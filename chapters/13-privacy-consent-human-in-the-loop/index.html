@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Trailhead · Cart</title></head>
+<body>
+  <p id="agent-presence" role="status" aria-live="polite" hidden></p>
+  <header><span id="who">Signed out</span>
+    <button id="sign-in">Sign in</button> <button id="sign-out">Sign out</button></header>
+  <main><h1>Your cart</h1><ul id="cart"></ul></main>
+
+  <dialog id="confirm-sheet" aria-labelledby="confirm-title">
+    <h2 id="confirm-title" tabindex="-1">Place this order?</h2>
+    <ul data-items></ul>
+    <p>Total: <strong data-total></strong></p>
+    <p>Ship to: <span data-ship-to></span> · Pay with: <span data-pay-with></span></p>
+    <button data-back>Back to cart</button>
+    <button data-place>Place order</button>
+  </dialog>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
