@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Supportly</title></head>
+<body>
+  <h1>Help</h1>
+  <p id="status">Loading…</p>
+  <dialog id="ticket-dialog">
+    <h2>Send this ticket?</h2>
+    <p><b>Subject:</b> <span data-subject></span></p>
+    <p><b>Priority:</b> <span data-priority></span></p>
+    <pre data-body></pre>
+    <button data-cancel>Cancel</button> <button data-send>Send ticket</button>
+  </dialog>
+  <script type="module">
+    import { registerSupportTools } from './widget-tools.js';
+    const tools = new AbortController();
+    registerSupportTools(tools.signal).then(
+      () => { document.querySelector('#status').textContent = 'modelContext' in document ? 'tools registered' : 'no WebMCP'; },
+      (e) => { document.querySelector('#status').textContent = 'tools not registered: ' + e.name; });
+  </script>
+</body>
+</html>

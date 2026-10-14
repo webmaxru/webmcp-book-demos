@@ -1,0 +1,14 @@
+{
+  "name": "ch12-threat-models",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Chapter 12 examples (Threat Models for Tool-Exposing Pages) from Tools, Not Clicks (working title)",
+  "scripts": {
+    "test": "node tests/run-tests.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
