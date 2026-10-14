@@ -1,0 +1,32 @@
+{
+  "name": "trailhead-react",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Trailhead (React 19 + Vite + TypeScript) with WebMCP tools: chapter 10 of Tools, Not Clicks (working title)",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node tests/run-tests.mjs",
+    "test:chrome": "WEBMCP=chrome node tests/run-tests.mjs"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "8.4.0",
+    "usewebmcp": "6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "playwright": "1.64.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "webmcp-types": "0.1.10"
+  }
+}

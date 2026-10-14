@@ -1,0 +1,27 @@
+:root { font-family: system-ui, sans-serif; color: #1d2a24; background: #f6f4ef; }
+body { margin: 0; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #1f4d3a; color: #fff; }
+header a { color: #fff; text-decoration: none; margin-left: 16px; }
+.brand { font-weight: 700; font-size: 1.3rem; margin-left: 0; }
+main { padding: 24px; max-width: 1000px; margin: 0 auto; }
+footer { text-align: center; font-size: 0.8rem; color: #667; padding: 24px; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.filters input { flex: 1; min-width: 200px; padding: 8px; }
+.grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.card { background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1); display: flex; flex-direction: column; gap: 6px; }
+.card h2 { font-size: 1rem; margin: 0; }
+.meta { color: #556; font-size: .85rem; margin: 0; }
+.price { font-weight: 700; margin: 0; }
+button { padding: 6px 12px; border-radius: 6px; border: 1px solid #1f4d3a; background: #fff; cursor: pointer; }
+button.primary { background: #1f4d3a; color: #fff; }
+button:disabled { opacity: .5; cursor: default; }
+.compare { border-collapse: collapse; background: #fff; }
+.compare th, .compare td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
+.lines { list-style: none; padding: 0; }
+.lines li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #ddd; }
+.total { font-weight: 700; }
+.notice { background: #e2f1e8; padding: 8px 12px; border-radius: 6px; }
+.agent-activity { position: fixed; bottom: 16px; right: 16px; background: #1f4d3a; color: #fff; padding: 8px 14px; border-radius: 20px; margin: 0; }
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: grid; place-items: center; }
+.dialog { background: #fff; padding: 20px 24px; border-radius: 10px; min-width: 280px; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
