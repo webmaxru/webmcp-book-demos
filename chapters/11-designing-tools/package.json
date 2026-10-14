@@ -1,0 +1,13 @@
+{
+  "name": "webmcp-book-ch11-examples",
+  "private": true,
+  "type": "module",
+  "description": "Chapter 11 examples: designing tools agents can actually use (Trailhead and the Supportly Helpdesk Widget)",
+  "scripts": {
+    "test": "node tests/run-tests.mjs",
+    "check-listings": "node tests/check-listings.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}

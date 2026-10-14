@@ -1,0 +1,905 @@
+{
+  "observations": {
+    "date": "2026-10-14T23:02:59.592Z",
+    "lintBefore": [
+      {
+        "name": "search_products",
+        "from": "Listing 6.2",
+        "problems": [
+          {
+            "tool": "search_products",
+            "where": "inputSchema.category",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          }
+        ]
+      },
+      {
+        "name": "add_to_cart",
+        "from": "Listing 6.7",
+        "problems": [
+          {
+            "tool": "add_to_cart",
+            "where": "inputSchema.quantity",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          }
+        ]
+      },
+      {
+        "name": "search_articles",
+        "from": "Listing 7.3",
+        "problems": [
+          {
+            "tool": "search_articles",
+            "where": "inputSchema.query",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          }
+        ]
+      },
+      {
+        "name": "create_ticket",
+        "from": "Listing 7.3",
+        "problems": [
+          {
+            "tool": "create_ticket",
+            "where": "inputSchema.subject",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          },
+          {
+            "tool": "create_ticket",
+            "where": "inputSchema.body",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          },
+          {
+            "tool": "create_ticket",
+            "where": "inputSchema.priority",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          }
+        ]
+      },
+      {
+        "name": "get_ticket_status",
+        "from": "Listing 7.3",
+        "problems": [
+          {
+            "tool": "get_ticket_status",
+            "where": "description",
+            "rule": "says_what_it_returns",
+            "detail": "say what comes back"
+          },
+          {
+            "tool": "get_ticket_status",
+            "where": "inputSchema.ticketId",
+            "rule": "described",
+            "detail": "every parameter needs a description"
+          }
+        ]
+      }
+    ],
+    "measureBefore": {
+      "rows": [
+        {
+          "name": "search_products",
+          "chars": 624
+        },
+        {
+          "name": "add_to_cart",
+          "chars": 395
+        },
+        {
+          "name": "search_articles",
+          "chars": 283
+        },
+        {
+          "name": "create_ticket",
+          "chars": 415
+        },
+        {
+          "name": "get_ticket_status",
+          "chars": 257
+        }
+      ],
+      "total": 1974
+    },
+    "mockTrailheadMeasure": {
+      "rows": [
+        {
+          "name": "add_to_cart",
+          "chars": 503
+        },
+        {
+          "name": "compare_products",
+          "chars": 477
+        },
+        {
+          "name": "search_products",
+          "chars": 818
+        }
+      ],
+      "total": 1798
+    },
+    "mockSearchResultChars": 1312,
+    "mockSearchTotal": 16,
+    "mockExampleErrors": {
+      "maxPriceString": {
+        "status": "error",
+        "code": "INVALID_ARGUMENT",
+        "message": "\"maxPrice\" must be a number. Highest price in NOK, e.g. 2500.",
+        "field": "maxPrice"
+      },
+      "bootWithoutSize": {
+        "status": "needs_input",
+        "code": "MISSING_INFORMATION",
+        "missing": [
+          "size"
+        ],
+        "message": "This product comes in EU sizes 40, 41, 42, 43, 44, 45. Ask the user which size, then call add_to_cart again with the sized SKU, e.g. TH-BOOT-FJELL-40.",
+        "sizes": [
+          40,
+          41,
+          42,
+          43,
+          44,
+          45
+        ]
+      },
+      "jacketLimit": {
+        "status": "refused",
+        "code": "PURCHASE_LIMIT",
+        "message": "Storm Shell Jacket (limited edition) is limited to 2 per customer and the cart has 0. Ask the user before adding a smaller quantity.",
+        "limit": 2,
+        "inCart": 0
+      }
+    },
+    "mockWidgetMeasure": {
+      "rows": [
+        {
+          "name": "create_ticket",
+          "chars": 1014
+        },
+        {
+          "name": "get_ticket_status",
+          "chars": 432
+        },
+        {
+          "name": "search_articles",
+          "chars": 404
+        }
+      ],
+      "total": 1850
+    },
+    "mockPriorityAsListed": {
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "low",
+          "title": "Low: a question; nothing is blocked. Reply within 2 business days."
+        },
+        {
+          "const": "normal",
+          "title": "Normal: something is broken, with a workaround. Reply within 1 business day."
+        },
+        {
+          "const": "high",
+          "title": "High: the user or their team cannot work. Reply within 4 hours."
+        }
+      ],
+      "description": "How urgent the problem is for the user."
+    },
+    "mockExampleErrors2": {
+      "urgent": {
+        "status": "error",
+        "code": "INVALID_ARGUMENT",
+        "message": "\"priority\" must be one of \"low\", \"normal\", \"high\". How urgent the problem is for the user.",
+        "field": "priority"
+      },
+      "limit": {
+        "status": "refused",
+        "code": "TICKET_LIMIT",
+        "message": "This account has opened 3 tickets in the past hour, the most allowed. Tell the user they can open another after 00:03 (UTC).",
+        "resetsAt": "00:03"
+      }
+    },
+    "chromiumVersion": "156.0.8078.4",
+    "chromiumTrailheadMeasure": {
+      "rows": [
+        {
+          "name": "add_to_cart",
+          "chars": 503
+        },
+        {
+          "name": "compare_products",
+          "chars": 477
+        },
+        {
+          "name": "search_products",
+          "chars": 818
+        }
+      ],
+      "total": 1798
+    },
+    "chromiumSearchResultChars": 1312,
+    "chromiumSearchTotal": 16,
+    "chromiumExampleErrors": {
+      "maxPriceString": {
+        "status": "error",
+        "code": "INVALID_ARGUMENT",
+        "message": "\"maxPrice\" must be a number. Highest price in NOK, e.g. 2500.",
+        "field": "maxPrice"
+      },
+      "bootWithoutSize": {
+        "status": "needs_input",
+        "code": "MISSING_INFORMATION",
+        "missing": [
+          "size"
+        ],
+        "message": "This product comes in EU sizes 40, 41, 42, 43, 44, 45. Ask the user which size, then call add_to_cart again with the sized SKU, e.g. TH-BOOT-FJELL-40.",
+        "sizes": [
+          40,
+          41,
+          42,
+          43,
+          44,
+          45
+        ]
+      },
+      "jacketLimit": {
+        "status": "refused",
+        "code": "PURCHASE_LIMIT",
+        "message": "Storm Shell Jacket (limited edition) is limited to 2 per customer and the cart has 0. Ask the user before adding a smaller quantity.",
+        "limit": 2,
+        "inCart": 0
+      }
+    },
+    "chromiumWidgetMeasure": {
+      "rows": [
+        {
+          "name": "create_ticket",
+          "chars": 1014
+        },
+        {
+          "name": "get_ticket_status",
+          "chars": 432
+        },
+        {
+          "name": "search_articles",
+          "chars": 404
+        }
+      ],
+      "total": 1850
+    },
+    "chromiumPriorityAsListed": {
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "low",
+          "title": "Low: a question; nothing is blocked. Reply within 2 business days."
+        },
+        {
+          "const": "normal",
+          "title": "Normal: something is broken, with a workaround. Reply within 1 business day."
+        },
+        {
+          "const": "high",
+          "title": "High: the user or their team cannot work. Reply within 4 hours."
+        }
+      ],
+      "description": "How urgent the problem is for the user."
+    },
+    "chromiumExampleErrors2": {
+      "urgent": {
+        "status": "error",
+        "code": "INVALID_ARGUMENT",
+        "message": "\"priority\" must be one of \"low\", \"normal\", \"high\". How urgent the problem is for the user.",
+        "field": "priority"
+      },
+      "limit": {
+        "status": "refused",
+        "code": "TICKET_LIMIT",
+        "message": "This account has opened 3 tickets in the past hour, the most allowed. Tell the user they can open another after 00:03 (UTC).",
+        "resetsAt": "00:03"
+      }
+    }
+  },
+  "results": [
+    {
+      "suite": "syntax",
+      "name": "node --check shared/results.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check shared/tool-lint.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check shared/validate.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/cart-tools.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/catalog-tools.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/main.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/store.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check helpdesk/copy.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check helpdesk/helpdesk-api.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check helpdesk/main.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check helpdesk/widget-form.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check helpdesk/widget-tools.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check tests/check-listings.mjs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check tests/mock-model-context.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check tests/run-tests.mjs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check tests/fixtures/before.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "checkArgs accepts valid arguments",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "missing required -> MISSING_ARGUMENT naming the field and its description",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "out of range -> INVALID_ARGUMENT with the bound",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "oneOf const values are enforced",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "array rules (minItems, uniqueItems)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "unknown argument -> UNKNOWN_ARGUMENT listing the real ones",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "an array instead of an object is rejected",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "result helpers keep Chapter 6 fail() shape and add three statuses",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "lint catches steering, prohibitions, missing return, bad name, empty and numeric enums",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "unit",
+      "name": "lint finds problems in the earlier tool definitions (recorded)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "Trailhead registers search_products, compare_products, add_to_cart",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "Trailhead tools pass the lint (budgets, descriptions, enums)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "compare_products schema keeps minItems/maxItems/uniqueItems through registration",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "broad search: 10 products, the total, and a note on how to narrow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "broad search result stays under 1,500 characters",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "narrowed search fits without a note",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "maxPrice as a string -> error INVALID_ARGUMENT naming maxPrice",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "unknown parameter -> UNKNOWN_ARGUMENT",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "no matches -> empty list plus a note, not an error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "compare with one SKU -> INVALID_ARGUMENT (minItems)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "compare with an unknown SKU -> UNKNOWN_SKU listing it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "compare two tents -> rows per attribute with a value per SKU",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "boot without size -> needs_input, missing [\"size\"]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "sized boot -> added",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "3 limited jackets -> refused PURCHASE_LIMIT, cart unchanged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "sold-out tent -> refused OUT_OF_STOCK",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "fractional quantity -> INVALID_ARGUMENT",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "cart badge shows what the agent added",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "no page errors (Trailhead)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "widget registers its three tools",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "widget tools pass the lint",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "priority oneOf [{const,title}] survives registration intact",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "tool title = button label = form heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "priority options in the form = oneOf in the schema",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "form maxlength = schema maxLength",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "search_articles returns up to 5 articles with title, url, excerpt",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "no articles -> empty list plus a note",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "priority \"urgent\" -> INVALID_ARGUMENT listing low, normal, high",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "create_ticket shows the draft in the widget form",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "person cancels -> cancelled_by_user",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "person sends -> created, SUP-1044..1046, with expected reply time",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "fourth ticket in an hour -> refused TICKET_LIMIT before the form opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "get_ticket_status SUP-1042 -> ticketState waiting_on_user, reply quoted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "another account's ticket and a non-existent one look the same",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "ticketId \"1042\" -> INVALID_ARGUMENT with the example format",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "no page errors (widget)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "WebMCP available in Chromium 156.0.8078.4 with WebMCPTesting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "Trailhead registers search_products, compare_products, add_to_cart",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "Trailhead tools pass the lint (budgets, descriptions, enums)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "compare_products schema keeps minItems/maxItems/uniqueItems through registration",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "broad search: 10 products, the total, and a note on how to narrow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "broad search result stays under 1,500 characters",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "narrowed search fits without a note",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "maxPrice as a string -> error INVALID_ARGUMENT naming maxPrice",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "unknown parameter -> UNKNOWN_ARGUMENT",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "no matches -> empty list plus a note, not an error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "compare with one SKU -> INVALID_ARGUMENT (minItems)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "compare with an unknown SKU -> UNKNOWN_SKU listing it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "compare two tents -> rows per attribute with a value per SKU",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "boot without size -> needs_input, missing [\"size\"]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "sized boot -> added",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "3 limited jackets -> refused PURCHASE_LIMIT, cart unchanged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "sold-out tent -> refused OUT_OF_STOCK",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "fractional quantity -> INVALID_ARGUMENT",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "cart badge shows what the agent added",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "no page errors (Trailhead)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "widget registers its three tools",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "widget tools pass the lint",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "priority oneOf [{const,title}] survives registration intact",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "tool title = button label = form heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "priority options in the form = oneOf in the schema",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "form maxlength = schema maxLength",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "search_articles returns up to 5 articles with title, url, excerpt",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "no articles -> empty list plus a note",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "priority \"urgent\" -> INVALID_ARGUMENT listing low, normal, high",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "create_ticket shows the draft in the widget form",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "person cancels -> cancelled_by_user",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "person sends -> created, SUP-1044..1046, with expected reply time",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "fourth ticket in an hour -> refused TICKET_LIMIT before the form opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "get_ticket_status SUP-1042 -> ticketState waiting_on_user, reply quoted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "another account's ticket and a non-existent one look the same",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "ticketId \"1042\" -> INVALID_ARGUMENT with the example format",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "no page errors (widget)",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
