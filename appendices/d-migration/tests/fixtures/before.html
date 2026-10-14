@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>Appendix D: before</title>
+<script>
+  // Fake Fjord Table back end (test fixture only).
+  window.availability = { async search({ date, partySize }) { return [{ time: '18:00' }, { time: '19:30' }]; } };
+  window.bookings = { async create(b) { return 'FT-' + b.date.replaceAll('-', '') + '-' + b.partySize; } };
+  window.confirmAnswer = true;
+  window.confirmCalls = 0;
+  window.confirmBooking = async () => { window.confirmCalls++; return window.confirmAnswer; };
+</script>
+<script>window.legacyMock = new URL(location).searchParams.has('mock');</script>
+<script src="/tests/legacy-mock.js"></script>
+<script src="/before/fjord-tools.before.js"></script>
+<script>window.ready = true;</script>

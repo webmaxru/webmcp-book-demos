@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Appendix D: after</title>
+<script>
+  // Fake Fjord Table back end (test fixture only).
+  window.availability = { async search({ date, partySize }) { return [{ time: '18:00' }, { time: '19:30' }]; } };
+  window.bookings = { async create(b) { return 'FT-' + b.date.replaceAll('-', '') + '-' + b.partySize; } };
+  window.confirmAnswer = true;
+  window.confirmCalls = 0;
+  window.confirmBooking = async () => { window.confirmCalls++; return window.confirmAnswer; };
+</script>
+<script type="module">
+  import { registerFjordTools } from '/after/fjord-tools.js';
+  import { createToolSet } from '/after/tool-set.js';
+  import { webmcpStatus } from '/after/detect.js';
+  Object.assign(window, { registerFjordTools, createToolSet, webmcpStatus });
+  window.ready = true;
+</script>
