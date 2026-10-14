@@ -1,0 +1,22 @@
+{
+  "browser": "156.0.8078.4",
+  "date": "2026-10-14T22:32:34.353Z",
+  "activatedOrder": "execute called → toolactivated event",
+  "callerAbort": "rejected AbortError",
+  "callerAbortToolSide": "tool signal aborted (AbortError); tool kept running and settled",
+  "callerAbortEvents": "toolactivated:slow, toolcancel:slow",
+  "preAborted": "rejected AbortError",
+  "unregisterMidCall": "resolved \"{\\\"aborted\\\":false}\"",
+  "staleTool": "rejected UnknownError",
+  "thrown": "rejected UnknownError",
+  "returnsUndefined": "resolved \"undefined\"",
+  "returnsBigInt": "rejected UnknownError",
+  "inputNotObject": "rejected TypeError",
+  "inputArray": "resolved \"[1,2]\"",
+  "concurrentCalls": "start 1, start 2, end 1, end 2",
+  "toolchangeCounts": "register 3 tools → 3 events; abort their shared signal → 3 events",
+  "annotationsWhenOmitted": "undefined",
+  "targetUnloadedMidCall": "rejected UnknownError",
+  "navigateButReturnFirst": "resolved \"navigating\"",
+  "callerUnloadedMidCall": "target saw: toolactivated:top_slow, toolcancel:top_slow; tool signal: aborted"
+}

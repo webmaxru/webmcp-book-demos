@@ -1,0 +1,444 @@
+{
+  "passed": 73,
+  "failed": 0,
+  "results": [
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/app.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/cart-tools.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/checkout-tool.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/compare-tool.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/debug-tools.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/product-tools.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/store.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/tool-lifecycle.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/tool-sync.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "syntax",
+      "name": "node --check trailhead/ui.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "five tools registered with ?debug, checkout absent while cart empty",
+      "ok": true,
+      "detail": "[\"add_to_cart\",\"compare_products\",\"debug_dump_cart_state\",\"get_cart\",\"get_product_reviews\",\"search_products\"]"
+    },
+    {
+      "suite": "mock",
+      "name": "search_products annotations: readOnlyHint only",
+      "ok": true,
+      "detail": "{\"readOnlyHint\":true,\"untrustedContentHint\":false,\"consequentialHint\":false,\"debugging\":false}"
+    },
+    {
+      "suite": "mock",
+      "name": "get_product_reviews annotations: readOnly + untrustedContent",
+      "ok": true,
+      "detail": "{\"readOnlyHint\":true,\"untrustedContentHint\":true,\"consequentialHint\":false,\"debugging\":false}"
+    },
+    {
+      "suite": "mock",
+      "name": "add_to_cart has no annotations (all hints default to false)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "debug tool annotations: debugging + readOnly",
+      "ok": true,
+      "detail": "{\"readOnlyHint\":true,\"untrustedContentHint\":false,\"consequentialHint\":false,\"debugging\":true}"
+    },
+    {
+      "suite": "mock",
+      "name": "search_products returns in-stock tents priced in NOK",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"products\":[{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"price\":{\"amount\":3490,\"currency\":\"NOK\"},\"rating\":4.6,\"inStock\":true},{\"sku\":\"TH-TENT-UL1\",\"name\":\"Fjær ultralight 1-person tent\",\"price\":{\"amount\":4290,\"currency\":\"NOK\"},\"rating\":4.4,\"inStock\":true}]}}"
+    },
+    {
+      "suite": "mock",
+      "name": "search results are shown in the page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "invalid category is returned as a value",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"\\\"category\\\" must be one of: tents, sleeping-bags, backpacks, footwear, clothing.\"}}"
+    },
+    {
+      "suite": "mock",
+      "name": "reviews come back as data fields (injection text stays inside \"text\")",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"sku\":\"TH-TENT-2P\",\"averageRating\":4.6,\"reviews\":[{\"rating\":5,\"date\":\"2026-09-28\",\"text\":\"Pitched it in the rain on Hardangervidda in five minutes. Bone dry inside.\"},{\"rating\":4,\""
+    },
+    {
+      "suite": "mock",
+      "name": "unknown SKU in reviews → status unknown_sku",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"unknown_sku\",\"message\":\"No product has SKU \\\"NOPE\\\". Use search_products to find SKUs.\"}}"
+    },
+    {
+      "suite": "mock",
+      "name": "add_to_cart quantity 0 → INVALID_QUANTITY",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"INVALID_QUANTITY\",\"message\":\"Provide \\\"quantity\\\" as a whole number from 1 to 10.\"}}"
+    },
+    {
+      "suite": "mock",
+      "name": "add_to_cart unknown SKU → UNKNOWN_SKU",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"UNKNOWN_SKU\",\"message\":\"No product has SKU \\\"TH-NOPE\\\". Use search_products to find SKUs.\"}}"
+    },
+    {
+      "suite": "mock",
+      "name": "add_to_cart sold-out tent → OUT_OF_STOCK with available: 0",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"OUT_OF_STOCK\",\"message\":\"Only 0 of Vidde 4-person tent in stock.\",\"available\":0}}"
+    },
+    {
+      "suite": "mock",
+      "name": "add_to_cart cancelled during stock check → caller gets AbortError",
+      "ok": true,
+      "detail": "{\"ok\":false,\"error\":\"AbortError\"}"
+    },
+    {
+      "suite": "mock",
+      "name": "…and nothing was added to the cart",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"lines\":[],\"total\":{\"amount\":0,\"currency\":\"NOK\"}}}"
+    },
+    {
+      "suite": "mock",
+      "name": "add_to_cart 2 × TH-TENT-2P → added, total 6980 NOK",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"added\",\"line\":{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"quantity\":2},\"total\":{\"amount\":6980,\"currency\":\"NOK\"}}}"
+    },
+    {
+      "suite": "mock",
+      "name": "checkout is registered once the cart has items (toolchange)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "checkout annotations: consequentialHint",
+      "ok": true,
+      "detail": "{\"readOnlyHint\":false,\"untrustedContentHint\":false,\"consequentialHint\":true,\"debugging\":false}"
+    },
+    {
+      "suite": "mock",
+      "name": "compare_products (2 SKUs) → complete",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"complete\",\"rows\":[{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"price\":{\"amount\":3490,\"currency\":\"NOK\"},\"weightKg\":2.1,\"season\":\"3-season\",\"rating\":4.6,\"inStock\""
+    },
+    {
+      "suite": "mock",
+      "name": "compare_products with one SKU → invalid_input",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"Provide 2 to 4 SKUs in \\\"skus\\\".\"}}"
+    },
+    {
+      "suite": "mock",
+      "name": "compare_products cancelled by the caller → AbortError",
+      "ok": true,
+      "detail": "{\"ok\":false,\"error\":\"AbortError\"}"
+    },
+    {
+      "suite": "mock",
+      "name": "toolcancel reached the page (activity log)",
+      "ok": true,
+      "detail": "[\"▶ compare_products\",\"■ compare_products cancelled\"]"
+    },
+    {
+      "suite": "mock",
+      "name": "agent banner cleared after the cancelled call settled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "page deadline (8 s) → partial comparison with the slow SKU listed as missing",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"partial\",\"rows\":[{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"price\":{\"amount\":3490,\"currency\":\"NOK\"},\"weightKg\":2.1,\"season\":\"3-season\",\"rating\":4.6,\"inStock\":"
+    },
+    {
+      "suite": "mock",
+      "name": "checkout: user presses Cancel → status declined",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"declined\",\"message\":\"The user cancelled checkout. Nothing was ordered.\"}}"
+    },
+    {
+      "suite": "mock",
+      "name": "checkout cancelled by the caller → AbortError and the dialog closes",
+      "ok": true,
+      "detail": "{\"ok\":false,\"error\":\"AbortError\"}"
+    },
+    {
+      "suite": "mock",
+      "name": "checkout: user presses Place order → placed TH-1001",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"placed\",\"orderId\":\"TH-1001\",\"total\":{\"amount\":6980,\"currency\":\"NOK\"}}}"
+    },
+    {
+      "suite": "mock",
+      "name": "checkout unregistered again once the order empties the cart",
+      "ok": true,
+      "detail": "[\"add_to_cart\",\"compare_products\",\"debug_dump_cart_state\",\"get_cart\",\"get_product_reviews\",\"search_products\"]"
+    },
+    {
+      "suite": "mock",
+      "name": "debug tool returns the raw store",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"raw\":{\"lines\":[],\"nextLineId\":2}}}"
+    },
+    {
+      "suite": "mock",
+      "name": "no uncaught page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
+      "name": "without ?debug the debugging tool is not registered",
+      "ok": true,
+      "detail": "[\"add_to_cart\",\"compare_products\",\"get_cart\",\"get_product_reviews\",\"search_products\"]"
+    },
+    {
+      "suite": "chromium",
+      "name": "WebMCP available in 156.0.8078.4",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "five tools registered with ?debug, checkout absent while cart empty",
+      "ok": true,
+      "detail": "[\"add_to_cart\",\"compare_products\",\"debug_dump_cart_state\",\"get_cart\",\"get_product_reviews\",\"search_products\"]"
+    },
+    {
+      "suite": "chromium",
+      "name": "search_products annotations: readOnlyHint only",
+      "ok": true,
+      "detail": "{\"consequentialHint\":false,\"debugging\":false,\"readOnlyHint\":true,\"untrustedContentHint\":false}"
+    },
+    {
+      "suite": "chromium",
+      "name": "get_product_reviews annotations: readOnly + untrustedContent",
+      "ok": true,
+      "detail": "{\"consequentialHint\":false,\"debugging\":false,\"readOnlyHint\":true,\"untrustedContentHint\":true}"
+    },
+    {
+      "suite": "chromium",
+      "name": "add_to_cart has no annotations (all hints default to false)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "debug tool annotations: debugging + readOnly",
+      "ok": true,
+      "detail": "{\"consequentialHint\":false,\"debugging\":true,\"readOnlyHint\":true,\"untrustedContentHint\":false}"
+    },
+    {
+      "suite": "chromium",
+      "name": "search_products returns in-stock tents priced in NOK",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"products\":[{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"price\":{\"amount\":3490,\"currency\":\"NOK\"},\"rating\":4.6,\"inStock\":true},{\"sku\":\"TH-TENT-UL1\",\"name\":\"Fjær ultralight 1-person tent\",\"price\":{\"amount\":4290,\"currency\":\"NOK\"},\"rating\":4.4,\"inStock\":true}]}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "search results are shown in the page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "invalid category is returned as a value",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"\\\"category\\\" must be one of: tents, sleeping-bags, backpacks, footwear, clothing.\"}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "reviews come back as data fields (injection text stays inside \"text\")",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"sku\":\"TH-TENT-2P\",\"averageRating\":4.6,\"reviews\":[{\"rating\":5,\"date\":\"2026-09-28\",\"text\":\"Pitched it in the rain on Hardangervidda in five minutes. Bone dry inside.\"},{\"rating\":4,\""
+    },
+    {
+      "suite": "chromium",
+      "name": "unknown SKU in reviews → status unknown_sku",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"unknown_sku\",\"message\":\"No product has SKU \\\"NOPE\\\". Use search_products to find SKUs.\"}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "add_to_cart quantity 0 → INVALID_QUANTITY",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"INVALID_QUANTITY\",\"message\":\"Provide \\\"quantity\\\" as a whole number from 1 to 10.\"}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "add_to_cart unknown SKU → UNKNOWN_SKU",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"UNKNOWN_SKU\",\"message\":\"No product has SKU \\\"TH-NOPE\\\". Use search_products to find SKUs.\"}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "add_to_cart sold-out tent → OUT_OF_STOCK with available: 0",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"OUT_OF_STOCK\",\"message\":\"Only 0 of Vidde 4-person tent in stock.\",\"available\":0}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "add_to_cart cancelled during stock check → caller gets AbortError",
+      "ok": true,
+      "detail": "{\"ok\":false,\"error\":\"AbortError\"}"
+    },
+    {
+      "suite": "chromium",
+      "name": "…and nothing was added to the cart",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"lines\":[],\"total\":{\"amount\":0,\"currency\":\"NOK\"}}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "add_to_cart 2 × TH-TENT-2P → added, total 6980 NOK",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"added\",\"line\":{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"quantity\":2},\"total\":{\"amount\":6980,\"currency\":\"NOK\"}}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "checkout is registered once the cart has items (toolchange)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "checkout annotations: consequentialHint",
+      "ok": true,
+      "detail": "{\"consequentialHint\":true,\"debugging\":false,\"readOnlyHint\":false,\"untrustedContentHint\":false}"
+    },
+    {
+      "suite": "chromium",
+      "name": "compare_products (2 SKUs) → complete",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"complete\",\"rows\":[{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"price\":{\"amount\":3490,\"currency\":\"NOK\"},\"weightKg\":2.1,\"season\":\"3-season\",\"rating\":4.6,\"inStock\""
+    },
+    {
+      "suite": "chromium",
+      "name": "compare_products with one SKU → invalid_input",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"Provide 2 to 4 SKUs in \\\"skus\\\".\"}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "compare_products cancelled by the caller → AbortError",
+      "ok": true,
+      "detail": "{\"ok\":false,\"error\":\"AbortError\"}"
+    },
+    {
+      "suite": "chromium",
+      "name": "toolcancel reached the page (activity log)",
+      "ok": true,
+      "detail": "[\"▶ compare_products\",\"■ compare_products cancelled\"]"
+    },
+    {
+      "suite": "chromium",
+      "name": "agent banner cleared after the cancelled call settled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "page deadline (8 s) → partial comparison with the slow SKU listed as missing",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"partial\",\"rows\":[{\"sku\":\"TH-TENT-2P\",\"name\":\"Fjellhytte 2-person tent\",\"price\":{\"amount\":3490,\"currency\":\"NOK\"},\"weightKg\":2.1,\"season\":\"3-season\",\"rating\":4.6,\"inStock\":"
+    },
+    {
+      "suite": "chromium",
+      "name": "checkout: user presses Cancel → status declined",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"declined\",\"message\":\"The user cancelled checkout. Nothing was ordered.\"}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "checkout cancelled by the caller → AbortError and the dialog closes",
+      "ok": true,
+      "detail": "{\"ok\":false,\"error\":\"AbortError\"}"
+    },
+    {
+      "suite": "chromium",
+      "name": "checkout: user presses Place order → placed TH-1001",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"placed\",\"orderId\":\"TH-1001\",\"total\":{\"amount\":6980,\"currency\":\"NOK\"}}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "checkout unregistered again once the order empties the cart",
+      "ok": true,
+      "detail": "[\"add_to_cart\",\"compare_products\",\"debug_dump_cart_state\",\"get_cart\",\"get_product_reviews\",\"search_products\"]"
+    },
+    {
+      "suite": "chromium",
+      "name": "debug tool returns the raw store",
+      "ok": true,
+      "detail": "{\"ok\":true,\"value\":{\"raw\":{\"lines\":[],\"nextLineId\":2}}}"
+    },
+    {
+      "suite": "chromium",
+      "name": "no uncaught page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "without ?debug the debugging tool is not registered",
+      "ok": true,
+      "detail": "[\"add_to_cart\",\"compare_products\",\"get_cart\",\"get_product_reviews\",\"search_products\"]"
+    }
+  ]
+}
