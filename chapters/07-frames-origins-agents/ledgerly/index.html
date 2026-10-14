@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Ledgerly · Invoices</title>
+  <link rel="stylesheet" href="ledgerly.css">
+</head>
+<body>
+  <header><strong>Ledgerly</strong> · Invoices</header>
+  <main id="dashboard">…</main>
+
+  <aside id="assistant" aria-label="Ledgerly Assistant">
+    <form id="ask"><input name="goal" placeholder="Ask the assistant"><button>Ask</button></form>
+    <ol id="transcript"></ol>
+  </aside>
+
+  <!-- Supportly's help widget, from a third-party origin. -->
+  <iframe id="supportly"
+          title="Supportly help"
+          src="https://widget.supportly.example/embed.html?customer=ledgerly"
+          allow="tools"></iframe>
+
+  <script type="module" src="agent/assistant.js"></script>
+</body>
+</html>

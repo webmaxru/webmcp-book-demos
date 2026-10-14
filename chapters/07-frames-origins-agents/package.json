@@ -1,0 +1,15 @@
+{
+  "name": "ch07-frames-origins-agents",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chapter 7 examples (Helpdesk Widget): Permissions Policy, exposedTo/fromOrigins, an in-page agent and an extension agent",
+  "license": "MIT",
+  "scripts": {
+    "start": "node tests/serve.mjs",
+    "test": "node tests/run-tests.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}

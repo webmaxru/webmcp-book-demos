@@ -1,0 +1,3 @@
+body { font: 14px/1.4 system-ui, sans-serif; margin: 12px; }
+.confirm { border: 1px solid #c7d2fe; background: #eef2ff; padding: 8px; border-radius: 8px; }
+pre { white-space: pre-wrap; }

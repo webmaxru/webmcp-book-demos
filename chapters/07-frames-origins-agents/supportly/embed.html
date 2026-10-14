@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Supportly help</title>
+  <link rel="stylesheet" href="widget.css">
+</head>
+<body>
+  <h2>Help</h2>
+  <p id="tools-state">WebMCP tools: …</p>
+  <div id="confirm-area"></div>
+  <script type="module">
+    import { registerWidgetTools } from './widget-tools.js';
+    const widgetTools = new AbortController();
+    const state = await registerWidgetTools(widgetTools.signal);
+    document.getElementById('tools-state').textContent = `WebMCP tools: ${state}`;
+    document.body.dataset.tools = state;
+  </script>
+</body>
+</html>

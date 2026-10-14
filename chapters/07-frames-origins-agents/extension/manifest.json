@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Tool Inspector",
+  "version": "0.1.0",
+  "description": "Lists and runs the WebMCP tools of every frame on a page.",
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{
+    "matches": ["https://app.ledgerly.example/*", "https://widget.supportly.example/*"],
+    "js": ["content-script.js"],
+    "all_frames": true,
+    "run_at": "document_idle"
+  }]
+}
