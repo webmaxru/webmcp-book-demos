@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "webmcp-local-relay": {
+      "command": "npx",
+      "args": [
+        "-y", "@mcp-b/webmcp-local-relay@6.0.3",
+        "--widget-origin", "http://localhost:3000"
+      ]
+    }
+  }
+}

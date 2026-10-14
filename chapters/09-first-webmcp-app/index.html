@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fjord Table · Book a table</title>
+  <meta name="description" content="Fjord Table, a fictional restaurant in Oslo: the running example from Tools, Not Clicks (working title). Chapter 9: the app end to end.">
+  <!-- WebMCP origin trial (Chapter 9, "Deploying with an origin-trial token"):
+       paste the token registered for this origin, or send it as an Origin-Trial header
+       (server.js does that when WEBMCP_OT_TOKEN is set). Not needed on localhost
+       with chrome://flags/#enable-webmcp-testing. -->
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="./">Fjord Table</a>
+  </header>
+  <p id="webmcp-status" class="status" role="status">Checking for WebMCP…</p>
+
+  <main>
+    <section>
+      <h1>Book a table</h1>
+      <p>Seasonal Norwegian cooking on the Oslo waterfront. Open Tuesday to Sunday,
+         17:00 to 22:00 (last sitting 21:30).</p>
+      <form id="search-form" class="search">
+        <label>Date <input name="date" type="date" required></label>
+        <label>Time <input name="time" type="time" step="1800" value="19:00"></label>
+        <label>Guests
+          <select name="partySize">
+            <option>1</option><option selected>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option><option>11</option><option>12</option>
+          </select>
+        </label>
+        <button type="submit">Find a table</button>
+      </form>
+      <p id="slots-heading" aria-live="polite"></p>
+      <ul id="slots" class="slots"></ul>
+      <p id="confirmation" class="confirmation" role="status" hidden></p>
+      <section id="my-bookings-section" hidden>
+        <h2>Your bookings</h2>
+        <ul id="my-bookings"></ul>
+      </section>
+      <p class="small">Groups larger than 12: please call us.</p>
+    </section>
+  </main>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <form id="confirm-form" method="dialog">
+      <h2 id="confirm-title">Confirm your booking</h2>
+      <p id="confirm-intro"></p>
+      <dl>
+        <dt>When</dt><dd id="confirm-when"></dd>
+        <dt>Party</dt><dd id="confirm-party"></dd>
+        <dt>Guest</dt><dd id="confirm-guest"></dd>
+      </dl>
+      <label>Seating <select name="seating"></select></label>
+      <label>Notes (allergies, occasion) <textarea name="notes" rows="2"></textarea></label>
+      <p id="confirm-error" class="error" hidden></p>
+      <div class="actions">
+        <button type="button" id="confirm-cancel">Cancel</button>
+        <button type="submit" id="confirm-submit" class="primary">Confirm booking</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer>
+    <span>Signed in as Ingrid Hansen (demo account)</span>
+  </footer>
+  <script>
+    // Default the date picker to tomorrow (demo convenience).
+    const d = new Date(Date.now() + 86400000), date = document.querySelector('[name=date]');
+    date.value = d.toISOString().slice(0, 10);
+  </script>
+</body>
+</html>

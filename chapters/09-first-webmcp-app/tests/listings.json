@@ -1,0 +1,11 @@
+{
+  "9.1": "snippets/check-webmcp.js",
+  "9.2": "webmcp/enable.js",
+  "9.3": "webmcp/tools.js",
+  "9.4": "app.js",
+  "9.5": "test-agent.js",
+  "9.6": "prompt-planner.js",
+  "9.7": "deploy/claude_desktop_config.json",
+  "9.8": "deploy/origin-trial-meta.html",
+  "9.9": "server.js"
+}
