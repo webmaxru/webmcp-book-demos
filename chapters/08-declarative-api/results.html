@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fjord Table · Open tables</title>
+  <script type="module">
+    import { availability } from './availability.js';
+
+    const query = new URLSearchParams(location.search);
+    const date = query.get('date');
+    const partySize = Number(query.get('partySize'));
+    // No await before the JSON-LD is in place: Chromium 156 reads it
+    // when the page finishes parsing, and anything added later is missed.
+    const slots = availability.searchNow({
+      date, partySize, time: query.get('time') || undefined
+    });
+
+    // What a person reads...
+    document.querySelector('#slots').innerHTML = slots.length
+      ? slots.map((s) => `<li>${s.time}</li>`).join('')
+      : '<li>No open tables. Try another date.</li>';
+
+    // ...and what the agent that submitted the form receives (Chromium 156).
+    const data = document.createElement('script');
+    data.type = 'application/ld+json';
+    data.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: `Open tables at Fjord Table on ${date} for ${partySize}`,
+      itemListElement: slots.map((s, i) =>
+        ({ '@type': 'ListItem', position: i + 1, name: s.time }))
+    });
+    document.head.append(data);
+  </script>
+</head>
+<body>
+  <h1>Open tables</h1>
+  <ul id="slots"></ul>
+  <p><a href="index.html">Back to booking</a></p>
+</body>
+</html>

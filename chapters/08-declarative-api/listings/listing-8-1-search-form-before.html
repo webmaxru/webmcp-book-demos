@@ -1,0 +1,16 @@
+<form id="search-form" class="search" action="results.html" method="get">
+  <label for="search-date">Date</label>
+  <input id="search-date" name="date" type="date" required>
+  <label for="search-time">Preferred time</label>
+  <input id="search-time" name="time" type="time">
+  <label for="search-party">Guests</label>
+  <input id="search-party" name="partySize" type="number" min="1" max="12" required>
+  <label for="search-seating">Seating</label>
+  <select id="search-seating" name="seating">
+    <option value="">No preference</option>
+    <option value="window">By the window</option>
+    <option value="indoor">Indoor</option>
+    <option value="terrace">On the terrace</option>
+  </select>
+  <button type="submit">Find a table</button>
+</form>

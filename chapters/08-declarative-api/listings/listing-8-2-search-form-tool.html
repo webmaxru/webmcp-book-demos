@@ -1,0 +1,20 @@
+<form id="search-form" class="search" action="results.html" method="get"
+      toolname="search_availability"
+      tooldescription="Find open tables at Fjord Table for a date, time and party size. Returns up to five nearby time slots. Does not make a booking."
+      toolautosubmit>
+  <label for="search-date">Date</label>
+  <input id="search-date" name="date" type="date" required>
+  <label for="search-time">Preferred time</label>
+  <input id="search-time" name="time" type="time"
+         toolparamdescription="Preferred time, 24h HH:MM. Leave out for any time.">
+  <label for="search-party">Guests</label>
+  <input id="search-party" name="partySize" type="number" min="1" max="12" required>
+  <label for="search-seating">Seating</label>
+  <select id="search-seating" name="seating">
+    <option value="">No preference</option>
+    <option value="window">By the window</option>
+    <option value="indoor">Indoor</option>
+    <option value="terrace">On the terrace</option>
+  </select>
+  <button type="submit">Find a table</button>
+</form>

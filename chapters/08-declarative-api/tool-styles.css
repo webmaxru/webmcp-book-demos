@@ -1,0 +1,11 @@
+/* tool-styles.css: show the person which form an agent is working on. */
+@supports selector(:tool-form-active) {
+  form:tool-form-active {
+    outline: 2px dashed #1f5f7a;
+    outline-offset: 6px;
+    background: #eef6f9;
+  }
+  button:tool-submit-active {
+    box-shadow: 0 0 0 4px #f2c94c;
+  }
+}

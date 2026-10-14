@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fjord Table · Book a table (declarative WebMCP)</title>
+  <!-- WebMCP origin trial: paste the token you registered for your origin here.
+       Not needed on localhost if you enabled chrome://flags/#enable-webmcp-testing. -->
+  <!-- <meta http-equiv="origin-trial" content="YOUR_ORIGIN_TRIAL_TOKEN"> -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tool-styles.css">     <!-- Listing 8.9 -->
+  <script type="module" src="booking-ui.js"></script>
+  <script type="module" src="search-form.js"></script>  <!-- Listing 8.5 -->
+  <script type="module" src="book-form.js"></script>    <!-- Listing 8.6 -->
+  <script type="module" src="agent-feedback.js"></script> <!-- Listing 8.8 -->
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="index.html">Fjord Table</a>
+    <span class="tagline">Chapter 8: forms as tools</span>
+  </header>
+  <p id="webmcp-status" class="status" role="status">Checking for WebMCP…</p>
+
+  <main>
+    <h1>Book a table</h1>
+    <p>Open Tuesday to Sunday, 17:00 to 22:00 (last sitting 21:30). Closed on Mondays.</p>
+
+    <h2>1. Find a time</h2>
+<!-- Listing 8.2 -->
+<form id="search-form" class="search" action="results.html" method="get"
+      toolname="search_availability"
+      tooldescription="Find open tables at Fjord Table for a date, time and party size. Returns up to five nearby time slots. Does not make a booking."
+      toolautosubmit>
+  <label for="search-date">Date</label>
+  <input id="search-date" name="date" type="date" required>
+  <label for="search-time">Preferred time</label>
+  <input id="search-time" name="time" type="time"
+         toolparamdescription="Preferred time, 24h HH:MM. Leave out for any time.">
+  <label for="search-party">Guests</label>
+  <input id="search-party" name="partySize" type="number" min="1" max="12" required>
+  <label for="search-seating">Seating</label>
+  <select id="search-seating" name="seating">
+    <option value="">No preference</option>
+    <option value="window">By the window</option>
+    <option value="indoor">Indoor</option>
+    <option value="terrace">On the terrace</option>
+  </select>
+  <button type="submit">Find a table</button>
+</form>
+<!-- /Listing 8.2 -->
+    <p id="slots-heading" aria-live="polite"></p>
+    <ul id="slots" class="slots"></ul>
+
+    <h2>2. Book it</h2>
+    <p id="agent-banner" class="agent-banner" role="status" hidden></p>
+<!-- Listing 8.4 -->
+<form id="book-form" class="booking"
+      toolname="book_table"
+      tooldescription="Fill in a table booking at Fjord Table for the signed-in guest. The guest checks the details and presses Book table to confirm. Nothing is booked until they do.">
+  <label for="book-date">Date</label>
+  <input id="book-date" name="date" type="date" required>
+  <label for="book-time">Time</label>
+  <input id="book-time" name="time" type="time" required
+         toolparamdescription="A time returned by search_availability, 24h HH:MM.">
+  <label for="book-party">Guests</label>
+  <input id="book-party" name="partySize" type="number" min="1" max="12" required>
+  <label for="book-seating">Seating</label>
+  <select id="book-seating" name="seating">
+    <option value="">No preference</option>
+    <option value="window">By the window</option>
+    <option value="indoor">Indoor</option>
+    <option value="terrace">On the terrace</option>
+  </select>
+  <label for="book-notes">Notes for the kitchen</label>
+  <textarea id="book-notes" name="notes" maxlength="200"
+            toolparamdescription="Allergies or the occasion, in the guest's own words. Optional."></textarea>
+  <button type="submit">Book table</button>
+</form>
+<!-- /Listing 8.4 -->
+    <p id="booking-problem" class="error" role="alert" hidden></p>
+    <p id="confirmation" class="confirmation" role="status" hidden></p>
+    <section id="my-bookings-section" hidden>
+      <h2>Your bookings</h2>
+      <ul id="my-bookings"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <span>Signed in as Ingrid Hansen (demo account)</span>
+    <span>Fjord Table is fictional: the running example in <em>Tools, Not Clicks</em>.</span>
+  </footer>
+</body>
+</html>

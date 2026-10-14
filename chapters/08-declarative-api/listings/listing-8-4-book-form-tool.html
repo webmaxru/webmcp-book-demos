@@ -1,0 +1,22 @@
+<form id="book-form" class="booking"
+      toolname="book_table"
+      tooldescription="Fill in a table booking at Fjord Table for the signed-in guest. The guest checks the details and presses Book table to confirm. Nothing is booked until they do.">
+  <label for="book-date">Date</label>
+  <input id="book-date" name="date" type="date" required>
+  <label for="book-time">Time</label>
+  <input id="book-time" name="time" type="time" required
+         toolparamdescription="A time returned by search_availability, 24h HH:MM.">
+  <label for="book-party">Guests</label>
+  <input id="book-party" name="partySize" type="number" min="1" max="12" required>
+  <label for="book-seating">Seating</label>
+  <select id="book-seating" name="seating">
+    <option value="">No preference</option>
+    <option value="window">By the window</option>
+    <option value="indoor">Indoor</option>
+    <option value="terrace">On the terrace</option>
+  </select>
+  <label for="book-notes">Notes for the kitchen</label>
+  <textarea id="book-notes" name="notes" maxlength="200"
+            toolparamdescription="Allergies or the occasion, in the guest's own words. Optional."></textarea>
+  <button type="submit">Book table</button>
+</form>
