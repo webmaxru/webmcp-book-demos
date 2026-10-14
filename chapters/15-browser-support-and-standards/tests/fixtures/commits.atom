@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
+  <id>tag:github.com,2008:/webmachinelearning/webmcp/commits/main</id>
+  <link type="text/html" rel="alternate" href="https://github.com/webmachinelearning/webmcp/commits/main"/>
+  <link type="application/atom+xml" rel="self" href="https://github.com/webmachinelearning/webmcp/commits/main.atom"/>
+  <title>Recent Commits to webmcp:main</title>
+  <updated>2026-10-14T22:00:40Z</updated>
+  <entry>
+    <id>tag:github.com,2008:Grit::Commit/1636b331a26f854754906003657d52cbc7cb4ed7</id>
+    <link type="text/html" rel="alternate" href="https://github.com/webmachinelearning/webmcp/commit/1636b331a26f854754906003657d52cbc7cb4ed7"/>
+    <title>
+        Fix inactive document unregistration&#39;s notification algorithm (#345)
+    </title>
+    <updated>2026-10-14T22:00:40Z</updated>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/9669289?s=30&amp;v=4"/>
+    <author>
+      <name>domfarolino</name>
+      <uri>https://github.com/domfarolino</uri>
+    </author>
+    <content type="html">
+      &lt;pre style=&#39;white-space:pre-wrap;width:81ex&#39;&gt;Fix inactive document unregistration&amp;#39;s notification algorithm (#345)&lt;/pre&gt;
+    </content>
+  </entry>
+</feed>

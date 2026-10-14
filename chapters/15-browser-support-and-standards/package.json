@@ -1,0 +1,16 @@
+{
+  "name": "webmcp-book-ch15-browser-support-and-standards",
+  "private": true,
+  "type": "module",
+  "description": "Chapter 15 examples: feature detection across WebMCP builds, and a standards-status watcher",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "watch": "node standards-watch.mjs snapshots/last.json"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
