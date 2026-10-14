@@ -1,0 +1,48 @@
+[
+  {
+    "name": "Find a table for two on a named date",
+    "messages": [
+      { "role": "user", "type": "message",
+        "content": "Is there a table for two at Fjord Table on Friday 20 November 2026, around 7 in the evening?" }
+    ],
+    "expectedCall": [
+      { "functionName": "search_availability",
+        "arguments": { "date": "2026-11-20", "partySize": 2,
+                       "time": { "$pattern": "^(18|19|20):\\d{2}$" } } }
+    ]
+  },
+  {
+    "name": "Search, then book the slot the user asked for",
+    "messages": [
+      { "role": "user", "type": "message",
+        "content": "Book us a window table for four at 19:30 on 21 November 2026. It's my mum's birthday." }
+    ],
+    "expectedCall": [
+      { "functionName": "search_availability",
+        "arguments": { "date": "2026-11-21", "partySize": 4 }, "optional": true },
+      { "functionName": "book_table",
+        "arguments": { "date": "2026-11-21", "time": "19:30", "partySize": 4,
+                       "seating": "window", "notes": { "$contains": "birthday" } } }
+    ],
+    "assertions": [
+      { "type": "dom", "selector": "#confirmation",
+        "expect": { "text": { "$contains": "Booked: FT-" } } }
+    ]
+  },
+  {
+    "name": "Children count as guests",
+    "messages": [
+      { "role": "user", "type": "message",
+        "content": "Two adults and three kids, Saturday 28 November 2026 at 17:30 please. Any table is fine." }
+    ],
+    "expectedCall": [
+      { "functionName": "search_availability",
+        "arguments": { "date": "2026-11-28", "partySize": 5 }, "optional": true },
+      { "functionName": "book_table",
+        "arguments": { "date": "2026-11-28", "time": "17:30", "partySize": 5 } }
+    ],
+    "assertions": [
+      { "type": "dom", "selector": "#my-bookings li", "expect": { "count": 1 } }
+    ]
+  }
+]

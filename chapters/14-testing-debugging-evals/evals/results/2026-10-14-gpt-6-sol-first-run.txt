@@ -1,0 +1,40 @@
+ 100%  5/5  Find a table for two on a named date
+ 100%  5/5  Search, then book the slot the user asked for
+   0%  0/5  Children count as guests
+        ✗ expected book_table; got search_availability({"date":"2026-11-28","time":"17:00","partySize":5})
+{
+  "agent": "chat",
+  "model": "gpt-6-sol",
+  "runs": 5,
+  "chromium": "156.0.8078.4",
+  "date": "2026-10-14T22:31:47.042Z",
+  "report": [
+    {
+      "name": "Find a table for two on a named date",
+      "runs": 5,
+      "passed": 5,
+      "failures": [],
+      "passRate": 1
+    },
+    {
+      "name": "Search, then book the slot the user asked for",
+      "runs": 5,
+      "passed": 5,
+      "failures": [],
+      "passRate": 1
+    },
+    {
+      "name": "Children count as guests",
+      "runs": 5,
+      "passed": 0,
+      "failures": [
+        "expected book_table; got search_availability({\"date\":\"2026-11-28\",\"time\":\"17:00\",\"partySize\":5})",
+        "expected book_table; got search_availability({\"date\":\"2026-11-28\",\"time\":\"17:00\",\"partySize\":5})",
+        "expected book_table; got search_availability({\"date\":\"2026-11-28\",\"time\":\"17:00\",\"partySize\":5})",
+        "expected book_table; got search_availability({\"date\":\"2026-11-28\",\"time\":\"17:00\",\"partySize\":5})",
+        "expected book_table; got search_availability({\"date\":\"2026-11-28\",\"time\":\"17:00\",\"partySize\":5})"
+      ],
+      "passRate": 0
+    }
+  ]
+}

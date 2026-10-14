@@ -1,0 +1,14 @@
+{
+  "name": "webmcp-book-ch14-testing-debugging-evals",
+  "private": true,
+  "type": "module",
+  "description": "Chapter 14 examples: testing, debugging and evals for WebMCP tools",
+  "scripts": {
+    "test": "node tests/run-all.js",
+    "test:unit": "node --test tests/*.test.js",
+    "evals": "node evals/run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}

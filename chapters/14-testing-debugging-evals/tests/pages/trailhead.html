@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Trailhead tools test page</title>
+<!-- Support page for tests/rum.test.js (not a listing): Trailhead's tools with fake
+     dependencies, wrapped by instrumentTool() and registered on document.modelContext. -->
+<p id="status">loading</p>
+<script type="module">
+  import { createTrailheadTools } from '../../trailhead-tools.js';
+  import { instrumentTool } from '../../instrument-tool.js';
+  import { fakeCatalog, fakeCart, recordingUi } from '../fixtures/fakes.js';
+
+  const catalog = fakeCatalog();
+  const slowCatalog = { ...catalog, search: (q, { signal }) => new Promise((_, reject) =>
+    signal.addEventListener('abort', () => reject(signal.reason))) };
+  window.rum = [];
+  window.activated = [];
+  const report = (event) => window.rum.push(event);
+  const deps = { catalog, cart: fakeCart(), ui: recordingUi() };
+  const [search, addToCart] = createTrailheadTools(deps);
+  const [slowSearch] = createTrailheadTools({ ...deps, catalog: slowCatalog });
+
+  if ('modelContext' in document) {
+    document.modelContext.addEventListener?.('toolactivated', (e) => window.activated.push(e.toolName));
+    const signal = new AbortController().signal;
+    for (const tool of [search, addToCart, { ...slowSearch, name: 'search_products_slow' }])
+      await document.modelContext.registerTool(instrumentTool(tool, report), { signal });
+    document.querySelector('#status').textContent = 'ready';
+  } else {
+    document.querySelector('#status').textContent = 'no WebMCP';
+  }
+</script>
