@@ -158,14 +158,14 @@ for (const [label, browser] of [['chromium', real]]) {
     assert.equal(await page.evaluate(() => window.trailhead.orders.placed.length), 0);
     await context.close();
   });
-  await test(`${label}: checkout with an empty cart returns an EMPTY_CART error`, async () => {
+  await test(`${label}: checkout with an empty cart returns a CART_EMPTY error`, async () => {
     const { page, context } = await open(browser);
     await signIn(page);
     await page.evaluate(() => window.trailhead.cart.clear());
     await startCheckout(page);
     const r = await result(page);
     assert.equal(r.status, 'error');
-    assert.equal(r.code, 'EMPTY_CART');
+    assert.equal(r.code, 'CART_EMPTY');
     assert.equal(await page.evaluate(() => !!document.querySelector('#confirm-sheet').open), false);
     await context.close();
   });

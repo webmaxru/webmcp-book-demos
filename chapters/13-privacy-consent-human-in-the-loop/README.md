@@ -41,7 +41,7 @@ The test runner serves the page as `https://shop.trailhead.example` through Play
   - `get_cart` returns exactly `lines`, `total` (7,297 NOK), `shipTo: "Oslo 0150"` and `payWith: "Visa ending 4242"`.
   - `checkout` opens the sheet with focus on its heading; a scripted `click()` and a trusted click before the arming delay do nothing; after the delay, a Playwright click places order `TH-100200`. That Playwright click is `isTrusted: true`, which is the point of the chapter's section on issue #288.
   - Back and Esc both return `{ status: "cancelled_by_user", message }` (Chapter 11's convention) and place nothing.
-  - Checkout with an empty cart returns `{ status: "error", code: "EMPTY_CART", message }` and opens no sheet.
+  - Checkout with an empty cart returns `{ status: "error", code: "CART_EMPTY", message }` and opens no sheet.
   - The caller aborting closes the sheet, rejects with `AbortError` and the banner says the assistant stopped.
   - Signing out mid-checkout returns `{ status: "refused", code: "SESSION_ENDED", message }`.
   - A tool call does not give the page user activation (`isActive` and `hasBeenActive` both `false` inside `execute`). Note: Playwright's `evaluate()`/`waitForFunction()` count as user gestures, so this probe runs entirely from page script.

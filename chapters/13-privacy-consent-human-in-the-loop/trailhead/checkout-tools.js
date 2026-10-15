@@ -32,7 +32,7 @@ export async function registerCheckoutTools({ cart, account, orders, signal }) {
     annotations: { consequentialHint: true },
     async execute(_input, { signal: call }) {
       if (cart.lines().length === 0) {
-        return { status: 'error', code: 'EMPTY_CART',
+        return { status: 'error', code: 'CART_EMPTY',
                  message: 'The cart is empty. Add items with add_to_cart first.' };
       }
       // Stop waiting if the agent cancels OR the user signs out: unregistering a tool
