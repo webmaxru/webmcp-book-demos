@@ -21,7 +21,7 @@ export function createTrailheadTools({ catalog, cart, ui }) {
     annotations: { readOnlyHint: true },
     async execute(input, { signal }) {
       const problem = checkSearchInput(input);              // the browser won't check
-      if (problem) return { error: 'invalid_input', message: problem };
+      if (problem) return { status: 'error', code: 'INVALID_ARGUMENT', message: problem };
       const hits = await catalog.search(input, { signal });
       ui.showResults(hits);                                 // the user sees it too
       return {
@@ -39,7 +39,7 @@ export function createTrailheadTools({ catalog, cart, ui }) {
     title: 'Add to cart',
     description:
       'Add a product to the cart by its SKU from search_products. ' +
-      'Returns the updated cart line, or an error the agent can recover from.',
+      'Returns the updated cart line, or a status and code saying why not.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -50,15 +50,16 @@ export function createTrailheadTools({ catalog, cart, ui }) {
     },
     async execute({ sku, quantity }, { signal }) {
       if (typeof sku !== 'string' || sku === '')
-        return { error: 'invalid_input', message: 'sku must be a SKU from search_products.' };
+        return { status: 'error', code: 'INVALID_ARGUMENT', message: 'sku must be a SKU from search_products.' };
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10)
-        return { error: 'invalid_input', message: 'quantity must be a whole number from 1 to 10.' };
+        return { status: 'error', code: 'INVALID_ARGUMENT', message: 'quantity must be a whole number from 1 to 10.' };
       const product = await catalog.get(sku, { signal });
       if (!product)
-        return { error: 'unknown_sku', message: `No product ${sku}. Call search_products first.` };
+        return { status: 'error', code: 'UNKNOWN_SKU', message: `No product ${sku}. Call search_products first.` };
       if (product.stock < quantity)
-        return { error: 'out_of_stock', available: product.stock,
-                 message: `Only ${product.stock} of ${product.name} in stock.` };
+        return { status: 'refused', code: 'OUT_OF_STOCK',
+                 message: `Only ${product.stock} of ${product.name} in stock. Ask the user before adding fewer.`,
+                 available: product.stock };
       const line = cart.add(product, quantity);
       ui.showCart(cart);
       return { sku, quantity: line.quantity,

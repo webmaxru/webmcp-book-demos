@@ -30,7 +30,8 @@ test('input the schema forbids comes back as a value, not a throw', async () => 
   for (const input of [{}, { query: '' }, { query: 'tent', maxPrice: '3000' },
                        { query: 'tent', category: 'kayaks' }]) {
     const result = await run(search, input);
-    assert.equal(result.error, 'invalid_input', JSON.stringify(input));
+    assert.equal(result.status, 'error', JSON.stringify(input));
+    assert.equal(result.code, 'INVALID_ARGUMENT');
     assert.match(result.message, /must/);                    // tells the agent how to fix it
   }
   assert.equal(catalog.searches, 0);                         // never reached the backend
@@ -39,7 +40,8 @@ test('input the schema forbids comes back as a value, not a throw', async () => 
 test('add_to_cart explains a stock problem the agent can act on', async () => {
   const { addToCart } = setup();
   const result = await run(addToCart, { sku: 'TH-TENT-2P', quantity: 9 });
-  assert.equal(result.error, 'out_of_stock');
+  assert.equal(result.status, 'refused');
+  assert.equal(result.code, 'OUT_OF_STOCK');
   assert.equal(result.available, 3);
 });
 

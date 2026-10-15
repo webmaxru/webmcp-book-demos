@@ -26,6 +26,7 @@ Support code (not printed in the book):
 | `tests/pages/trailhead.html` | Test page that registers instrumented Trailhead tools |
 | `tests/rum.test.js` | Tests for Listing 14.8, with the dev mock and with Chromium's own WebMCP |
 | `tests/evals.test.js` | Tests for Listings 14.5–14.7 against the live Fjord Table page |
+| `tests/test-agent.test.js` | Chapter 9's Test Agent (`../09-first-webmcp-app/test-agent.js`, unchanged) with a scripted planner, booking in the Fjord Table page from inside it |
 | `evals/fjord-table-page.js` | Opens Fjord Table's booking view with the CDP driver attached and plays the person who confirms |
 | `evals/chat-agent.js` | Agent adapter for any OpenAI-compatible Chat Completions endpoint |
 | `evals/run.js` | Command line for running the suite with a scripted or real agent |
@@ -43,17 +44,18 @@ npx playwright install chromium
 npm test
 ```
 
-`npm test` runs, in order: `node --check` on every JavaScript file; the unit tests; the RUM tests with the mock; the RUM tests with Chromium's own WebMCP; the Fjord Table protocol tests; and the eval-harness tests. The last three launch Chromium with `--enable-features=WebMCPTesting` (the switch behind `chrome://flags/#enable-webmcp-testing`). The protocol tests need a real Chromium: the DevTools Protocol's `WebMCP` domain has no mock.
+`npm test` runs, in order: `node --check` on every JavaScript file; the unit tests; the RUM tests with the mock; the RUM tests with Chromium's own WebMCP; the Fjord Table protocol tests; the eval-harness tests; and Chapter 9's Test Agent in the page. The last four launch Chromium with `--enable-features=WebMCPTesting` (the switch behind `chrome://flags/#enable-webmcp-testing`). The protocol tests need a real Chromium: the DevTools Protocol's `WebMCP` domain has no mock.
 
-Result on 14 October 2026 (Node 22.23, Playwright 1.64, Chromium 156.0.8078.4):
+Result on 15 October 2026, re-run from a fresh clone during the technical review, after the Trailhead tools and `instrumentTool()` adopted Chapter 11's result convention and Fjord Table's `book_table` moved to it (Node 22.23, Playwright 1.64, Chromium 156.0.8078.4):
 
 ```
-ok   node --check … (16 files)
+ok   node --check … (17 files)
 ok   unit tests  (pass 4, fail 0)
 ok   RUM, mock WebMCP  (pass 3, fail 0)
 ok   RUM, Chromium WebMCP  (pass 4, fail 0)
 ok   Fjord Table over CDP  (pass 3, fail 0)
 ok   eval harness  (pass 5, fail 0)
+ok   Test Agent (Chapter 9), in the page  (pass 2, fail 0)
 
 all checks passed
 ```
@@ -74,7 +76,7 @@ EVAL_BASE_URL=https://api.openai.com/v1 EVAL_API_KEY=… EVAL_MODEL=… \
 
 Five runs of three cases against one model is a smoke test, not a benchmark.
 
-## Observed in Chromium 156 (14 October 2026)
+## Observed in Chromium 156 (14 October 2026, re-confirmed 15 October 2026)
 
 - `WebMCP.toolsAdded` fires once per registration, with `frameId` and the registration's stack trace; `WebMCP.enable` replays it for tools already registered.
 - `invokeTool` with an unknown tool name fails the command with `Tool not found`.

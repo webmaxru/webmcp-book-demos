@@ -5,7 +5,8 @@
 //  4. the same with Chromium's own WebMCP           WEBMCP=chrome tests/rum.test.js
 //  5. Fjord Table over the WebMCP DevTools domain   tests/fjord-table.cdp.test.js
 //  6. the eval harness with scripted agents         tests/evals.test.js
-// Steps 4-6 launch Chromium with --enable-features=WebMCPTesting.
+//  7. Chapter 9's Test Agent, scripted, in the page tests/test-agent.test.js
+// Steps 4-7 launch Chromium with --enable-features=WebMCPTesting.
 import { spawnSync } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -24,7 +25,8 @@ const steps = [
   ['RUM, mock WebMCP', ['--test', 'tests/rum.test.js'], {}],
   ['RUM, Chromium WebMCP', ['--test', 'tests/rum.test.js'], { WEBMCP: 'chrome' }],
   ['Fjord Table over CDP', ['--test', 'tests/fjord-table.cdp.test.js'], {}],
-  ['eval harness', ['--test', 'tests/evals.test.js'], {}]
+  ['eval harness', ['--test', 'tests/evals.test.js'], {}],
+  ['Test Agent (Chapter 9), in the page', ['--test', 'tests/test-agent.test.js'], {}]
 ];
 
 let failed = 0;

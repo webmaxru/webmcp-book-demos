@@ -37,10 +37,13 @@ test(`[${REAL ? 'chrome' : 'mock'}] a successful call is recorded as ok, with a 
   assert.equal(JSON.stringify(event).includes('tent'), false);   // no inputs leave the page
 });
 
-test(`[${REAL ? 'chrome' : 'mock'}] a failure returned as a value is recorded as recoverable`, async () => {
+test(`[${REAL ? 'chrome' : 'mock'}] a failure returned as a value is recorded with its status and code`, async () => {
   await call('add_to_cart', { sku: 'TH-TENT-4P', quantity: 1 });
   assert.deepEqual(await lastEvent().then(({ outcome, code }) => ({ outcome, code })),
-                   { outcome: 'recoverable', code: 'out_of_stock' });
+                   { outcome: 'refused', code: 'OUT_OF_STOCK' });
+  await call('add_to_cart', { sku: 'TH-TENT-2P', quantity: 0 });
+  assert.deepEqual(await lastEvent().then(({ outcome, code }) => ({ outcome, code })),
+                   { outcome: 'error', code: 'INVALID_ARGUMENT' });
 });
 
 test(`[${REAL ? 'chrome' : 'mock'}] a call the agent abandons is recorded as aborted`, async () => {
@@ -53,5 +56,5 @@ test(`[${REAL ? 'chrome' : 'mock'}] a call the agent abandons is recorded as abo
 test(`[${REAL ? 'chrome' : 'mock'}] toolactivated fired once per call`, { skip: !REAL && 'Chromium only' },
   async () => {
     const activated = await page.evaluate(() => window.activated);
-    assert.deepEqual(activated, ['search_products', 'add_to_cart', 'search_products_slow']);
+    assert.deepEqual(activated, ['search_products', 'add_to_cart', 'add_to_cart', 'search_products_slow']);
   });

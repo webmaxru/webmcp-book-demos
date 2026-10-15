@@ -46,7 +46,8 @@ test('bad input is answered with a value the agent can fix', async () => {
   const { status, output } =
     await webmcp.invoke('book_table', { date: '20/11/2026', time: '19:00', partySize: 2 });
   assert.equal(status, 'Completed');                       // not an Error
-  assert.equal(output.status, 'invalid_input');
+  assert.equal(output.status, 'error');
+  assert.equal(output.code, 'INVALID_INPUT');
   assert.match(output.message, /YYYY-MM-DD/);
 });
 

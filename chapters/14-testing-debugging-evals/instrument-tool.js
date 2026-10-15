@@ -1,6 +1,10 @@
 // Real-user measurement for WebMCP tools: wrap execute() to record how each
 // call ended and how long it took. No inputs or outputs leave the page.
-export function instrumentTool(tool, report, { failureCode = (r) => r?.error } = {}) {
+
+// Chapter 11's statuses for a call that returned without doing what was asked.
+const FELL_SHORT = ['error', 'refused', 'needs_input', 'cancelled_by_user'];
+
+export function instrumentTool(tool, report) {
   const execute = tool.execute;
   return {
     ...tool,
@@ -9,11 +13,11 @@ export function instrumentTool(tool, report, { failureCode = (r) => r?.error } =
       const event = { tool: tool.name, outcome: 'ok', page: location.pathname };
       try {
         const result = await execute.call(tool, input, options);
-        const code = failureCode(result);                  // a failure returned as a value
-        if (code) Object.assign(event, { outcome: 'recoverable', code: String(code) });
+        if (FELL_SHORT.includes(result?.status))           // a failure returned as a value
+          Object.assign(event, { outcome: result.status, code: result.code ?? null });
         return result;
       } catch (err) {
-        event.outcome = options.signal.aborted ? 'aborted' : 'thrown';
+        event.outcome = options.signal.aborted ? 'aborted' : 'threw';
         event.code = err?.name ?? 'Error';
         throw err;
       } finally {
