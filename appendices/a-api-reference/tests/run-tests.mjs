@@ -64,6 +64,7 @@ await new Promise((r) => setTimeout(r, 200));
 
 // --- Chromium probes ---------------------------------------------------------
 const out = {};
+let crashed = false, reentrant = null; // set by the re-entrant registration probe
 const browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
 try {
 
@@ -184,7 +185,19 @@ out.declarative = await page.evaluate(async () => {
 });
 
 } finally {
-  await browser.close();
+  // Re-registering the same name while inputSchema is being serialized (the draft's
+// 15 October 2026 re-check, PR #347). Run in its own page: Chromium 156 crashes it.
+const crashPage = await browser.newPage();
+crashPage.on('crash', () => { crashed = true; });
+await crashPage.goto('http://localhost:8611/');
+reentrant = await crashPage.evaluate(async () => {
+  const mc = document.modelContext;
+  const ok = (n) => ({ name: n, description: 'd', execute: () => 1 });
+  let inner;
+  const outer = mc.registerTool({ ...ok('x'), inputSchema: { toJSON() { inner = mc.registerTool(ok('x')); return { type: 'object' }; } } });
+  return { outer: await outer.then(() => 'resolved', (e) => e.name), inner: await inner.then(() => 'resolved', (e) => e.name) };
+}).catch((e) => 'evaluate failed: ' + e.message.split('\n')[0]);
+await browser.close();
   servers.forEach((s) => s.close());
 }
 
@@ -259,6 +272,10 @@ await test('declarative <form toolname> still registers a tool in Chromium 156',
   assert.equal(out.declarative.length, 1);
   assert.equal(out.declarative[0].name, 'search_availability');
   assert.deepEqual(out.declarative[0].schema.required, ['date', 'partySize']);
+});
+
+await test('Chromium differs: re-registering the name during inputSchema serialization crashes the renderer (draft: InvalidStateError)', () => {
+  assert.equal(crashed, true, JSON.stringify(reentrant));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

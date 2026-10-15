@@ -22,6 +22,6 @@ The test starts two local origins (`http://localhost:8611` and `http://127.0.0.1
 
 ## Result (15 October 2026, tech review)
 
-24 of 24 checks pass in Chromium 156.0.8078.4 (Playwright 1.64) with `WebMCPTesting`.
+25 of 25 checks pass in Chromium 156.0.8078.4 (Playwright 1.64) with `WebMCPTesting`.
 
-The checks named "Chromium differs" pin today's differences from the draft (`UnknownError` where the draft says `NotFoundError`, `OperationError` or `AbortError`; `undefined` and `BigInt` results resolving where the draft rejects). When Chromium catches up with the draft, those checks will fail on purpose: update Table A.5 and Table A.7 in the book at the same time.
+The checks named "Chromium differs" pin today's differences from the draft (`UnknownError` where the draft says `NotFoundError`, `OperationError` or `AbortError`; `undefined` and `BigInt` results resolving where the draft rejects). One check pins a crash: registering a second tool with the same name from inside an `inputSchema`'s `toJSON()` (the case the draft's 15 October re-check, PR #347, covers) crashes the page's renderer in Chromium 156. When Chromium catches up with the draft, those checks will fail on purpose: update Table A.5 and Table A.7 in the book at the same time.
