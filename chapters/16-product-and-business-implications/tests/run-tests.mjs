@@ -1,7 +1,7 @@
 // tests/run-tests.mjs: checks for the chapter 16 listings.
 // Run from this folder:  npm install && npx playwright install chromium && npm test
 //
-// 1. Listing 16.2 against Listing 16.1, in Node (the budget check a CI job would run).
+// 1. Listing 16.5 against Listing 16.1, in Node (the budget check a CI job would run).
 // 2. The page (tests/index.html + dist/), in Chromium:
 //      npm test             WebMCP comes from dev/model-context-mock.js, injected before the page loads
 //      npm run test:chrome  WebMCP comes from Chromium itself (--enable-features=WebMCPTesting); no mock
@@ -25,11 +25,11 @@ async function test(name, fn) {
 const { toolCatalog } = await import(pathToFileURL(join(ROOT, 'dist/tool-catalog.js')));
 const { checkBudgets, BUDGET } = await import(pathToFileURL(join(ROOT, 'dist/check-budgets.js')));
 
-await test('Listing 16.2: the Trailhead catalog is within Chrome\'s budgets', () => {
+await test('Listing 16.5: the Trailhead catalog is within Chrome\'s budgets', () => {
   assert.deepEqual(checkBudgets(toolCatalog), []);
   assert.deepEqual(BUDGET, { name: 30, description: 500, parameterDescription: 150 });
 });
-await test('Listing 16.2: catches a long description, a duplicate and a missing owner', () => {
+await test('Listing 16.5: catches a long description, a duplicate and a missing owner', () => {
   const bad = [
     { ...toolCatalog[0], description: 'x'.repeat(501) },
     { ...toolCatalog[0], owner: '' },
@@ -43,6 +43,19 @@ await test('Listing 16.1: names follow the spec\'s name rule and match the book\
   for (const t of toolCatalog) assert.match(t.name, /^[A-Za-z0-9_.\-]{1,128}$/);
   assert.deepEqual(toolCatalog.map((t) => t.name), ['search_products', 'compare_products', 'add_to_cart', 'get_cart', 'checkout']);
   assert.equal(toolCatalog.find((t) => t.name === 'checkout').annotations.consequentialHint, true);
+});
+
+// Listings in the chapter vs. the files here (byte for byte, apart from the final newline).
+await test('listings: each listing in the chapter matches its file in src/', async () => {
+  const md = process.env.CHAPTER_MD;
+  if (!md) { console.log('     (skipped: set CHAPTER_MD to the chapter Markdown)'); return; }
+  const text = await readFile(md, 'utf8');
+  const found = [...text.matchAll(/\*\*Listing (16\.\d) — [^*]*?\(([^)]+)\)\*\*\s*\n\s*```[a-z]*\n([\s\S]*?)\n```/g)];
+  assert.equal(found.length, 5, 'five listings');
+  for (const [, n, file, code] of found) {
+    const src = (await readFile(join(ROOT, 'src', file), 'utf8')).replace(/\n$/, '');
+    assert.equal(code, src, `Listing ${n} vs src/${file}`);
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -95,7 +108,7 @@ const activated = [];
 await page.exposeFunction('__activated', (n) => activated.push(n));
 await page.evaluate(() => document.modelContext.addEventListener('toolactivated', (e) => window.__activated(e.toolName)));
 
-await test('Listing 16.5: the catalog registers five tools with their annotations', async () => {
+await test('Listing 16.4: the catalog registers five tools with their annotations', async () => {
   const tools = await page.evaluate(async () => (await document.modelContext.getTools())
     .map((t) => ({ name: t.name, title: t.title, ro: t.annotations?.readOnlyHint === true, cq: t.annotations?.consequentialHint === true })));
   // getTools() order is not specified: the mock keeps registration order, Chromium 156 sorts by name.
@@ -106,7 +119,7 @@ await test('Listing 16.5: the catalog registers five tools with their annotation
   assert.equal(tools.find((t) => t.name === 'search_products').title, 'Search products');
 });
 
-await test('Listing 16.3: a successful call is recorded as ok, with a duration', async () => {
+await test('Listing 16.2: a successful call is recorded as ok, with a duration', async () => {
   const r = await call(page, 'search_products', { query: 'tent', maxPrice: 4000 });
   assert.deepEqual(JSON.parse(r.json).products.map((p) => p.sku), ['TH-TENT-2P']);
   const last = (await records(page)).at(-1);
@@ -114,23 +127,32 @@ await test('Listing 16.3: a successful call is recorded as ok, with a duration',
   assert.equal(typeof last.ms, 'number');
 });
 
-await test('Listing 16.3: a recoverable failure is recorded with its code, and still returned to the agent', async () => {
+await test('Listing 16.2: a refused call (out of stock) is recorded with its status and code, and still returned to the agent', async () => {
   const r = await call(page, 'add_to_cart', { sku: 'TH-TENT-UL1', quantity: 1 });
-  assert.equal(JSON.parse(r.json).error.code, 'out_of_stock');
+  const result = JSON.parse(r.json);
+  assert.deepEqual([result.status, result.code], ['refused', 'OUT_OF_STOCK']);
+  assert.equal(typeof result.message, 'string');
   const last = (await records(page)).at(-1);
-  assert.deepEqual([last.tool, last.outcome, last.code], ['add_to_cart', 'recoverable', 'out_of_stock']);
+  assert.deepEqual([last.tool, last.outcome, last.code], ['add_to_cart', 'refused', 'OUT_OF_STOCK']);
 });
 
-await test('Listing 16.3: a thrown error is recorded as error, and the call still rejects', async () => {
+await test('Listing 16.2: an agent-fixable error is recorded as error with its code', async () => {
+  const r = await call(page, 'compare_products', { skus: ['TH-TENT-2P', 'NO-SUCH-SKU'] });
+  assert.deepEqual([JSON.parse(r.json).status, JSON.parse(r.json).code], ['error', 'UNKNOWN_SKU']);
+  const last = (await records(page)).at(-1);
+  assert.deepEqual([last.tool, last.outcome, last.code], ['compare_products', 'error', 'UNKNOWN_SKU']);
+});
+
+await test('Listing 16.2: a thrown error is recorded as threw, and the call still rejects', async () => {
   await page.evaluate(() => window.__trailhead.breakHandlerForTest('compare_products'));
   const r = await call(page, 'compare_products', { skus: ['TH-TENT-2P', 'TH-BAG-M5'] });
   assert.ok(r.rejected, 'executeTool should reject');
   console.log(`     (executeTool rejected with ${r.rejected})`);
   const last = (await records(page)).at(-1);
-  assert.deepEqual([last.tool, last.outcome], ['compare_products', 'error']);
+  assert.deepEqual([last.tool, last.outcome], ['compare_products', 'threw']);
 });
 
-await test('Listing 16.3: an aborted call is recorded as cancelled (wrapper called directly)', async () => {
+await test('Listing 16.2: an aborted call is recorded as cancelled (wrapper called directly)', async () => {
   const outcome = await page.evaluate(async () => {
     const { withMeasurement } = await import('/dist/measure.js');
     let seen;
@@ -147,7 +169,7 @@ await test('Listing 16.3: an aborted call is recorded as cancelled (wrapper call
   assert.equal(outcome, 'cancelled');
 });
 
-await test('Listing 16.4: an order placed after agent help carries the tools that helped', async () => {
+await test('Listing 16.3: an order placed after agent help carries the tools that helped', async () => {
   JSON.parse((await call(page, 'add_to_cart', { sku: 'TH-BAG-M5', quantity: 1 })).json);
   const r = JSON.parse((await call(page, 'checkout', {})).json);
   assert.equal(r.status, 'awaiting_customer');
@@ -157,7 +179,7 @@ await test('Listing 16.4: an order placed after agent help carries the tools tha
   assert.deepEqual(order.toolsUsed.sort(), ['add_to_cart', 'checkout', 'search_products']);
 });
 
-await test('Listing 16.4: an order with no agent help is not attributed', async () => {
+await test('Listing 16.3: an order with no agent help is not attributed', async () => {
   const { page: p2, context: c2 } = await open({ withWebMCP: true });
   await p2.evaluate(() => { document.querySelector('#view').innerHTML = '<button id="place-order">Place order</button>'; });
   await p2.click('#place-order');

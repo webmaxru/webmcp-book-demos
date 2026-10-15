@@ -13,7 +13,9 @@ const PRODUCTS: Product[] = [
 ];
 const cart = new Map<string, number>();
 const nok = (amount: number) => ({ amount, currency: 'NOK' as const });
-const fail = (code: string, message: string) => ({ error: { code, message } });
+// Chapter 11's result convention: `status` says who acts next, `code` is stable.
+const fail = (code: string, message: string) => ({ status: 'error' as const, code, message });
+const refuse = (code: string, message: string) => ({ status: 'refused' as const, code, message });
 const show = (html: string) => { const el = document.querySelector('#view'); if (el) el.innerHTML = html; };
 function cartTotal() { let t = 0; for (const [sku, q] of cart) t += (PRODUCTS.find((p) => p.sku === sku)?.price ?? 0) * q; return t; }
 
@@ -39,18 +41,18 @@ export const handlers: Record<ToolName, WebMCP.ToolExecuteCallback> = {
   },
   async compare_products(input) {
     const skus = Array.isArray(input.skus) ? input.skus.map(String) : [];
-    if (skus.length < 2 || skus.length > 4) return fail('invalid_input', 'Compare 2 to 4 SKUs.');
+    if (skus.length < 2 || skus.length > 4) return fail('INVALID_INPUT', 'Compare 2 to 4 SKUs.');
     const rows = skus.map((sku) => PRODUCTS.find((p) => p.sku === sku));
-    if (rows.includes(undefined)) return fail('unknown_sku', 'One or more SKUs do not exist.');
+    if (rows.includes(undefined)) return fail('UNKNOWN_SKU', 'One or more SKUs do not exist.');
     show('<table id="compare"></table>');
     return { rows: rows.map((p) => ({ sku: p!.sku, price: nok(p!.price), weightG: p!.weightG, rating: p!.rating, inStock: p!.stock > 0 })) };
   },
   async add_to_cart(input) {
     const product = PRODUCTS.find((p) => p.sku === input.sku);
     const quantity = Number(input.quantity);
-    if (!product) return fail('unknown_sku', `No product with SKU ${String(input.sku)}.`);
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) return fail('invalid_input', 'Quantity must be 1 to 10.');
-    if (product.stock < (cart.get(product.sku) ?? 0) + quantity) return fail('out_of_stock', `${product.name} is out of stock.`);
+    if (!product) return fail('UNKNOWN_SKU', `No product with SKU ${String(input.sku)}.`);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) return fail('INVALID_INPUT', 'Quantity must be 1 to 10.');
+    if (product.stock < (cart.get(product.sku) ?? 0) + quantity) return refuse('OUT_OF_STOCK', `${product.name} is out of stock.`);
     cart.set(product.sku, (cart.get(product.sku) ?? 0) + quantity);
     const badge = document.querySelector('#cart-count'); if (badge) badge.textContent = String([...cart.values()].reduce((a, b) => a + b, 0));
     return { cartTotal: nok(cartTotal()) };
@@ -59,14 +61,14 @@ export const handlers: Record<ToolName, WebMCP.ToolExecuteCallback> = {
     return { items: [...cart].map(([sku, quantity]) => ({ sku, quantity })), total: nok(cartTotal()) };
   },
   async checkout(_input, { signal }) {
-    if (cart.size === 0) return fail('empty_cart', 'The cart is empty.');
+    if (cart.size === 0) return fail('EMPTY_CART', 'The cart is empty.');
     show('<section id="checkout"><p>Review your order</p><button id="place-order">Place order</button></section>');
     if (signal.aborted) throw signal.reason;
     return { status: 'awaiting_customer', total: nok(cartTotal()) };
   },
 };
 
-// Test hook: lets the test make a handler throw, to see the 'error' outcome.
+// Test hook: lets the test make a handler throw, to see the 'threw' outcome.
 export function breakHandlerForTest(name: ToolName): void {
   handlers[name] = async () => { throw new Error('backend unavailable'); };
 }
