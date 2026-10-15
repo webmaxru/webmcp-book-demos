@@ -14,12 +14,12 @@ export const searchProductsSchema = {
 } as const;
 
 export function searchProductsTool({ query, category, maxPrice, inStockOnly }: Record<string, unknown>) {
-  if (typeof query !== 'string') return { error: 'query must be a string.' };
+  if (typeof query !== 'string') return { status: 'error', code: 'INVALID_ARGUMENT', message: 'query must be a string.' };
   if (category !== undefined && !CATEGORIES.includes(category as Category)) {
-    return { error: `category must be one of: ${CATEGORIES.join(', ')}.` };
+    return { status: 'error', code: 'INVALID_ARGUMENT', message: `category must be one of: ${CATEGORIES.join(', ')}.` };
   }
   if (maxPrice !== undefined && (typeof maxPrice !== 'number' || maxPrice < 0)) {
-    return { error: 'maxPrice must be a non-negative number of NOK.' };
+    return { status: 'error', code: 'INVALID_ARGUMENT', message: 'maxPrice must be a non-negative number of NOK.' };
   }
   const products = searchProducts({
     query,

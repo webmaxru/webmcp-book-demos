@@ -53,7 +53,7 @@ await test('Listing 10.9: search_products is registered for the whole app and ru
   const r = await call('search_products', { query: 'tent', maxPrice: 5000 });
   eq(r.products.map((p) => p.sku), ['TH-TENT-01', 'TH-TENT-03'], 'tents under 5000 NOK');
   const bad = await call('search_products', { query: 'tent', category: 'kayaks' });
-  if (!/category must be one of/.test(bad.error)) throw new Error(JSON.stringify(bad));
+  if (bad.status !== 'error' || bad.code !== 'INVALID_ARGUMENT' || !/category must be one of/.test(bad.message)) throw new Error(JSON.stringify(bad));
 });
 
 await test('Listing 10.10: get_cart exists only while /cart is active (withAutoCleanupInjectors)', async () => {

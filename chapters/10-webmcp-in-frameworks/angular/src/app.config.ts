@@ -25,9 +25,9 @@ export const appConfig: ApplicationConfig = {
         },
         annotations: { readOnlyHint: true },
         execute: ({ query, category, maxPrice }) => {
-          if (typeof query !== 'string') return { error: 'query must be a string.' };
+          if (typeof query !== 'string') return { status: 'error', code: 'INVALID_ARGUMENT', message: 'query must be a string.' };
           if (category !== undefined && !CATEGORIES.includes(category)) {
-            return { error: `category must be one of: ${CATEGORIES.join(', ')}.` };
+            return { status: 'error', code: 'INVALID_ARGUMENT', message: `category must be one of: ${CATEGORIES.join(', ')}.` };
           }
           return { products: inject(CatalogService).search({ query, category, maxPrice }) };
         },

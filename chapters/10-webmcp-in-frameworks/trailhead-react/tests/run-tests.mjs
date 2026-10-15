@@ -116,7 +116,8 @@ await test('search_products returns NOK products and reports bad input as a valu
   eq(r.products.map((p) => p.sku), ['TH-SB-02'], 'cheap sleeping bags');
   eq(r.products[0].price, { amount: 1299, currency: 'NOK' }, 'price shape');
   const bad = await call(page, 'search_products', { query: 'tent', category: 'kayaks' });
-  assert(/category must be one of/.test(bad.error), `expected a category error, got ${JSON.stringify(bad)}`);
+  eq([bad.status, bad.code], ['error', 'INVALID_ARGUMENT'], 'bad category is an error result');
+  assert(/category must be one of/.test(bad.message), `expected a category error, got ${JSON.stringify(bad)}`);
   await close();
 });
 
@@ -130,9 +131,11 @@ await test('add_to_cart and get_cart share the store with the UI (header updates
   const cart = await call(page, 'get_cart');
   eq(cart.lines.map((l) => [l.sku, l.quantity]), [['TH-SB-01', 2], ['TH-CL-02', 1]], 'agent sees the person\'s item');
   const oos = await call(page, 'add_to_cart', { sku: 'TH-TENT-03', quantity: 1 });
-  eq(oos, { error: 'TH-TENT-03 is out of stock.' }, 'out of stock');
+  eq([oos.status, oos.code], ['refused', 'OUT_OF_STOCK'], 'out of stock is a refusal');
+  assert(/TH-TENT-03 is out of stock/.test(oos.message), 'out-of-stock message');
   const big = await call(page, 'add_to_cart', { sku: 'TH-SB-01', quantity: 50 });
-  assert(/quantity must be/.test(big.error), 'quantity validated in code');
+  eq([big.status, big.code], ['error', 'INVALID_ARGUMENT'], 'quantity error result');
+  assert(/quantity must be/.test(big.message), 'quantity validated in code');
   await close();
 });
 
@@ -144,7 +147,8 @@ await test('compare_products returns table data and shows the comparison to the 
   await page.waitForURL(/\/compare\?skus=TH-FW-01,TH-FW-02$/);
   await page.getByRole('heading', { name: 'Compare' }).waitFor();
   const bad = await call(page, 'compare_products', { skus: ['TH-FW-01', 'NOPE'] });
-  assert(/Unknown SKU/.test(bad.error), 'unknown sku reported');
+  eq([bad.status, bad.code], ['error', 'UNKNOWN_SKU'], 'unknown sku is an error result');
+  assert(/Unknown SKU/.test(bad.message), 'unknown sku reported');
   await close();
 });
 
@@ -162,7 +166,7 @@ await test('checkout exists only on the cart route, and only with items in the c
   await close();
 });
 
-await test('checkout waits for the person: Cancel returns "cancelled", Place order returns an order ID', async () => {
+await test('checkout waits for the person: Cancel returns "cancelled_by_user", Place order returns an order ID', async () => {
   const { page, close } = await open(webmcp);
   await waitForTools(page, (n) => n.length === 4, 'ready');
   await call(page, 'add_to_cart', { sku: 'TH-TENT-01', quantity: 1 });
@@ -172,7 +176,7 @@ await test('checkout waits for the person: Cancel returns "cancelled", Place ord
   await page.getByRole('dialog').waitFor();
   assert(!(await isSettled(page)), 'checkout must not settle before the person answers');
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
-  eq((await settle(page)).ok.status, 'cancelled', 'cancel');
+  eq((await settle(page)).ok.status, 'cancelled_by_user', 'cancel');
   await startCall(page, 'checkout');
   await page.getByRole('dialog').getByRole('button', { name: 'Place order' }).click();
   const placed = (await settle(page)).ok;

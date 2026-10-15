@@ -50,7 +50,7 @@ npm run test:chrome          # the same against Chromium's own WebMCP
 
 To try the store with a real agent, open it in Chrome with `chrome://flags/#enable-webmcp-testing` enabled (see `fjord-table/README.md` and chapter 9).
 
-## Test results (14 October 2026)
+## Test results (14 October 2026; re-run 15 October 2026)
 
 Playwright 1.64.1, Chromium 156.0.8078.4. Versions: React 19.3.1, React Router 8.4.0, usewebmcp 6.0.3, Vite 8.3.4, TypeScript 7.0.2, Angular 22.2.2.
 
@@ -58,6 +58,8 @@ Playwright 1.64.1, Chromium 156.0.8078.4. Versions: React 19.3.1, React Router 8
 |---|---|---|
 | `trailhead-react` (11 tests) | 11 passed | 11 passed |
 | `angular` (5 tests, after `tsc` and an esbuild bundle) | 5 passed | 5 passed |
+
+Re-run from a fresh clone on 15 October 2026 during the technical review, after the tools adopted Chapter 11's result convention (`{ status: 'error' | 'refused' | 'cancelled_by_user', code, message }`; success results unchanged): the same 11 + 11 and 5 + 5 passed.
 
 What the React tests cover: the store works without WebMCP; app-wide tools register once under StrictMode; `search_products` results and validation errors; `add_to_cart`/`get_cart` share state with the UI; `compare_products` navigates and shows the table; `checkout` exists only on `/cart` with a non-empty cart; `checkout` waits for the person (Cancel and Place order); an in-flight `checkout` survives the person pressing Back (the tool unregisters, the call still resolves); an agent abort closes the dialog and fires `toolcancel`; `toolactivated` drives the status pill; Listing 10.1's hook registers once, calls see the latest state, a description change re-registers, unmount unregisters.
 
