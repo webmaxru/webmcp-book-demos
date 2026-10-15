@@ -182,8 +182,8 @@ await test('chromium: the browser passes oversized and undeclared input through;
     return [await document.modelContext.executeTool(t, { query: 'x'.repeat(50000) }),
             await document.modelContext.executeTool(t, { query: 'csv', accountEmail: 'kari@ledgerly.example' })];
   }, SUPPORTLY);
-  assert.deepEqual(JSON.parse(r[0]), { error: 'query is longer than 200 characters' });
-  assert.deepEqual(JSON.parse(r[1]), { error: 'Unexpected field(s): accountEmail' });
+  assert.deepEqual(JSON.parse(r[0]), { status: 'error', code: 'INVALID_ARGUMENT', message: 'query is longer than 200 characters' });
+  assert.deepEqual(JSON.parse(r[1]), { status: 'error', code: 'INVALID_ARGUMENT', message: 'Unexpected field(s): accountEmail' });
   await context.close();
 });
 
@@ -192,10 +192,14 @@ await test('chromium: get_ticket_status answers Ledgerly and returns bad input a
   const r = await page.evaluate(async (s) => {
     const t = (await document.modelContext.getTools({ fromOrigins: [s] })).find((x) => x.name === 'get_ticket_status');
     return [await document.modelContext.executeTool(t, { ticketId: 'SUP-1042' }),
-            await document.modelContext.executeTool(t, { ticketId: 'SUP-1042', note: 'x' })];
+            await document.modelContext.executeTool(t, { ticketId: 'SUP-1042', note: 'x' }),
+            await document.modelContext.executeTool(t, { ticketId: 'SUP-9999' })];
   }, SUPPORTLY);
-  assert.deepEqual(JSON.parse(r[0]), { ticketId: 'SUP-1042', status: 'waiting on customer', updated: '2026-10-12' });
-  assert.deepEqual(JSON.parse(r[1]), { error: 'Unexpected field(s): note' });
+  assert.deepEqual(JSON.parse(r[0]), { ticketId: 'SUP-1042', ticketState: 'waiting_on_user', updated: '2026-10-12' });
+  assert.deepEqual(JSON.parse(r[1]), { status: 'error', code: 'INVALID_ARGUMENT', message: 'Unexpected field(s): note' });
+  const notFound = JSON.parse(r[2]);
+  assert.equal(notFound.status, 'error');
+  assert.equal(notFound.code, 'TICKET_NOT_FOUND');
   await context.close();
 });
 
@@ -212,7 +216,21 @@ await test('chromium: create_ticket waits for a trusted click; a scripted click 
   assert.equal(await w.evaluate(() => document.querySelector('#ticket-dialog').open), true);
   await w.click('[data-send]');                                               // a real (trusted) click
   const r = JSON.parse(await w.evaluate(() => window.pending));
-  assert.deepEqual(r, { ticketId: 'SUP-1043', status: 'open' });
+  assert.deepEqual(r, { status: 'created', ticketId: 'SUP-1043' });
+  await context.close();
+});
+
+await test('chromium: create_ticket returns cancelled_by_user when the person presses Cancel', async () => {
+  const { context, widget } = await open(real, LEDGERLY + '/invoices');
+  const w = widget();
+  await w.evaluate(() => { window.pending = (async () => {
+    const t = (await document.modelContext.getTools()).find((x) => x.name === 'create_ticket');
+    return document.modelContext.executeTool(t, { subject: 'Export fails', body: 'CSV export is empty' });
+  })(); });
+  await w.waitForSelector('#ticket-dialog[open]');
+  await w.click('[data-cancel]');
+  const r = JSON.parse(await w.evaluate(() => window.pending));
+  assert.deepEqual(r, { status: 'cancelled_by_user', message: 'The user closed the ticket form without sending it.' });
   await context.close();
 });
 

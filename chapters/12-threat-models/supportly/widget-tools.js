@@ -5,6 +5,9 @@ import { helpCenter, tickets, ticketDialog } from './widget-app.js';
 
 const HOST = 'https://app.ledgerly.example';   // the one embedder we trust
 
+// Chapter 11's result shape: a recoverable failure is a value, not a throw.
+const invalid = (err) => ({ status: 'error', code: 'INVALID_ARGUMENT', message: err.message });
+
 export async function registerSupportTools(signal) {
   if (!('modelContext' in document)) return;
   const mc = document.modelContext;
@@ -26,7 +29,7 @@ export async function registerSupportTools(signal) {
         const { query } = checkArgs(input, { query: { required: true, maxLength: 200 } });
         return shapeArticles(await helpCenter.search(query));
       } catch (err) {
-        if (err instanceof ToolInputError) return { error: err.message };
+        if (err instanceof ToolInputError) return invalid(err);
         throw err;
       }
     }
@@ -47,9 +50,13 @@ export async function registerSupportTools(signal) {
       try {
         const { ticketId } = checkArgs(input, { ticketId: { required: true, maxLength: 12 } });
         const t = tickets.get(ticketId);
-        return t ? { ticketId, status: t.status, updated: t.updated } : { error: 'No such ticket' };
+        if (!t) {
+          return { status: 'error', code: 'TICKET_NOT_FOUND',
+                   message: `No ticket ${ticketId} on this account. Check the ID with the user.` };
+        }
+        return { ticketId, ticketState: t.state, updated: t.updated };
       } catch (err) {
-        if (err instanceof ToolInputError) return { error: err.message };
+        if (err instanceof ToolInputError) return invalid(err);
         throw err;
       }
     }
@@ -81,11 +88,13 @@ export async function registerSupportTools(signal) {
           priority: { maxLength: 6, enum: ['low', 'normal', 'high'] }
         });
       } catch (err) {
-        if (err instanceof ToolInputError) return { error: err.message };
+        if (err instanceof ToolInputError) return invalid(err);
         throw err;
       }
       const sent = await ticketDialog.review(args, { signal: call });
-      return sent ? { ticketId: sent.id, status: 'open' } : { cancelled: true };
+      return sent
+        ? { status: 'created', ticketId: sent.id }
+        : { status: 'cancelled_by_user', message: 'The user closed the ticket form without sending it.' };
     }
   }, { signal });
 }

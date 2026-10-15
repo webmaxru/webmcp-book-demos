@@ -21,7 +21,7 @@ export const helpCenter = {
   }
 };
 
-export const tickets = new Map([['SUP-1042', { status: 'waiting on customer', updated: '2026-10-12' }]]);
+export const tickets = new Map([['SUP-1042', { state: 'waiting_on_user', updated: '2026-10-12' }]]);
 let next = 1043;
 
 export const ticketDialog = {
@@ -37,7 +37,7 @@ export const ticketDialog = {
       const onSend = (e) => {
         if (!e.isTrusted) return;                     // scripts cannot press Send
         const id = `SUP-${next++}`;
-        tickets.set(id, { status: 'open', updated: new Date().toISOString().slice(0, 10) });
+        tickets.set(id, { state: 'open', updated: new Date().toISOString().slice(0, 10) });
         done({ id });
       };
       const onCancel = () => done(null);
