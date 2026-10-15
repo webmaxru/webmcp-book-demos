@@ -28,12 +28,12 @@ export const bookTable = {
   annotations: { consequentialHint: true },          // a real-world action: Chapter 6
   async execute(input, { signal }) {
     const problem = checkBookingInput(input);         // validate strictly in code
-    if (problem) return { status: 'invalid_input', message: problem };
+    if (problem) return { status: 'error', code: 'INVALID_INPUT', message: problem };
 
     const slot = await availability.find(input, { signal });
     if (!slot) {
       return {
-        status: 'slot_unavailable',
+        status: 'refused', code: 'SLOT_UNAVAILABLE',    // the guest picks another time
         message: `No table for ${input.partySize} at ${input.time} on ${input.date}. ` +
                  'Call search_availability for current slots.'
       };
@@ -42,7 +42,7 @@ export const bookTable = {
     // Fjord Table's own UI: the booking form, pre-filled, on screen.
     // The guest's name and contact details come from their signed-in account.
     const outcome = await bookingPanel.confirmWithUser({ ...input, slot }, { signal });
-    if (!outcome.confirmed) return { status: 'not_confirmed_by_user' };
+    if (!outcome.confirmed) return { status: 'cancelled_by_user', message: 'The guest closed the booking form without confirming. Nothing was booked.' };
 
     return { status: 'booked', reference: outcome.reference,
              date: input.date, time: slot.time, partySize: input.partySize };

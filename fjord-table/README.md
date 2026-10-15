@@ -31,7 +31,7 @@ For scripted tests, the same switch is `--enable-features=WebMCPTesting` on the 
 
 **Calling the tools.** Registering a tool doesn't make anything call it. To call them:
 
-- **DevTools.** Chapter 5 describes Chrome's WebMCP pane in the Application panel. It lists the page's tools, logs calls, and lets you run a tool by hand. Try `book_table` with `partySize: 40` and you should get a helpful `invalid_input` result back, not an error.
+- **DevTools.** Chapter 5 describes Chrome's WebMCP pane in the Application panel. It lists the page's tools, logs calls, and lets you run a tool by hand. Try `book_table` with `partySize: 40` and you should get a helpful `{ status: 'error', code: 'INVALID_INPUT', … }` result back, not an exception.
 - **Chrome's Model Context Tool Inspector extension** ([Chrome Web Store](https://chromewebstore.google.com/detail/model-context-tool-inspec/gbpdfapgefenggkahomfgkhfehlcenpd)). Chrome's docs recommend it for experimenting with an agent against your tools.
 - **The console, as an in-page agent.** Paste Listing 4.2:
 
@@ -65,7 +65,7 @@ For scripted tests, the same switch is `--enable-features=WebMCPTesting` on the 
 Patterns from chapter 5 you can watch in action:
 
 - **Feature detection.** All tool code sits behind `'modelContext' in document`. Without it, nothing registers and the page works normally.
-- **Validation in code, recoverable failures as values.** `book_table` returns `{ status: 'invalid_input' | 'slot_unavailable' | 'not_confirmed_by_user' | 'booked', … }` instead of throwing.
+- **Validation in code, recoverable failures as values.** `book_table` returns values in Chapter 11's result convention instead of throwing: `{ status: 'error', code: 'INVALID_INPUT', message }` for bad input, `{ status: 'refused', code: 'SLOT_UNAVAILABLE', message }` when the slot is gone, `{ status: 'cancelled_by_user', message }` when the guest cancels, and `{ status: 'booked', reference, … }` on success. (Changed from `invalid_input` / `slot_unavailable` / `not_confirmed_by_user` in the technical review of 15 October 2026.)
 - **A confirm step in the site's own UI.** `book_table` never books on its own. It opens the pre-filled booking dialog, and the person confirms or cancels. The guest's name and contact come from the (demo) signed-in account, never from the agent.
 - **AbortController-based unregistration and view-scoped tools.** `book_table` exists only while the booking view is open. Switching **Tool descriptions for agents** in the footer to *Norsk* re-registers it with a Norwegian title and description (Listing 5.5's `relabelBookingTools()`).
 
@@ -92,15 +92,15 @@ Both test runs cover the same things:
 - a person books a table through the UI
 - `search_availability` is registered at startup, and `book_table` only while the booking view is open
 - Listing 4.2 runs as printed
-- `book_table` returns `invalid_input` and `slot_unavailable` as values
+- `book_table` returns `error`/`INVALID_INPUT` and `refused`/`SLOT_UNAVAILABLE` as values
 - an agent booking goes through the site's confirmation dialog and returns `booked` with a reference
-- a cancel returns `not_confirmed_by_user`
+- a cancel returns `cancelled_by_user`
 - a caller's abort closes the dialog
 - relabelling to Norwegian re-registers the tool and it still books
 
 ### What Chromium 156 did differently from the draft
 
-On 14 October 2026 `npm run test:chrome` passed on Chromium 156.0.8078.4 (Playwright 1.64's build) with `--enable-features=WebMCPTesting`. In a separate probe, that build differed from the 13 October 2026 draft in these places:
+On 15 October 2026, after the result-convention change above, `npm test` and `npm run test:chrome` both passed again on Chromium 156.0.8078.4. On 14 October 2026 `npm run test:chrome` passed on Chromium 156.0.8078.4 (Playwright 1.64's build) with `--enable-features=WebMCPTesting`. In a separate probe, that build differed from the 13 October 2026 draft in these places:
 
 | Case | Draft says | Chromium 156 did |
 |---|---|---|

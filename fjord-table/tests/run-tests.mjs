@@ -178,19 +178,23 @@ await test(`${LABEL}: book_table returns recoverable failures as values`, async 
   await waitForCount(page, 2);
 
   const tooMany = await execute(page, 'book_table', { date: DATE, time: '19:00', partySize: 40 });
-  assert.equal(tooMany.status, 'invalid_input');
+  assert.equal(tooMany.status, 'error');
+  assert.equal(tooMany.code, 'INVALID_INPUT');
   assert.match(tooMany.message, /1 to 12/);
 
   const badDate = await execute(page, 'book_table', { date: '20/11/2026', time: '19:00', partySize: 2 });
-  assert.equal(badDate.status, 'invalid_input');
+  assert.equal(badDate.status, 'error');
+  assert.equal(badDate.code, 'INVALID_INPUT');
   assert.match(badDate.message, /YYYY-MM-DD/);
 
   const closed = await execute(page, 'book_table', { date: DATE, time: '23:00', partySize: 2 });
-  assert.equal(closed.status, 'slot_unavailable');
+  assert.equal(closed.status, 'refused');
+  assert.equal(closed.code, 'SLOT_UNAVAILABLE');
   assert.match(closed.message, /search_availability/);
 
   const missing = await execute(page, 'book_table', {});
-  assert.equal(missing.status, 'invalid_input');
+  assert.equal(missing.status, 'error');
+  assert.equal(missing.code, 'INVALID_INPUT');
 
   // The draft says "tool not found" surfaces as NotFoundError. Chromium 156 throws UnknownError.
   const unknown = await execute(page, 'no_such_tool', {});
@@ -232,7 +236,7 @@ await test(`${LABEL}: book_table → confirm in the site UI → booked with a re
   await context.close();
 });
 
-await test(`${LABEL}: the user cancels → not_confirmed_by_user, nothing booked`, async () => {
+await test(`${LABEL}: the user cancels → cancelled_by_user, nothing booked`, async () => {
   const { page, errors, context } = await openPage({ mock: true });
   await page.goto(URL_ + '#/book');
   await waitForCount(page, 2);
@@ -240,7 +244,8 @@ await test(`${LABEL}: the user cancels → not_confirmed_by_user, nothing booked
   const pending = execute(page, 'book_table', { date: DATE, time, partySize: 3 });
   await page.waitForSelector('#confirm-dialog[open]');
   await page.click('#confirm-cancel');
-  assert.deepEqual(await pending, { status: 'not_confirmed_by_user' });
+  assert.deepEqual(await pending, { status: 'cancelled_by_user',
+    message: 'The guest closed the booking form without confirming. Nothing was booked.' });
   assert.equal(await page.isHidden('#confirmation'), true);
   assert.deepEqual(errors, []);
   await context.close();
