@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Chapter 12 examples (Threat Models for Tool-Exposing Pages) from Tools, Not Clicks (working title)",
+  "description": "Chapter 12 examples (Threat Models for Tool-Exposing Pages) from Tools, Not Clicks",
   "scripts": {
     "test": "node tests/run-tests.mjs"
   },

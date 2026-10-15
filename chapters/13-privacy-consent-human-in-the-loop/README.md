@@ -1,6 +1,6 @@
 # Chapter 13 · Privacy, Consent and the Human in the Loop
 
-Runnable examples for Chapter 13 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title): Trailhead's checkout, built so that an order never completes without a person.
+Runnable examples for Chapter 13 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*: Trailhead's checkout, built so that an order never completes without a person.
 Every listing file below is byte-identical to the code printed in the chapter.
 
 | File | Listing | What it is |

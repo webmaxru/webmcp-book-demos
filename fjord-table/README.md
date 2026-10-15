@@ -1,6 +1,6 @@
 # Fjord Table: a WebMCP demo
 
-Fjord Table is a fictional restaurant on the Oslo waterfront and the running example in *Tools, Not Clicks* (working title), chapters 4 and 5. This folder is a small booking site in plain HTML, CSS and JavaScript modules. It has no build step and no dependencies at run time.
+Fjord Table is a fictional restaurant on the Oslo waterfront and the running example in *Tools, Not Clicks*, chapters 4 and 5. This folder is a small booking site in plain HTML, CSS and JavaScript modules. It has no build step and no dependencies at run time.
 
 - **In any browser** it works as an ordinary booking page: pick a date, time and party size, choose a time, confirm.
 - **Where `document.modelContext` exists** (Chrome with the WebMCP flag or origin trial), it also registers two WebMCP tools: `search_availability` and `book_table`.

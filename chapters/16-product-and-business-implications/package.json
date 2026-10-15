@@ -2,7 +2,7 @@
   "name": "ch16-product-and-business",
   "version": "0.1.0",
   "private": true,
-  "description": "Chapter 16 examples from Tools, Not Clicks (working title): Trailhead's tool catalog, budget check, measurement wrapper and attribution",
+  "description": "Chapter 16 examples from Tools, Not Clicks: Trailhead's tool catalog, budget check, measurement wrapper and attribution",
   "type": "module",
   "license": "MIT",
   "scripts": {

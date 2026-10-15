@@ -1,6 +1,6 @@
 # Chapter 10: WebMCP in Frameworks
 
-Runnable code for chapter 10 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title).
+Runnable code for chapter 10 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
 Every listing in the chapter is a file here, byte-identical to the book (`node check-listings.mjs <chapter.md>` verifies it).
 
 - `trailhead-react/`: Trailhead, the outdoor-gear store, in React 19 + Vite + TypeScript, with WebMCP tools registered through `usewebmcp`.

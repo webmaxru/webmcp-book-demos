@@ -1,6 +1,6 @@
 # Chapter 9: Your First WebMCP App, End to End
 
-Fjord Table, the small Oslo restaurant-booking site from the book *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title), put together end to end. The page works for everyone. Agent tools are added as a progressive enhancement: native WebMCP where the browser has it, an opt-in pinned polyfill otherwise, and nothing at all on insecure origins or under a blocking Permissions Policy. The folder also has the chapter's **Test Agent** (an in-page agent harness) and a small server that sends the deployment headers.
+Fjord Table, the small Oslo restaurant-booking site from the book *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*, put together end to end. The page works for everyone. Agent tools are added as a progressive enhancement: native WebMCP where the browser has it, an opt-in pinned polyfill otherwise, and nothing at all on insecure origins or under a blocking Permissions Policy. The folder also has the chapter's **Test Agent** (an in-page agent harness) and a small server that sends the deployment headers.
 
 ## Files and listings
 

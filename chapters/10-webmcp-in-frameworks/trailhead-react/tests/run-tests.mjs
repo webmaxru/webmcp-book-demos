@@ -1,8 +1,8 @@
 // Chapter 10 tests: Trailhead (React 19 + Vite) with WebMCP tools.
-//   npm run build && npm test          WebMCP from dev/model-context-mock.js, injected before the app loads
-//   npm run build && npm run test:chrome
+//   npm test                           WebMCP from dev/model-context-mock.js, injected before the app loads
+//   npm run test:chrome
 //                                      WebMCP from Chromium itself (--enable-features=WebMCPTesting)
-// Every test drives the built app in dist/, served from localhost (a secure context).
+// Both scripts run `npm run build` first. Every test drives the built app in dist/, served from localhost (a secure context).
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';

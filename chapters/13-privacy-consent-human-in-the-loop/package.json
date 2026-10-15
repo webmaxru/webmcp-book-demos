@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Chapter 13 examples (Privacy, Consent and the Human in the Loop) from Tools, Not Clicks (working title)",
+  "description": "Chapter 13 examples (Privacy, Consent and the Human in the Loop) from Tools, Not Clicks",
   "scripts": {
     "start": "npx --yes serve .",
     "test": "node tests/run-tests.mjs"

@@ -1,6 +1,6 @@
 # Chapter 8: The Declarative API: Forms as Tools
 
-Runnable code for Chapter 8 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title).
+Runnable code for Chapter 8 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
 Fjord Table's search and booking forms become WebMCP tools through HTML attributes (`toolname`,
 `tooldescription`, `toolparamdescription`, `toolautosubmit`), with `SubmitEvent.agentInvoked` /
 `respondWith()`, the `toolactivated` / `toolcancel` events and the `:tool-form-active` /

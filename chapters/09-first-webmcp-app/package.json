@@ -2,7 +2,7 @@
   "name": "fjord-table-ch09-end-to-end",
   "version": "0.1.0",
   "private": true,
-  "description": "Chapter 9 of Tools, Not Clicks (working title): Fjord Table end to end, with progressive enhancement, a polyfill fallback, the Test Agent and deployment headers",
+  "description": "Chapter 9 of Tools, Not Clicks: Fjord Table end to end, with progressive enhancement, a polyfill fallback, the Test Agent and deployment headers",
   "type": "module",
   "license": "MIT",
   "scripts": {

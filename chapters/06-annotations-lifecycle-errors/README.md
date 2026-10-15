@@ -1,6 +1,6 @@
 # Chapter 6 — Annotations, Lifecycle and Errors (Trailhead)
 
-Runnable examples for Chapter 6 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title).
+Runnable examples for Chapter 6 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
 Every listing in the chapter is a file here, byte-identical to the code printed in the book.
 
 ## Files and listings

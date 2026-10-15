@@ -1,6 +1,6 @@
 # Chapter 7 — Frames, Origins and Page-Embedded Agents (Helpdesk Widget)
 
-Runnable code for chapter 7 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title).
+Runnable code for chapter 7 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
 
 Two fictional companies, two origins:
 

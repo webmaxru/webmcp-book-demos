@@ -2,7 +2,7 @@
   "name": "fjord-table",
   "version": "0.1.0",
   "private": true,
-  "description": "Fjord Table: the WebMCP demo app from Tools, Not Clicks (working title), chapters 4 and 5",
+  "description": "Fjord Table: the WebMCP demo app from Tools, Not Clicks, chapters 4 and 5",
   "type": "module",
   "license": "MIT",
   "scripts": {

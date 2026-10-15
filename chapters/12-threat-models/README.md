@@ -1,6 +1,6 @@
 # Chapter 12 · Threat Models for Tool-Exposing Pages
 
-Runnable examples for Chapter 12 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title).
+Runnable examples for Chapter 12 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
 Every listing file below is byte-identical to the code printed in the chapter.
 
 | File | Listing | What it is |

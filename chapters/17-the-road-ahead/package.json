@@ -2,7 +2,7 @@
   "name": "ch17-the-road-ahead",
   "version": "0.1.0",
   "private": true,
-  "description": "Chapter 17 examples from Tools, Not Clicks (working title): a tool catalog entry with outputSchema, a one-file WebMCP adapter and a capability probe",
+  "description": "Chapter 17 examples from Tools, Not Clicks: a tool catalog entry with outputSchema, a one-file WebMCP adapter and a capability probe",
   "type": "module",
   "license": "MIT",
   "scripts": {

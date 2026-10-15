@@ -1,6 +1,6 @@
 # Chapter 17: The Road Ahead
 
-Runnable examples for chapter 17 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title). They belong to **Trailhead**, the book's fictional Norwegian outdoor-gear store, and show how to build so that today's tools survive tomorrow's API: tools as plain data, one adapter that knows the WebMCP API shape, and a probe that reports what a browser actually supports.
+Runnable examples for chapter 17 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*. They belong to **Trailhead**, the book's fictional Norwegian outdoor-gear store, and show how to build so that today's tools survive tomorrow's API: tools as plain data, one adapter that knows the WebMCP API shape, and a probe that reports what a browser actually supports.
 
 Every file under `src/` that maps to a listing is byte-identical to the code printed in the chapter (the tests check this when `CHAPTER_MD` points at the chapter's Markdown).
 

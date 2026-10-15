@@ -1,6 +1,6 @@
 # Chapter 16: Product and Business Implications
 
-Runnable examples for chapter 16 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title). They belong to **Trailhead**, the book's fictional Norwegian outdoor-gear store, and show the non-UI side of shipping WebMCP: a tool catalog owned like product copy, a CI check for Chrome's character budgets, a measurement wrapper and order attribution.
+Runnable examples for chapter 16 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*. They belong to **Trailhead**, the book's fictional Norwegian outdoor-gear store, and show the non-UI side of shipping WebMCP: a tool catalog owned like product copy, a CI check for Chrome's character budgets, a measurement wrapper and order attribution.
 
 Every file under `src/` that maps to a listing is byte-identical to the code printed in the chapter.
 

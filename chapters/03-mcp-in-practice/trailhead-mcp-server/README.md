@@ -1,6 +1,6 @@
 # Chapter 3: MCP in Practice — Trailhead's backend MCP server
 
-Runnable code for Chapter 3 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP* (working title).
+Runnable code for Chapter 3 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
 It is the companion backend MCP server for the Trailhead outdoor-gear store: Node.js plus version 2 of the
 official MCP TypeScript SDK, exposing `search_products` and `get_order_status`, a returns-policy resource and a
 packing-list prompt, served over stdio and Streamable HTTP. It speaks MCP revision 2026-07-28 ("modern") and

@@ -2,7 +2,7 @@
   "name": "fjord-table-ch08-declarative",
   "version": "0.1.0",
   "private": true,
-  "description": "Chapter 8 of Tools, Not Clicks (working title): Fjord Table with declarative WebMCP form tools",
+  "description": "Chapter 8 of Tools, Not Clicks: Fjord Table with declarative WebMCP form tools",
   "type": "module",
   "license": "MIT",
   "scripts": {
