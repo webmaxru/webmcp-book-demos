@@ -152,7 +152,7 @@ await test('Listing 16.2: a thrown error is recorded as threw, and the call stil
   assert.deepEqual([last.tool, last.outcome], ['compare_products', 'threw']);
 });
 
-await test('Listing 16.2: an aborted call is recorded as cancelled (wrapper called directly)', async () => {
+await test('Listing 16.2: an aborted call is recorded as aborted, not cancelled_by_user (wrapper called directly)', async () => {
   const outcome = await page.evaluate(async () => {
     const { withMeasurement } = await import('/dist/measure.js');
     let seen;
@@ -166,7 +166,7 @@ await test('Listing 16.2: an aborted call is recorded as cancelled (wrapper call
     await p;
     return seen.outcome;
   });
-  assert.equal(outcome, 'cancelled');
+  assert.equal(outcome, 'aborted');
 });
 
 await test('Listing 16.3: an order placed after agent help carries the tools that helped', async () => {

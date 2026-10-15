@@ -9,7 +9,7 @@ Every file under `src/` that maps to a listing is byte-identical to the code pri
 | File | Book | Notes |
 |---|---|---|
 | `src/tool-catalog.ts` | Listing 16.1 | The five canonical Trailhead tools with title, description, journey, owner, eval suite and annotations. |
-| `src/measure.ts` | Listing 16.2 | `withMeasurement()`: reports `ok`, one of Chapter 11's statuses (`error`, `needs_input`, `refused`, `cancelled_by_user`), `threw` or `cancelled` for each call, plus the result's code and the duration. |
+| `src/measure.ts` | Listing 16.2 | `withMeasurement()`: reports `ok`, one of Chapter 11's statuses (`error`, `needs_input`, `refused`, `cancelled_by_user`), `threw` or `aborted` for each call, plus the result's code and the duration. |
 | `src/attribution.ts` | Listing 16.3 | `noteAgentAssist()` and `orderAttribution()`, using `sessionStorage` (per tab). |
 | `src/register-tools.ts` | Listing 16.4 | Registers the catalog with measurement and attribution, behind feature detection, with one `AbortSignal`. |
 | `src/check-budgets.ts` | Listing 16.5 | Fails when a name or description exceeds Chrome's provisional budgets, or a tool has no owner or eval suite. |
@@ -36,7 +36,7 @@ npm run typecheck     # tsc --noEmit against webmcp-types
 - Listing 16.1's names follow the spec's name rule and match the book's canonical Trailhead tool set.
 - Without WebMCP the page loads cleanly and registers nothing.
 - Listing 16.4 registers all five tools with the right `readOnlyHint` and `consequentialHint`.
-- Listing 16.2 records `ok` for a search, `refused` with code `OUT_OF_STOCK` for an out-of-stock item (the value still reaches the agent), `error` with code `UNKNOWN_SKU` for an unknown SKU, `threw` for a thrown handler (and `executeTool()` still rejects), and `cancelled` for an aborted call.
+- Listing 16.2 records `ok` for a search, `refused` with code `OUT_OF_STOCK` for an out-of-stock item (the value still reaches the agent), `error` with code `UNKNOWN_SKU` for an unknown SKU, `threw` for a thrown handler (and `executeTool()` still rejects), and `aborted` for an aborted call (a caller's abort, not Chapter 11's `cancelled_by_user`).
 - Listing 16.3: an order placed after agent calls carries `agentAssisted: true` and the tools that helped; an order with no agent calls carries `agentAssisted: false`.
 - Aborting the registration signal removes all five tools.
 
@@ -56,6 +56,6 @@ MIT. See [LICENSE](../../LICENSE).
 
 ## Tech review, 15 October 2026
 
-- Applied Chapter 11's result convention (book-wide decision): `trailhead-tools.ts` returns `{ status, code, message }` with upper-case codes, and `measure.ts` (Listing 16.2) classifies by `status`. The thrown-exception outcome is now `threw`, so it can't be confused with `status: 'error'`.
+- Applied Chapter 11's result convention (book-wide decision): `trailhead-tools.ts` returns `{ status, code, message }` with upper-case codes, and `measure.ts` (Listing 16.2) classifies by `status`. The thrown-exception outcome is now `threw`, so it can't be confused with `status: 'error'`, and the caller-abort outcome is `aborted`, so it can't be confused with `status: 'cancelled_by_user'`.
 - Test names now use the chapter's listing numbers (they had been shifted), and a listings check compares each listing in the chapter with its file in `src/` when `CHAPTER_MD` is set.
 - Re-run from a fresh clone: `npm test` and `npm run test:chrome` both pass (17 checks each; Node 22, Playwright 1.64.1, Chromium 156.0.8078.4).
