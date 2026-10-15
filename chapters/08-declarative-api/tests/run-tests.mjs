@@ -209,7 +209,7 @@ await test('WebMCP: book_table waits for the person; their click books and answe
   await page.click('#book-form button[type=submit]');                    // the person confirms
   const r = await agent.response(id);
   assert.equal(r?.status, 'Completed', JSON.stringify(r));
-  assert.equal(r.output.booked, true);
+  assert.equal(r.output.status, 'booked');
   assert.match(r.output.reference, /^FT-\d+$/);
   assert.match(await page.textContent('#confirmation'), new RegExp(r.output.reference));
   assert.equal(await page.$eval('#book-form', (f) => f.matches(':tool-form-active')), false);
@@ -237,7 +237,7 @@ await test('WebMCP: without toolautosubmit, the person’s click on an invalid f
   await context.close();
 });
 
-await test('WebMCP: a full sitting comes back as a recoverable failure value', async () => {
+await test('WebMCP: a full sitting comes back as a refused result value', async () => {
   const { page, context } = await openPage(webmcp);
   const agent = await agentFor(page);
   const id = await agent.invoke('book_table', { date: DATE, time: '23:30', partySize: 2 });
@@ -245,8 +245,9 @@ await test('WebMCP: a full sitting comes back as a recoverable failure value', a
   await page.click('#book-form button[type=submit]');
   const r = await agent.response(id);
   assert.equal(r.status, 'Completed');
-  assert.equal(r.output.booked, false);
-  assert.match(r.output.next, /search_availability/);
+  assert.equal(r.output.status, 'refused');
+  assert.equal(r.output.code, 'SLOT_UNAVAILABLE');
+  assert.match(r.output.message, /search_availability/);
   await context.close();
 });
 

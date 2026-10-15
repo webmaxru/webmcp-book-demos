@@ -16,16 +16,17 @@ form.addEventListener('submit', (event) => {
 
   const outcome = availability.find(request).then(async (slot) => {
     if (!slot) {
-      // Recoverable: say what went wrong and what to try next.
+      // A refusal (Chapter 11): another time is the guest's choice to make.
       const reason =
         `No table for ${request.partySize} at ${request.time} on ${request.date}.`;
       showProblem(reason);
-      return { booked: false, reason,
-               next: 'Call search_availability and offer the guest another time.' };
+      return { status: 'refused', code: 'SLOT_UNAVAILABLE',
+               message: `${reason} Call search_availability and ask the guest ` +
+                        'which other time they want.' };
     }
     const { reference, seating } = await availability.book(request);
     showConfirmation(reference, request);
-    return { booked: true, reference, date: request.date, time: request.time,
+    return { status: 'booked', reference, date: request.date, time: request.time,
              partySize: request.partySize, seating };
   });
 
@@ -34,6 +35,6 @@ form.addEventListener('submit', (event) => {
   // Clear the form only after the agent has its answer: resetting a form
   // while its tool call is still open cancels the call (Chromium 156).
   outcome.then((result) => {
-    if (result.booked) setTimeout(() => form.reset());
+    if (result.status === 'booked') setTimeout(() => form.reset());
   });
 });

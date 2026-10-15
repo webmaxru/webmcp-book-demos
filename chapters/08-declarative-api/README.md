@@ -65,7 +65,7 @@ npm test
    - validation feedback reaches the agent: custom validity ("closed on Mondays"), `max`, an unknown enum value, an unknown parameter;
    - `book_table` waits for the person; nothing is booked until the click; the click completes the call with the reference; the form resets afterwards;
    - without `toolautosubmit`, the person's click on an invalid agent-filled form ends the call with the validation error, and the corrected re-submission is an ordinary one (`agentInvoked` false);
-   - a full sitting comes back as `{ booked: false, ... }`;
+   - a full sitting comes back as `{ status: 'refused', code: 'SLOT_UNAVAILABLE', message }` (Chapter 11's result convention);
    - agent cancellation fires `toolcancel` and clears `:tool-form-active`; a `reset()` cancels the call without `toolcancel`;
    - with `search-form.js` blocked, the form navigates to `results.html` and the agent receives its JSON-LD;
    - Listing 8.1 registers nothing; Listing 8.10 fails at call time ("No submit button was found ...").
@@ -73,7 +73,7 @@ npm test
 There is deliberately **no `document.modelContext` mock** here: what this chapter documents is the browser's own
 form-to-tool behaviour (schema synthesis, filling, submission), which a mock would only imitate.
 
-Result on 14 October 2026, Chromium 156.0.8078.4 (Playwright 1.64): **17 passed, 0 failed.**
+Result on 14 October 2026, Chromium 156.0.8078.4 (Playwright 1.64): **17 passed, 0 failed.** Re-run from a fresh clone during the technical review on 15 October 2026, after `book_table` adopted Chapter 11's result convention: **17 passed, 0 failed.**
 
 ## Other observations behind the chapter (one-off probes, Chromium 156, 14 October 2026)
 
