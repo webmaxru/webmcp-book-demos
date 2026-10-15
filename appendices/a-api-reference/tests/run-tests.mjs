@@ -117,6 +117,8 @@ out.basic = await page.evaluate(async () => {
   r.execUndef = await err(mc.executeTool(T('undef'), {}));
   r.execBigint = await err(mc.executeTool(T('bigint'), {}));
   r.execStr = await err(mc.executeTool(T('str'), {}));
+  r.execCircularInput = await err((() => { const s = {}; s.self = s; return mc.executeTool(T('echo'), s); })());
+  r.toJsonUndef = await err(mc.registerTool(ok('tju', () => 1, { inputSchema: { toJSON() { return undefined; } } })));
   ac.abort();
   await new Promise((s) => setTimeout(s, 100));
   r.afterUnregister = (await mc.getTools()).map((t) => t.name).includes('temp');
@@ -225,6 +227,9 @@ await test('Chromium differs: thrown/rejected execute -> UnknownError (draft: Op
 await test('Chromium differs: unregistered, forged name, forged origin -> UnknownError (draft: NotFoundError)', () => {
   for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);
   assert.equal(b.afterUnregister, false);
+});
+await test('TypeError: toJSON() -> undefined inputSchema; circular executeTool() input (agrees)', () => {
+  assert.match(b.toJsonUndef, /^TypeError/); assert.match(b.execCircularInput, /^TypeError/);
 });
 await test('opaque origin "null" -> NotSupportedError (agrees)', () => assert.match(b.execOpaqueOrigin, /^NotSupportedError/));
 await test('caller abort -> AbortError, execute signal aborts, toolcancel fires', () => {

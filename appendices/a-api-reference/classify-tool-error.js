@@ -1,5 +1,5 @@
 // Listing A.2: classify an executeTool() rejection in a way that works with both
-// the 14 October 2026 draft's exception names and Chromium 156's.
+// the draft's exception names (since 8 October 2026) and Chromium 156's.
 export function classifyToolError(err) {
   const name = err && err.name;
   switch (name) {
