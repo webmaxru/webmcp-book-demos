@@ -72,7 +72,7 @@ try {
     });
     assert.deepEqual(out.decl, ['ledgerly__find_invoice']);
     assert.equal(out.h[1].result.ok, true);
-    assert.equal(out.h[1].result.value.status, 'unpaid');
+    assert.equal(out.h[1].result.value.invoiceState, 'unpaid');
     assert.equal(out.h[2].text, 'done');
     assert.deepEqual([out.failed.ok, out.failed.reason, out.failed.retryable], [false, 'UnknownError', true]);
     assert.deepEqual([out.timedOut.reason, out.timedOut.retryable], ['timed out', false]);
@@ -158,7 +158,7 @@ try {
       const { runTool } = await import('./agent/run-tool.js');
       return runTool((await discoverTools()).get('supportly__get_ticket_status'), { ticketId: 'SUP-1042' }, { stop: new AbortController().signal });
     });
-    assert.deepEqual([r.ok, r.untrusted, r.value.status], [true, true, 'waiting_on_customer']);
+    assert.deepEqual([r.ok, r.untrusted, r.value.ticketState, r.value.status], [true, true, 'waiting_on_customer', undefined]);
     await page.close();
   });
 
@@ -197,7 +197,21 @@ try {
       const { runTool } = await import('./agent/run-tool.js');
       return runTool((await discoverTools()).get('supportly__create_ticket'), { subject: 'x', body: 'y', priority: 'urgent' }, { stop: new AbortController().signal });
     });
-    assert.deepEqual([r.ok, r.value.error], [true, 'priority must be low, normal or high']);
+    assert.deepEqual([r.ok, r.value.status, r.value.code, r.value.message], [true, 'error', 'INVALID_INPUT', '"priority" must be low, normal or high.']);
+    await page.close();
+  });
+
+  await test('chromium: the user presses Cancel in the widget → cancelled_by_user, no ticket', async () => {
+    const { page, widget } = await open(browser);
+    const pending = page.evaluate(async () => {
+      const { discoverTools } = await import('./agent/discover.js');
+      const { runTool } = await import('./agent/run-tool.js');
+      return runTool((await discoverTools()).get('supportly__create_ticket'), { subject: 'Test', body: 'Body', priority: 'low' }, { stop: new AbortController().signal });
+    });
+    await widget.waitForSelector('#cancel-ticket', { timeout: 5000 });
+    await widget.click('#cancel-ticket');
+    const r = await withTimeout(pending, 5000, 'cancel');
+    assert.deepEqual([r.ok, r.value.status, typeof r.value.message, r.value.ticketId], [true, 'cancelled_by_user', 'string', undefined]);
     await page.close();
   });
 

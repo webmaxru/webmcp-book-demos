@@ -10,11 +10,11 @@ if ('modelContext' in document) {
   // One Ledgerly tool of its own, so the catalog mixes origins.
   await document.modelContext.registerTool({
     name: 'find_invoice',
-    description: 'Find a Ledgerly invoice by number and return its status and amount in NOK.',
+    description: 'Find a Ledgerly invoice by number and return its payment state and amount in NOK.',
     inputSchema: { type: 'object', properties: { number: { type: 'string' } }, required: ['number'] },
     annotations: { readOnlyHint: true },
     async execute({ number }) {
-      return { number, status: 'unpaid', amount: { value: 12500, currency: 'NOK' } };
+      return { number, invoiceState: 'unpaid', amount: { value: 12500, currency: 'NOK' } };
     },
   }).catch(() => {});
 

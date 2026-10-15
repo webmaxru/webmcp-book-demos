@@ -68,20 +68,20 @@ Chromium with `--enable-features=WebMCPTesting`). Without WebMCP the page still 
 npm test
 ```
 
-Last run on 14 October 2026 (UTC), Playwright 1.64 with Chromium 156.0.8078.4: **29/29 passed**.
+Last run on 15 October 2026 (UTC, tech review), Playwright 1.64 with Chromium 156.0.8078.4: **30/30 passed**.
 
 - 11 syntax checks (`node --check` on every script, JSON parse of the manifest)
 - 1 unit test of the agent loop and `runTool()` against the dev-only mock (plain Chromium, no WebMCP)
-- 16 behavioural tests in Chromium 156 with `--enable-features=WebMCPTesting`, across the two origins:
+- 17 behavioural tests in Chromium 156 with `--enable-features=WebMCPTesting`, across the two origins:
   registration inside the iframe; same-origin-only default for `getTools()`; `discoverTools()` merging both origins;
   `toolchange`; `search_articles`; the full agent loop with the user clicking *Send ticket* inside the widget;
   `untrustedContentHint`; user stop → `AbortError` + `toolcancel` in the widget; deadline → "timed out";
-  recoverable errors as values; no `allow` → `NotAllowedError`; `tools=()`; `tools=(self)` overriding `allow`;
+  recoverable errors as values (`{ status: 'error', code, message }`); the user's Cancel → `cancelled_by_user`; no `allow` → `NotAllowedError`; `tools=()`; `tools=(self)` overriding `allow`;
   unknown customer → empty `exposedTo`; `SecurityError` for insecure origins; a thrown error crossing as a bare `UnknownError`
 - 1 extension test: Listings 7.8–7.10 loaded unpacked into full Chromium 156; both frames report their own tools and the
   service worker runs `search_articles` in Supportly's frame
 
-### Chromium 156 vs the 14 October 2026 draft (observed)
+### Chromium 156 vs the 15 October 2026 draft (observed)
 
 | Situation | Draft | Chromium 156 |
 |---|---|---|
@@ -90,3 +90,9 @@ Last run on 14 October 2026 (UTC), Playwright 1.64 with Chromium 156.0.8078.4: *
 | Target iframe navigates away or is removed mid-call | `AbortError` | `UnknownError` |
 | Caller aborts | rejects with reason, `toolcancel` in target | same (`AbortError`, `toolcancel`) |
 | `'modelContext' in document` when the policy blocks | attribute still exists | `true` |
+
+## Result convention (tech review, 15 October 2026)
+
+The widget's tools use Chapter 11's result statuses: `{ status: 'error', code, message }` for input the agent can fix (`INVALID_INPUT`, `TICKET_NOT_FOUND`), `{ status: 'cancelled_by_user', message }` when the person cancels in the widget, and `{ status: 'created', ticketId }` on success. `get_ticket_status` returns the ticket's own lifecycle as `ticketState` (for example `waiting_on_customer`), so `status` stays free for outcomes. Ledgerly's demo tool `find_invoice` does the same with `invoiceState`.
+
+Every `UnknownError` in the table above is spec lag: the draft used `UnknownError` for those cases until 8 October 2026 (commit b206dae, PR #339), and Chromium 156 still implements that text.

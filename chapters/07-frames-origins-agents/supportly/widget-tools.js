@@ -30,7 +30,8 @@ export async function registerWidgetTools(signal) {
       annotations: { readOnlyHint: true },
       async execute({ query }) {
         if (typeof query !== 'string' || !query.trim()) {
-          return { error: 'query must be a non-empty string' };
+          return { status: 'error', code: 'INVALID_INPUT',
+                   message: 'Provide "query" as a non-empty string.' };
         }
         return { articles: await helpdesk.search(query.slice(0, 200)) };
       },
@@ -54,14 +55,19 @@ export async function registerWidgetTools(signal) {
       annotations: { consequentialHint: true },
       async execute({ subject, body, priority }, { signal }) {
         if (!subject?.trim() || !body?.trim()) {
-          return { error: 'subject and body are required' };
+          return { status: 'error', code: 'INVALID_INPUT',
+                   message: 'Provide a non-empty "subject" and "body".' };
         }
         if (!['low', 'normal', 'high'].includes(priority)) {
-          return { error: 'priority must be low, normal or high' };
+          return { status: 'error', code: 'INVALID_INPUT',
+                   message: '"priority" must be low, normal or high.' };
         }
         const draft = { subject: subject.slice(0, 120), body: body.slice(0, 4000), priority };
         const sent = await confirmTicket(draft, signal);          // ③
-        if (!sent) return { status: 'cancelled_by_user' };
+        if (!sent) {
+          return { status: 'cancelled_by_user',
+                   message: 'The user closed the ticket form without sending it.' };
+        }
         const ticket = await helpdesk.createTicket(draft);
         return { status: 'created', ticketId: ticket.id };
       },
@@ -81,11 +87,16 @@ export async function registerWidgetTools(signal) {
       annotations: { readOnlyHint: true, untrustedContentHint: true },  // ④
       async execute({ ticketId }) {
         if (!/^SUP-[0-9]+$/.test(ticketId ?? '')) {
-          return { error: 'ticketId looks like SUP-1042' };
+          return { status: 'error', code: 'INVALID_INPUT',
+                   message: '"ticketId" looks like SUP-1042.' };
         }
         const ticket = await helpdesk.getTicket(ticketId);
-        if (!ticket) return { error: `no ticket ${ticketId}` };
-        return { ticketId, status: ticket.status, latestReply: ticket.latestReply };
+        if (!ticket) {
+          return { status: 'error', code: 'TICKET_NOT_FOUND',
+                   message: `No ticket ${ticketId} on this account.` };
+        }
+        // The ticket's own state is ticketState, so status stays free for outcomes.
+        return { ticketId, ticketState: ticket.status, latestReply: ticket.latestReply };
       },
     }, { signal, exposedTo });
 
