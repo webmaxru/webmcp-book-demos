@@ -21,11 +21,12 @@ export function registerCompareTool(signal) {
     annotations: { readOnlyHint: true },
     execute: tracked('compare_products', async ({ skus }, { signal }) => {
       if (!Array.isArray(skus) || skus.length < 2 || skus.length > 4) {
-        return { status: 'invalid_input', message: 'Provide 2 to 4 SKUs in "skus".' };
+        return { status: 'error', code: 'INVALID_INPUT', message: 'Provide 2 to 4 SKUs in "skus".' };
       }
       const unknown = skus.filter((sku) => !catalog.get(sku));
       if (unknown.length) {
-        return { status: 'unknown_sku', unknown, message: 'Use search_products to find valid SKUs.' };
+        return { status: 'error', code: 'UNKNOWN_SKU', unknown,
+                 message: 'Use search_products to find valid SKUs.' };
       }
       // Stop when the caller cancels (signal) or when our own deadline passes.
       const stop = AbortSignal.any([signal, AbortSignal.timeout(PAGE_DEADLINE_MS)]);  // ①
@@ -34,7 +35,8 @@ export function registerCompareTool(signal) {
       const rows = [], missing = [];
       settled.forEach((r, i) => (r.status === 'fulfilled' ? rows.push(r.value) : missing.push(skus[i])));
       if (rows.length === 0) {
-        return { status: 'unavailable', message: 'Product details did not load in time. Try again shortly.' };
+        return { status: 'error', code: 'DETAILS_UNAVAILABLE',
+                 message: 'Product details did not load in time. Try again shortly.' };
       }
       return { status: missing.length ? 'partial' : 'complete', rows, missing };  // ③
     })

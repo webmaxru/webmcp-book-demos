@@ -24,10 +24,12 @@ export async function registerProductTools(signal) {
     annotations: { readOnlyHint: true },                               // ①
     async execute({ query, category, maxPrice, inStockOnly = false }, { signal }) {
       if (typeof query !== 'string' || query.trim() === '') {
-        return { status: 'invalid_input', message: 'Provide "query" as a non-empty string.' };
+        return { status: 'error', code: 'INVALID_INPUT',
+                 message: 'Provide "query" as a non-empty string.' };
       }
       if (category !== undefined && !CATEGORIES.includes(category)) {
-        return { status: 'invalid_input', message: `"category" must be one of: ${CATEGORIES.join(', ')}.` };
+        return { status: 'error', code: 'INVALID_INPUT',
+                 message: `"category" must be one of: ${CATEGORIES.join(', ')}.` };
       }
       const products = await catalog.search({ query, category, maxPrice, inStockOnly }, signal);
       showProducts(products);            // the user sees what the agent found
@@ -50,7 +52,8 @@ export async function registerProductTools(signal) {
     async execute({ sku }, { signal }) {
       const product = catalog.get(sku);
       if (!product) {
-        return { status: 'unknown_sku', message: `No product has SKU "${sku}". Use search_products to find SKUs.` };
+        return { status: 'error', code: 'UNKNOWN_SKU',
+                 message: `No product has SKU "${sku}". Use search_products to find SKUs.` };
       }
       const reviews = await catalog.reviews(sku, signal);
       return {

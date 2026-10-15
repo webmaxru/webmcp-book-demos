@@ -7,13 +7,13 @@ Every listing in the chapter is a file here, byte-identical to the code printed 
 
 | File | Book | What it shows |
 |---|---|---|
-| — | Listing 6.1 | `ToolAnnotations` IDL excerpt from the 14 October 2026 draft (WebIDL, not runnable; not in this folder) |
+| — | Listing 6.1 | `ToolAnnotations` IDL excerpt from the 15 October 2026 draft (WebIDL, not runnable; not in this folder) |
 | `trailhead/product-tools.js` | Listing 6.2 | `search_products` (`readOnlyHint`) and `get_product_reviews` (`readOnlyHint` + `untrustedContentHint`) |
 | `trailhead/checkout-tool.js` | Listing 6.3 | `checkout` (`consequentialHint`), confirmed in the page's own dialog, signal checked before the order |
 | `trailhead/debug-tools.js` | Listing 6.4 | `debug_dump_cart_state` (`debugging: true`), registered in development builds only |
 | `trailhead/tool-lifecycle.js` | Listing 6.5 | `toolactivated` / `toolcancel` observers and the `tracked()` wrapper |
 | `trailhead/compare-tool.js` | Listing 6.6 | `compare_products`: cancellation plus a page-owned deadline (`AbortSignal.any`, `AbortSignal.timeout`), partial results |
-| `trailhead/cart-tools.js` | Listing 6.7 | `add_to_cart` and `get_cart`: tool-level errors as values with stable codes |
+| `trailhead/cart-tools.js` | Listing 6.7 | `add_to_cart` and `get_cart`: tool-level errors as values with stable codes (`status: 'error'` to fix, `status: 'refused'` for out of stock) |
 | `trailhead/tool-sync.js` | Listing 6.8 | Registering `checkout` only while the cart is non-empty; counting `toolchange` |
 
 Support files (not printed in the book, added so the listings run):
@@ -51,7 +51,7 @@ The runner:
 3. Runs the **same 31 scenarios against Chromium's real WebMCP implementation** (`--enable-features=WebMCPTesting`), playing the agent with `getTools()` / `executeTool()`.
 4. Runs a **platform probe** that records how Chromium reports lifecycle events, cancellation and errors, and writes it to `tests/results/chromium-observations.json`.
 
-Result on 14 October 2026, Chromium 156.0.8078.4 (Playwright 1.64): **73 passed, 0 failed** (10 syntax + 31 mock + 1 availability + 31 Chromium). See `tests/results/summary.json`.
+Result on 15 October 2026 (tech review, after aligning result shapes with Chapter 11), Chromium 156.0.8078.4 (Playwright 1.64): **73 passed, 0 failed** (10 syntax + 31 mock + 1 availability + 31 Chromium). See `tests/results/summary.json`.
 
 ### What Chromium 156.0.8078.4 did (probe output, 14 October 2026)
 
@@ -75,3 +75,9 @@ Result on 14 October 2026, Chromium 156.0.8078.4 (Playwright 1.64): **73 passed,
 | Caller document unloads during a call | target saw: toolactivated:top_slow, toolcancel:top_slow; tool signal: aborted | call cancelled, `toolcancel` fires |
 
 Fill-ins beyond the book: `store.js`, `ui.js`, `app.js` and `index.html` are support code written for this demo; the listings themselves are unchanged.
+
+## Result convention (tech review, 15 October 2026)
+
+Every tool here returns Chapter 11's result statuses: `{ status: 'error', code, message }` for something the agent can fix (`INVALID_INPUT`, `INVALID_QUANTITY`, `UNKNOWN_SKU`, `EMPTY_CART`, `DETAILS_UNAVAILABLE`), `{ status: 'refused', code: 'OUT_OF_STOCK', message, available }` when a rule says no, `{ status: 'cancelled_by_user', message }` when the person cancels checkout, and a domain word (`added`, `placed`, `complete`, `partial`) on success.
+
+Chromium's `UnknownError` in the table above is spec lag: the draft used `UnknownError` for these failures until 8 October 2026 (commit b206dae, PR #339), and Chromium 156 still implements that text.

@@ -87,19 +87,19 @@ async function scenarios(suite, browser) {
   check(suite, 'search_products returns in-stock tents priced in NOK', r.ok && r.value.products.length === 2 && r.value.products.every((p) => p.inStock && p.price.currency === 'NOK'), JSON.stringify(r));
   check(suite, 'search results are shown in the page', (await page.locator('#products li').count()) === 2);
   r = await call('search_products', { query: 'tent', category: 'boats' });
-  check(suite, 'invalid category is returned as a value', r.ok && r.value.status === 'invalid_input', JSON.stringify(r));
+  check(suite, 'invalid category is returned as a value (error / INVALID_INPUT)', r.ok && r.value.status === 'error' && r.value.code === 'INVALID_INPUT', JSON.stringify(r));
 
   r = await call('get_product_reviews', { sku: 'TH-TENT-2P' });
   check(suite, 'reviews come back as data fields (injection text stays inside "text")', r.ok && r.value.reviews.length === 3 && r.value.reviews[1].text.includes('Ignore previous instructions'), JSON.stringify(r).slice(0, 200));
   r = await call('get_product_reviews', { sku: 'NOPE' });
-  check(suite, 'unknown SKU in reviews → status unknown_sku', r.ok && r.value.status === 'unknown_sku', JSON.stringify(r));
+  check(suite, 'unknown SKU in reviews → error / UNKNOWN_SKU', r.ok && r.value.status === 'error' && r.value.code === 'UNKNOWN_SKU', JSON.stringify(r));
 
   r = await call('add_to_cart', { sku: 'TH-TENT-2P', quantity: 0 });
   check(suite, 'add_to_cart quantity 0 → INVALID_QUANTITY', r.ok && r.value.code === 'INVALID_QUANTITY', JSON.stringify(r));
   r = await call('add_to_cart', { sku: 'TH-NOPE', quantity: 1 });
   check(suite, 'add_to_cart unknown SKU → UNKNOWN_SKU', r.ok && r.value.code === 'UNKNOWN_SKU', JSON.stringify(r));
   r = await call('add_to_cart', { sku: 'TH-TENT-4P', quantity: 1 });
-  check(suite, 'add_to_cart sold-out tent → OUT_OF_STOCK with available: 0', r.ok && r.value.code === 'OUT_OF_STOCK' && r.value.available === 0, JSON.stringify(r));
+  check(suite, 'add_to_cart sold-out tent → refused / OUT_OF_STOCK with available: 0', r.ok && r.value.status === 'refused' && r.value.code === 'OUT_OF_STOCK' && r.value.available === 0, JSON.stringify(r));
 
   // cancellation right before the side effect
   await page.evaluate(() => { window.__trailheadLatency.stock = 600; });
@@ -120,7 +120,7 @@ async function scenarios(suite, browser) {
   r = await call('compare_products', { skus: ['TH-TENT-2P', 'TH-TENT-UL1'] });
   check(suite, 'compare_products (2 SKUs) → complete', r.ok && r.value.status === 'complete' && r.value.rows.length === 2, JSON.stringify(r).slice(0, 200));
   r = await call('compare_products', { skus: ['TH-TENT-2P'] });
-  check(suite, 'compare_products with one SKU → invalid_input', r.ok && r.value.status === 'invalid_input', JSON.stringify(r));
+  check(suite, 'compare_products with one SKU → error / INVALID_INPUT', r.ok && r.value.status === 'error' && r.value.code === 'INVALID_INPUT', JSON.stringify(r));
   const logBefore = await page.evaluate(() => document.querySelectorAll('#activity li').length);
   r = await call('compare_products', { skus: ['TH-TENT-2P', 'TH-TENT-UL1', 'TH-TENT-4P'] }, 120);
   check(suite, 'compare_products cancelled by the caller → AbortError', !r.ok && r.error === 'AbortError', JSON.stringify(r));
@@ -133,13 +133,13 @@ async function scenarios(suite, browser) {
   check(suite, 'page deadline (8 s) → partial comparison with the slow SKU listed as missing', r.ok && r.value.status === 'partial' && r.value.missing[0] === 'TH-TENT-UL1', JSON.stringify(r).slice(0, 200));
   await page.evaluate(() => { delete window.__trailheadLatency.specsBySku['TH-TENT-UL1']; });
 
-  // checkout: declined, cancelled by caller, then placed
+  // checkout: cancelled by the user, cancelled by the caller, then placed
   let id = 'co1';
   await page.evaluate(() => window.__start('co1', 'checkout', {}));
   await page.locator('#confirm-dialog').waitFor({ state: 'visible', timeout: 5000 });
   await page.click('#confirm-cancel');
   r = await page.evaluate((i) => window.__result(i), id);
-  check(suite, 'checkout: user presses Cancel → status declined', r.ok && r.value.status === 'declined', JSON.stringify(r));
+  check(suite, 'checkout: user presses Cancel → status cancelled_by_user', r.ok && r.value.status === 'cancelled_by_user', JSON.stringify(r));
   await page.evaluate(() => window.__start('co2', 'checkout', {}));
   await page.locator('#confirm-dialog').waitFor({ state: 'visible', timeout: 5000 });
   await page.evaluate(() => window.__abort('co2'));

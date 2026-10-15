@@ -106,9 +106,9 @@
     },
     {
       "suite": "mock",
-      "name": "invalid category is returned as a value",
+      "name": "invalid category is returned as a value (error / INVALID_INPUT)",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"\\\"category\\\" must be one of: tents, sleeping-bags, backpacks, footwear, clothing.\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"INVALID_INPUT\",\"message\":\"\\\"category\\\" must be one of: tents, sleeping-bags, backpacks, footwear, clothing.\"}}"
     },
     {
       "suite": "mock",
@@ -118,9 +118,9 @@
     },
     {
       "suite": "mock",
-      "name": "unknown SKU in reviews → status unknown_sku",
+      "name": "unknown SKU in reviews → error / UNKNOWN_SKU",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"unknown_sku\",\"message\":\"No product has SKU \\\"NOPE\\\". Use search_products to find SKUs.\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"UNKNOWN_SKU\",\"message\":\"No product has SKU \\\"NOPE\\\". Use search_products to find SKUs.\"}}"
     },
     {
       "suite": "mock",
@@ -136,9 +136,9 @@
     },
     {
       "suite": "mock",
-      "name": "add_to_cart sold-out tent → OUT_OF_STOCK with available: 0",
+      "name": "add_to_cart sold-out tent → refused / OUT_OF_STOCK with available: 0",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"OUT_OF_STOCK\",\"message\":\"Only 0 of Vidde 4-person tent in stock.\",\"available\":0}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"refused\",\"code\":\"OUT_OF_STOCK\",\"message\":\"Only 0 of Vidde 4-person tent in stock. Ask the user before adding fewer.\",\"available\":0}}"
     },
     {
       "suite": "mock",
@@ -178,9 +178,9 @@
     },
     {
       "suite": "mock",
-      "name": "compare_products with one SKU → invalid_input",
+      "name": "compare_products with one SKU → error / INVALID_INPUT",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"Provide 2 to 4 SKUs in \\\"skus\\\".\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"INVALID_INPUT\",\"message\":\"Provide 2 to 4 SKUs in \\\"skus\\\".\"}}"
     },
     {
       "suite": "mock",
@@ -208,9 +208,9 @@
     },
     {
       "suite": "mock",
-      "name": "checkout: user presses Cancel → status declined",
+      "name": "checkout: user presses Cancel → status cancelled_by_user",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"declined\",\"message\":\"The user cancelled checkout. Nothing was ordered.\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"cancelled_by_user\",\"message\":\"The user cancelled checkout. Nothing was ordered.\"}}"
     },
     {
       "suite": "mock",
@@ -298,9 +298,9 @@
     },
     {
       "suite": "chromium",
-      "name": "invalid category is returned as a value",
+      "name": "invalid category is returned as a value (error / INVALID_INPUT)",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"\\\"category\\\" must be one of: tents, sleeping-bags, backpacks, footwear, clothing.\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"INVALID_INPUT\",\"message\":\"\\\"category\\\" must be one of: tents, sleeping-bags, backpacks, footwear, clothing.\"}}"
     },
     {
       "suite": "chromium",
@@ -310,9 +310,9 @@
     },
     {
       "suite": "chromium",
-      "name": "unknown SKU in reviews → status unknown_sku",
+      "name": "unknown SKU in reviews → error / UNKNOWN_SKU",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"unknown_sku\",\"message\":\"No product has SKU \\\"NOPE\\\". Use search_products to find SKUs.\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"UNKNOWN_SKU\",\"message\":\"No product has SKU \\\"NOPE\\\". Use search_products to find SKUs.\"}}"
     },
     {
       "suite": "chromium",
@@ -328,9 +328,9 @@
     },
     {
       "suite": "chromium",
-      "name": "add_to_cart sold-out tent → OUT_OF_STOCK with available: 0",
+      "name": "add_to_cart sold-out tent → refused / OUT_OF_STOCK with available: 0",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"OUT_OF_STOCK\",\"message\":\"Only 0 of Vidde 4-person tent in stock.\",\"available\":0}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"refused\",\"code\":\"OUT_OF_STOCK\",\"message\":\"Only 0 of Vidde 4-person tent in stock. Ask the user before adding fewer.\",\"available\":0}}"
     },
     {
       "suite": "chromium",
@@ -370,9 +370,9 @@
     },
     {
       "suite": "chromium",
-      "name": "compare_products with one SKU → invalid_input",
+      "name": "compare_products with one SKU → error / INVALID_INPUT",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"invalid_input\",\"message\":\"Provide 2 to 4 SKUs in \\\"skus\\\".\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"error\",\"code\":\"INVALID_INPUT\",\"message\":\"Provide 2 to 4 SKUs in \\\"skus\\\".\"}}"
     },
     {
       "suite": "chromium",
@@ -400,9 +400,9 @@
     },
     {
       "suite": "chromium",
-      "name": "checkout: user presses Cancel → status declined",
+      "name": "checkout: user presses Cancel → status cancelled_by_user",
       "ok": true,
-      "detail": "{\"ok\":true,\"value\":{\"status\":\"declined\",\"message\":\"The user cancelled checkout. Nothing was ordered.\"}}"
+      "detail": "{\"ok\":true,\"value\":{\"status\":\"cancelled_by_user\",\"message\":\"The user cancelled checkout. Nothing was ordered.\"}}"
     },
     {
       "suite": "chromium",

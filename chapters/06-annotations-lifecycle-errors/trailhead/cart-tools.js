@@ -2,6 +2,8 @@ import { cart, catalog } from './store.js';
 
 // A tool-level failure: a stable code to branch on and a sentence to act on.
 const fail = (code, message, details = {}) => ({ status: 'error', code, message, ...details });
+// A rule says no: the call was fine, but other arguments won't help (Chapter 11).
+const refuse = (code, message, details = {}) => ({ status: 'refused', code, message, ...details });
 
 export async function registerCartTools(signal) {
   await document.modelContext.registerTool({
@@ -31,7 +33,9 @@ export async function registerCartTools(signal) {
       }
       const available = await catalog.stock(sku, signal);
       if (available < quantity) {
-        return fail('OUT_OF_STOCK', `Only ${available} of ${product.name} in stock.`, { available });
+        return refuse('OUT_OF_STOCK',
+          `Only ${available} of ${product.name} in stock. Ask the user before adding fewer.`,
+          { available });
       }
       signal.throwIfAborted();          // check right before the side effect
       const line = cart.add(sku, quantity);
