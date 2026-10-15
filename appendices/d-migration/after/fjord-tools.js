@@ -1,4 +1,4 @@
-// AFTER (document.modelContext, 14 October 2026 draft; Chromium 156).
+// AFTER (document.modelContext, 15 October 2026 draft; Chromium 156).
 // One registerTool() call per tool, one AbortController per view.
 export async function registerFjordTools({ availability, bookings, confirmBooking }) {
   if (!('modelContext' in document)) return null;   // progressive enhancement
@@ -41,8 +41,8 @@ export async function registerFjordTools({ availability, bookings, confirmBookin
     // The second argument is now { signal }. Confirmation is the page's own UI.
     async execute(booking, { signal }) {
       const ok = await confirmBooking(booking, { signal });
-      if (!ok) return { booked: false, reason: 'The user declined.' };
-      return { booked: true, reference: await bookings.create(booking) };
+      if (!ok) return { status: 'cancelled_by_user', message: 'The guest declined in the booking dialog.' };
+      return { status: 'booked', reference: await bookings.create(booking) };
     }
   }, options);
 

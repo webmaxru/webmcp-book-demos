@@ -86,8 +86,8 @@ try {
     assert.deepEqual(r.search, { date: '2026-11-06', partySize: 4, slots: ['18:00', '19:30'] });
   });
   await test('Listing D.3: book_table goes through the page\'s own confirmation', () => {
-    assert.deepEqual(r.booked, { booked: true, reference: 'FT-20261106-4' });
-    assert.deepEqual(r.declined, { booked: false, reason: 'The user declined.' });
+    assert.deepEqual(r.booked, { status: 'booked', reference: 'FT-20261106-4' });
+    assert.deepEqual(r.declined, { status: 'cancelled_by_user', message: 'The guest declined in the booking dialog.' });
     assert.equal(r.confirmCalls, 2);
   });
   await test('Listing D.3: view.abort() unregisters both tools (replaces clearContext)', () => {

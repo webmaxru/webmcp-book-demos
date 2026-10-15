@@ -30,6 +30,6 @@ The test serves this folder on `http://localhost:<random port>` (a secure contex
 3. The "before" code in Chromium 156: `navigator.modelContext` doesn't exist, so Listing D.1's guard registers nothing and Listing D.2 throws `TypeError`.
 4. The "before" code against the dev-only mock of the old shape: `provideContext()` sets both tools, `book_table` calls `requestUserInteraction()`, `clearContext()` wipes them, and `unregisterTool(name)` removes by name.
 
-## Result (14 October 2026)
+## Result (15 October 2026, tech review)
 
-20 of 20 checks pass in Chromium 156.0.8078.4 (Playwright 1.64) with `WebMCPTesting`.
+20 of 20 checks pass in Chromium 156.0.8078.4 (Playwright 1.64) with `WebMCPTesting`. Since the tech review, `book_table` in Listing D.3 returns chapter 11's result shapes (`status: 'booked'`, or `status: 'cancelled_by_user'` when the guest declines).
