@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-15T09:10:15.852Z",
+  "spec": "Draft Community Group Report, 15 October 2026",
+  "commits": "2026-10-15T00:00:42Z Handle re-registration during input serialization (#347)",
+  "chromestatus": {
+    "trialFrom": 149,
+    "trialThrough": 162
+  },
+  "edgeTrial": "March 30, 2027",
+  "mozilla": [
+    "position: neutral"
+  ],
+  "webkit": [
+    "position: oppose"
+  ],
+  "tag": [
+    "Missing: Multi-stakeholder support",
+    "Progress: in progress"
+  ]
+}

@@ -10,7 +10,7 @@ const files = {
   '15.1': ['origin-trial-head.html', 'origin-trial.headers.txt'],
   '15.2': ['webmcp-support.js'],
   '15.3': ['standards-watch.mjs'],
-  '15.4': ['snapshots/2026-10-14.json'],
+  '15.4': ['snapshots/2026-10-15.json'],
 };
 
 test('listings match the files', { skip: !md || !existsSync(md) ? 'set CHAPTER_MD' : false }, async () => {
