@@ -70,7 +70,8 @@ test('get_order_status: found and not found', async () => {
   const client = await inProcessClient();
   const ok = await client.callTool({ name: 'get_order_status', arguments: { orderId: 'TH-100231' } });
   assert.equal(ok.isError, undefined);
-  assert.equal(ok.structuredContent.status, 'shipped');
+  assert.equal(ok.structuredContent.orderState, 'shipped');
+  assert.equal('status' in ok.structuredContent, false); // `status` is reserved for outcomes (Chapter 11)
 
   const missing = await client.callTool({ name: 'get_order_status', arguments: { orderId: 'TH-999999' } });
   assert.equal(missing.isError, true);
@@ -95,7 +96,7 @@ test('legacy era (initialize handshake) still works', async () => {
   const client = await inProcessClient('legacy');
   assert.equal(client.getProtocolEra(), 'legacy');
   const r = await client.callTool({ name: 'get_order_status', arguments: { orderId: 'TH-100232' } });
-  assert.equal(r.structuredContent.status, 'processing');
+  assert.equal(r.structuredContent.orderState, 'processing');
 });
 
 test('stdio entry point: auto negotiates modern, legacy pins the handshake', async () => {

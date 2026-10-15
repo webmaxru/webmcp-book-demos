@@ -15,6 +15,6 @@ export const products = [
 ];
 
 export const orders = new Map([
-  ['TH-100231', { status: 'shipped', carrier: 'Posten', estimatedDelivery: '2026-10-17' }],
-  ['TH-100232', { status: 'processing', carrier: null, estimatedDelivery: '2026-10-21' }]
+  ['TH-100231', { orderState: 'shipped', carrier: 'Posten', estimatedDelivery: '2026-10-17' }],
+  ['TH-100232', { orderState: 'processing', carrier: null, estimatedDelivery: '2026-10-21' }]
 ]);

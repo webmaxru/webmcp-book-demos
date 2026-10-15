@@ -18,7 +18,7 @@ npm run inspect      # the MCP Inspector web UI against the stdio server
 npm test             # the test suite (see below)
 ```
 
-Node.js 20 or later. Pinned versions (all checked on npm on 14 Oct 2026): `@modelcontextprotocol/server` 2.3.1,
+Node.js 20 or later. Pinned versions (all checked on npm on 15 Oct 2026): `@modelcontextprotocol/server` 2.3.1,
 `@modelcontextprotocol/client` 2.3.1, `@modelcontextprotocol/node` 2.1.1, `zod` 4.6.7,
 `@modelcontextprotocol/inspector` 2.11.0 (dev only).
 
@@ -57,7 +57,7 @@ parsing, so key order and whitespace don't matter.
 1. Modern era over the HTTP handler in process (`handler.fetch`): era is `modern`, tools listed, annotations and schemas advertised.
 2. `search_products`: keyword + price + stock filter, category filter, empty result; `structuredContent` equals the JSON text block.
 3. Schema violations (`category: 'kayaks'`, `orderId: '12345'`) return `isError: true` with "Input validation error", without running the handler.
-4. `get_order_status`: a found order, and a missing one returned as a recoverable `isError` result.
+4. `get_order_status`: a found order (its state is in `orderState`; `status` is reserved for outcomes, as in Chapter 11), and a missing one returned as a recoverable `isError` result.
 5. The resource and the prompt.
 6. Legacy era (`initialize` handshake) over HTTP.
 7. The stdio entry point as a real child process, in `auto` (modern) and `legacy` modes.
@@ -66,7 +66,7 @@ parsing, so key order and whitespace don't matter.
 10. Listing 3.7 on a real port: modern client works; a POST without `Mcp-Method` gets HTTP 400; with it, 200; `Host: evil.example` gets HTTP 403 (DNS-rebinding guard).
 11. Listing 3.10: the Inspector CLI lists the tools and calls `search_products`.
 
-Result on 14 Oct 2026 (Node.js 22.23.2, Linux): **11 passed, 0 failed**.
+Result on 15 Oct 2026, re-run from a fresh clone during the tech review (Node.js 22.23.2, Linux): **11 passed, 0 failed**; `npm run check` clean; `check:listings` 10 of 10 identical.
 
 ## Observations worth knowing
 

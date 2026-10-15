@@ -25,12 +25,12 @@
     "content": [
       {
         "type": "text",
-        "text": "{\"orderId\":\"TH-100231\",\"status\":\"shipped\",\"carrier\":\"Posten\",\"estimatedDelivery\":\"2026-10-17\"}"
+        "text": "{\"orderId\":\"TH-100231\",\"orderState\":\"shipped\",\"carrier\":\"Posten\",\"estimatedDelivery\":\"2026-10-17\"}"
       }
     ],
     "structuredContent": {
       "orderId": "TH-100231",
-      "status": "shipped",
+      "orderState": "shipped",
       "carrier": "Posten",
       "estimatedDelivery": "2026-10-17"
     },
