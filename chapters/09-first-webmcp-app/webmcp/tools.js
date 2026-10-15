@@ -48,15 +48,16 @@ const bookTable = {
   async execute(input, { signal }) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date ?? '') || !/^\d{2}:\d{2}$/.test(input.time ?? '')
         || !Number.isInteger(input.partySize) || input.partySize < 1 || input.partySize > 12) {
-      return { status: 'invalid_input',
+      return { status: 'error', code: 'INVALID_INPUT',
                message: 'Use date YYYY-MM-DD, time HH:MM and a partySize from 1 to 12.' };
     }
     const slot = await availability.find(input, { signal });
-    if (!slot) return { status: 'slot_unavailable', message: 'Call search_availability again.' };
+    if (!slot) return { status: 'refused', code: 'SLOT_UNAVAILABLE',
+                        message: 'That slot is gone. Call search_availability and ask the guest.' };
     const outcome = await bookingPanel.confirmWithUser({ ...input, slot }, { signal });
     return outcome.confirmed
       ? { status: 'booked', reference: outcome.reference, date: input.date, time: slot.time }
-      : { status: 'not_confirmed_by_user' };
+      : { status: 'cancelled_by_user', message: 'The guest closed the booking form without confirming. Nothing was booked.' };
   }
 };
 

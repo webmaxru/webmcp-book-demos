@@ -212,10 +212,11 @@ await test('native: the Test Agent searches and books; nothing is booked until t
   await context.close();
 });
 
-await test('native: the guest cancels and the agent hears not_confirmed_by_user', async () => {
+await test('native: the guest cancels and the agent hears cancelled_by_user', async () => {
   const { page, context } = await openPage(webmcp, { url: BASE + '?test-agent' });
   const r = await agentBooks(page, { confirm: false });
-  assert.equal(r.status, 'not_confirmed_by_user');
+  assert.equal(r.status, 'cancelled_by_user');
+  assert.match(r.message, /Nothing was booked/);
   await context.close();
 });
 
@@ -238,7 +239,8 @@ await test('native: scripted run() uses one result to plan the next call', async
 await test('native: invalid input comes back as a value the planner can read', async () => {
   const { page, context } = await openPage(webmcp, { url: BASE + '?test-agent' });
   const r = await page.evaluate((date) => window.testAgent.call('book_table', { date, time: '7pm', partySize: 2 }), DATE);
-  assert.equal(r.status, 'invalid_input');
+  assert.equal(r.status, 'error');
+  assert.equal(r.code, 'INVALID_INPUT');
   const err = await page.evaluate(() => window.testAgent.call('no_such_tool').then(() => null, (e) => e.message));
   assert.match(err, /No tool named "no_such_tool"/);
   await context.close();
