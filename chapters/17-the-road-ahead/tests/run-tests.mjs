@@ -141,12 +141,14 @@ await test('Listing 17.2: a valid call returns structured data that matches outp
   assert.deepEqual(checkInput(catalog[0].outputSchema, r.value, 'output'), []);
 });
 
-await test('Listing 17.2: input the browser lets through is answered with invalid_input', async () => {
+await test('Listing 17.2: input the browser lets through is answered with Chapter 11\'s error shape', async () => {
   const r = await call(page, 'search_products', { maxPrice: -5 });
   assert.equal(r.rejected, undefined, 'the call resolves; the agent can correct itself');
-  assert.equal(r.value.error.code, 'invalid_input');
-  assert.match(r.value.error.message, /input\.query is required/);
-  assert.match(r.value.error.message, /input\.maxPrice must be at least 0/);
+  assert.equal(r.value.status, 'error');
+  assert.equal(r.value.code, 'INVALID_ARGUMENT');
+  assert.equal(r.value.error, undefined, 'no legacy { error: { code } } wrapper');
+  assert.match(r.value.message, /input\.query is required/);
+  assert.match(r.value.message, /input\.maxPrice must be at least 0/);
 });
 
 await test('Listing 17.2: exposedTo is passed through only when given', async () => {

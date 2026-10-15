@@ -36,7 +36,7 @@ What the tests check:
 - The input checker rejects a missing `query`, an unknown category, a negative `maxPrice` and a non-object.
 - Listings 17.1–17.3 are byte-identical to the chapter (when `CHAPTER_MD` is set).
 - Without WebMCP, Listing 17.2 registers nothing and Listing 17.3 reports `documentModelContext: false`, with no page errors.
-- With WebMCP, Listing 17.2 registers `search_products` with `readOnlyHint`; a valid call returns data matching `outputSchema`; an invalid call (no `query`, negative `maxPrice`) that the browser lets through is answered with `invalid_input` listing both problems; `exposedTo` is passed only when given; aborting the signal unregisters the catalog.
+- With WebMCP, Listing 17.2 registers `search_products` with `readOnlyHint`; a valid call returns data matching `outputSchema`; an invalid call (no `query`, negative `maxPrice`) that the browser lets through is answered with Chapter 11's error shape, `{ status: 'error', code: 'INVALID_ARGUMENT', message }`, listing both problems in the message; `exposedTo` is passed only when given; aborting the signal unregisters the catalog.
 - Listing 17.3 reports the browser's support and leaves no probe tool behind.
 
 ## Results (15 October 2026, Playwright 1.64, Chromium 156.0.8078.4)
@@ -47,7 +47,7 @@ What the tests check:
 {"documentModelContext":true,"legacyNavigatorModelContext":false,"getTools":true,"executeTool":true,"resumeTool":false,"outputSchemaReflected":false,"annotationsKept":["consequentialHint","debugging","readOnlyHint","untrustedContentHint"],"executeOptions":["signal"]}
 ```
 
-Observed in Chromium 156 (not guaranteed by the draft of 14 October 2026):
+Observed in Chromium 156 (not guaranteed by the draft of 15 October 2026):
 
 - `outputSchema` is accepted by `registerTool()` and silently dropped; `getTools()` doesn't return it.
 - An annotation the browser doesn't know (`sensitiveHint`) is dropped silently.

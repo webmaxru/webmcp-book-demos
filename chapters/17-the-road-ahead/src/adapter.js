@@ -21,7 +21,7 @@ export async function registerCatalog(catalog, { signal, exposedTo } = {}) {
         // The browser does not check input against inputSchema. We do.
         const problems = checkInput(def.inputSchema, input);
         if (problems.length > 0) {
-          return { error: { code: 'invalid_input', message: problems.join('; ') } };
+          return { status: 'error', code: 'INVALID_ARGUMENT', message: problems.join('; ') };
         }
         return def.run(input, { signal: callSignal });
       },
