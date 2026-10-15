@@ -62,7 +62,7 @@ await test('mock (plain Chromium): tools follow the session; decline returns a v
   await startCheckout(page);
   await page.waitForSelector('#confirm-sheet[open]');
   await page.click('[data-back]');
-  assert.deepEqual(await result(page), { status: 'declined' });
+  assert.deepEqual(await result(page), { status: 'cancelled_by_user', message: 'The user closed the order without placing it. Nothing was charged.' });
   assert.match(await page.textContent('#agent-presence'), /An assistant is using Trailhead: Place your order\./);
   assert.deepEqual(errors, []);
   await context.close();
@@ -125,11 +125,11 @@ for (const [label, browser] of [['chromium', real]]) {
     await startCheckout(page);
     await page.waitForSelector('#confirm-sheet[open]');
     await page.click('[data-back]');
-    assert.deepEqual(await result(page), { status: 'declined' });
+    assert.deepEqual(await result(page), { status: 'cancelled_by_user', message: 'The user closed the order without placing it. Nothing was charged.' });
     await startCheckout(page);
     await page.waitForSelector('#confirm-sheet[open]');
     await page.keyboard.press('Escape');
-    assert.deepEqual(await result(page), { status: 'declined' });
+    assert.deepEqual(await result(page), { status: 'cancelled_by_user', message: 'The user closed the order without placing it. Nothing was charged.' });
     assert.equal(await page.evaluate(() => window.trailhead.orders.placed.length), 0);
     await context.close();
   });
@@ -147,15 +147,26 @@ for (const [label, browser] of [['chromium', real]]) {
     await context.close();
   });
 
-  await test(`${label}: signing out mid-checkout ends the pending call as "cancelled"`, async () => {
+  await test(`${label}: signing out mid-checkout ends the pending call as refused (SESSION_ENDED)`, async () => {
     const { page, context } = await open(browser);
     await signIn(page);
     await startCheckout(page);
     await page.waitForSelector('#confirm-sheet[open]');
     await page.evaluate(() => window.trailhead.session.signOut());
-    assert.deepEqual(await result(page), { status: 'cancelled', reason: 'session_ended' });
+    assert.deepEqual(await result(page), { status: 'refused', code: 'SESSION_ENDED', message: 'The user signed out, so nothing was ordered.' });
     assert.equal(await page.evaluate(() => document.querySelector('#confirm-sheet').open), false);
     assert.equal(await page.evaluate(() => window.trailhead.orders.placed.length), 0);
+    await context.close();
+  });
+  await test(`${label}: checkout with an empty cart returns an EMPTY_CART error`, async () => {
+    const { page, context } = await open(browser);
+    await signIn(page);
+    await page.evaluate(() => window.trailhead.cart.clear());
+    await startCheckout(page);
+    const r = await result(page);
+    assert.equal(r.status, 'error');
+    assert.equal(r.code, 'EMPTY_CART');
+    assert.equal(await page.evaluate(() => !!document.querySelector('#confirm-sheet').open), false);
     await context.close();
   });
 }
