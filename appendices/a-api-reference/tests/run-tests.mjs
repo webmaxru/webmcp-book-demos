@@ -186,7 +186,8 @@ out.declarative = await page.evaluate(async () => {
 
 } finally {
   // Re-registering the same name while inputSchema is being serialized (the draft's
-// 15 October 2026 re-check, PR #347). Run in its own page: Chromium 156 crashes it.
+// 15 October 2026 re-check, PR #347). Run in its own page: Chromium 156 kills its renderer
+// (bad IPC message, reason 345; https://issues.chromium.org/issues/573722078).
 const crashPage = await browser.newPage();
 crashPage.on('crash', () => { crashed = true; });
 await crashPage.goto('http://localhost:8611/');
@@ -274,7 +275,7 @@ await test('declarative <form toolname> still registers a tool in Chromium 156',
   assert.deepEqual(out.declarative[0].schema.required, ['date', 'partySize']);
 });
 
-await test('Chromium differs: re-registering the name during inputSchema serialization crashes the renderer (draft: InvalidStateError)', () => {
+await test('Chromium differs: re-registering the name during inputSchema serialization kills the renderer, crbug 573722078 (draft: InvalidStateError)', () => {
   assert.equal(crashed, true, JSON.stringify(reentrant));
 });
 
