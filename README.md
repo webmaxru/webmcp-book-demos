@@ -5,7 +5,7 @@
 
 Runnable, tested code for every listing in the book *[Tools, Not Clicks: Building Agent-Ready Websites with WebMCP](https://webmcp.salnikov.no/)* by Maxim Salnikov.
 
-The book is free to read online at **[webmcp.salnikov.no](https://webmcp.salnikov.no/)**, and its manuscript lives in [vibeprogrammer/webmcp-book](https://github.com/vibeprogrammer/webmcp-book). Each folder here belongs to one chapter or appendix. Every listing in the book is a file here, byte-identical to the printed code, and each folder has its own tests that run against Chromium's built-in WebMCP and against a `document.modelContext` mock.
+The book is free to read online at **[webmcp.salnikov.no](https://webmcp.salnikov.no/)**, and its manuscript lives in [webmaxru/webmcp-book](https://github.com/webmaxru/webmcp-book). Each folder here belongs to one chapter or appendix. Every listing in the book is a file here, byte-identical to the printed code, and each folder has its own tests that run against Chromium's built-in WebMCP and against a `document.modelContext` mock.
 
 ## Table of contents
 
@@ -29,7 +29,7 @@ The book is free to read online at **[webmcp.salnikov.no](https://webmcp.salniko
 Each folder is a self-contained npm project; there is no root `package.json`. To run one, for example Fjord Table:
 
 ```bash
-git clone https://github.com/vibeprogrammer/webmcp-book-demos.git
+git clone https://github.com/webmaxru/webmcp-book-demos.git
 cd webmcp-book-demos/fjord-table
 npm install
 npx playwright install chromium   # once per machine: downloads Playwright's Chromium 156
@@ -102,8 +102,8 @@ WebMCP is a [Draft Community Group Report](https://webmachinelearning.github.io/
 
 ## Issues and contributions
 
-- If a demo fails, or a newer browser or draft breaks it, please [open an issue](https://github.com/vibeprogrammer/webmcp-book-demos/issues/new). Include the folder, your Node.js and browser versions, and the test output.
-- Errors in the book text belong in the [book repository's issues](https://github.com/vibeprogrammer/webmcp-book/issues).
+- If a demo fails, or a newer browser or draft breaks it, please [open an issue](https://github.com/webmaxru/webmcp-book-demos/issues/new). Include the folder, your Node.js and browser versions, and the test output.
+- Errors in the book text belong in the [book repository's issues](https://github.com/webmaxru/webmcp-book/issues).
 - Pull requests that fix a bug are welcome. The listings must stay byte-identical to the book, so a change to a listing file may also need a change in the book.
 
 ## License

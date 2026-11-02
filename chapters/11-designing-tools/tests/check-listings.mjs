@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const URL_MD = 'https://raw.githubusercontent.com/vibeprogrammer/webmcp-book/main/manuscript/11-designing-tools.md';
+const URL_MD = 'https://raw.githubusercontent.com/webmaxru/webmcp-book/main/manuscript/11-designing-tools.md';
 const src = process.argv[2] ?? process.env.CHAPTER_MD;
 const md = src ? await readFile(src, 'utf8') : await (await fetch(URL_MD, { signal: AbortSignal.timeout(20000) })).text();
 
