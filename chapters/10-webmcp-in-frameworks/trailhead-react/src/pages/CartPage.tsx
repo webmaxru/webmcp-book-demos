@@ -10,7 +10,7 @@ export function CartPage() {
   // A view-scoped, consequential tool: it exists only on this page, and only with items in the cart.
   useWebMCP({
     name: 'checkout',
-    description: 'Place the order for everything in the cart. The user must confirm in the page\'s own dialog; nothing is ordered until they click "Place order". Returns the order ID, or status "cancelled_by_user" if the user declines.',
+    description: 'Place the order for everything in the cart. The user must confirm in the page\'s own dialog; nothing is ordered until they click "Place order". Returns the order ID, status "cancelled_by_user" if the user declines, or status "refused" if the cart changed before they confirmed.',
     annotations: { consequentialHint: true },
     enabled: cart.itemCount > 0,
     execute: (_input, { signal }) => checkout(signal),

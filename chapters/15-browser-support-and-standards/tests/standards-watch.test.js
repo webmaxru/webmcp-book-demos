@@ -27,6 +27,11 @@ test('only current labels count, not removed ones in the timeline', async () => 
   assert.deepEqual(labels, ['Missing: Multi-stakeholder support', 'Progress: in progress']);
 });
 
+test('charter stage comes from the strategy issue labels', async () => {
+  assert.deepEqual(parse.labels(['In Charter', 'AC review', 'Council'])(await fx('charter-issue.html')),
+    ['In Charter Refinement']);
+});
+
 test('diff reports exactly the sources that changed', () => {
   const before = { spec: 'Draft Community Group Report, 13 October 2026', webkit: ['position: oppose'] };
   const after = { spec: 'Draft Community Group Report, 14 October 2026', webkit: ['position: oppose'] };

@@ -92,13 +92,14 @@ const insecure = await chromium.launch({
 });
 console.log(`\nChromium ${webmcp.version()}\n`);
 
-async function openPage(browser, { url = BASE, mock = false, polyfill = false } = {}) {
+async function openPage(browser, { url = BASE, mock = false, polyfill = false, init = null } = {}) {
   const context = await browser.newContext();
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   if (mock) await page.addInitScript({ path: join(ROOT, 'dev/model-context-mock.js') });
+  if (init) await page.addInitScript(init);
   if (polyfill) {
     // Serve the CDN URL from the installed package: same bytes, so the SRI check still runs.
     await page.route(POLYFILL_CDN, async (route) => route.fulfill({
@@ -295,6 +296,27 @@ await test('Permissions-Policy: tools=() blocks registration; the page still wor
   assert.equal(observed.blockedPolicy.toolsPolicy, false);
   await page.click('#search-form button[type=submit]');
   await page.waitForSelector('#slots-heading:not(:empty)');
+  await context.close();
+});
+
+await test('a refused registration rolls back the whole tool surface (all or nothing)', async () => {
+  // Refuse the second tool, as a policy or a name clash would, and check that the first is withdrawn.
+  const init = () => {
+    const mc = document.modelContext;
+    const register = mc.registerTool.bind(mc);
+    mc.registerTool = (tool, options) => tool.name === 'book_table'
+      ? Promise.reject(new DOMException('refused by the test', 'InvalidStateError'))
+      : register(tool, options);
+  };
+  const { page, errors, context, chip } = await openPage(webmcp, { init });
+  assert.match(await chip(), /Agent tools unavailable \(InvalidStateError\)/);
+  await wait(100);
+  const names = await page.evaluate(async () => (await document.modelContext.getTools()).map((t) => t.name));
+  observed.rollbackTools = names;
+  assert.deepEqual(names, []);
+  await page.click('#search-form button[type=submit]');
+  await page.waitForSelector('#slots-heading:not(:empty)');
+  assert.deepEqual(errors, []);
   await context.close();
 });
 

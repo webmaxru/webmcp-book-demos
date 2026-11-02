@@ -39,10 +39,11 @@ npm run typecheck     # tsc --noEmit against webmcp-types
 - Listing 16.2 records `ok` for a search, `refused` with code `OUT_OF_STOCK` for an out-of-stock item (the value still reaches the agent), `error` with code `UNKNOWN_SKU` for an unknown SKU, `threw` for a thrown handler (and `executeTool()` still rejects), and `aborted` for an aborted call (a caller's abort, not Chapter 11's `cancelled_by_user`).
 - Listing 16.3: an order placed after agent calls carries `agentAssisted: true` and the tools that helped; an order with no agent calls carries `agentAssisted: false`.
 - Aborting the registration signal removes all five tools.
+- Registration is all or nothing: when one `registerTool()` call fails (a squatter already holds `get_cart`), the tools registered before it are rolled back.
 
-## Results (15 October 2026)
+## Results (2 November 2026)
 
-Both runs passed, 17 of 17 checks (after the 15 October tech review; 14 before it), on Chromium 156.0.8078.4 (Playwright 1.64.1), TypeScript 5.9 and webmcp-types 0.1.10.
+Both runs passed, 16 of 16 checks (15 before the v2 rewrite added the rollback test), on Chromium 156.0.8078.4 (Playwright 1.64.1), TypeScript 5.9 and webmcp-types 0.1.10.
 
 Observed only in Chromium 156 with `WebMCPTesting` (not specified behaviour, so don't depend on it):
 
@@ -58,4 +59,4 @@ MIT. See [LICENSE](../../LICENSE).
 
 - Applied Chapter 11's result convention (book-wide decision): `trailhead-tools.ts` returns `{ status, code, message }` with upper-case codes, and `measure.ts` (Listing 16.2) classifies by `status`. The thrown-exception outcome is now `threw`, so it can't be confused with `status: 'error'`, and the caller-abort outcome is `aborted`, so it can't be confused with `status: 'cancelled_by_user'`.
 - Test names now use the chapter's listing numbers (they had been shifted), and a listings check compares each listing in the chapter with its file in `src/` when `CHAPTER_MD` is set.
-- Re-run from a fresh clone: `npm test` and `npm run test:chrome` both pass (17 checks each; Node 22, Playwright 1.64.1, Chromium 156.0.8078.4).
+- Re-run from a fresh clone: `npm test` and `npm run test:chrome` both pass (16 checks each; Node 22, Playwright 1.64.1, Chromium 156.0.8078.4).

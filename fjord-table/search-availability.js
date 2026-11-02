@@ -1,7 +1,7 @@
 // Fjord Table's first tool: Listing 4.1 (Chapter 4), the same code as Listing 5.1 (Chapter 5).
 // The two import lines are added for the demo; everything below them is the listing as printed.
-// (The book calls this file agent-tools.js. In the demo that name belongs to Listing 5.3's helper,
-// so the registration lives here.)
+// (The first edition called this file agent-tools.js. In the demo that name belongs to Listing 5.3's
+// helper, so the registration lives here, and the second edition names this file.)
 import { availability } from './availability.js';
 import { bookingPanel } from './booking-panel.js';
 

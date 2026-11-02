@@ -37,11 +37,12 @@ What the tests check:
 - Listings 17.1–17.3 are byte-identical to the chapter (when `CHAPTER_MD` is set).
 - Without WebMCP, Listing 17.2 registers nothing and Listing 17.3 reports `documentModelContext: false`, with no page errors.
 - With WebMCP, Listing 17.2 registers `search_products` with `readOnlyHint`; a valid call returns data matching `outputSchema`; an invalid call (no `query`, negative `maxPrice`) that the browser lets through is answered with Chapter 11's error shape, `{ status: 'error', code: 'INVALID_ARGUMENT', message }`, listing both problems in the message; `exposedTo` is passed only when given; aborting the signal unregisters the catalog.
+- Listing 17.2 rolls back the whole batch when one registration fails (a duplicate name).
 - Listing 17.3 reports the browser's support and leaves no probe tool behind.
 
-## Results (15 October 2026, Playwright 1.64, Chromium 156.0.8078.4)
+## Results (2 November 2026, Playwright 1.64.1, Chromium 156.0.8078.4)
 
-13 of 13 checks pass with the mock and 13 of 13 with Chromium's own WebMCP (`--enable-features=WebMCPTesting`). The probe reported, in Chromium 156:
+14 of 14 checks pass with the mock and 14 of 14 with Chromium's own WebMCP (`--enable-features=WebMCPTesting`). The probe reported, in Chromium 156:
 
 ```json
 {"documentModelContext":true,"legacyNavigatorModelContext":false,"getTools":true,"executeTool":true,"resumeTool":false,"outputSchemaReflected":false,"annotationsKept":["consequentialHint","debugging","readOnlyHint","untrustedContentHint"],"executeOptions":["signal"]}

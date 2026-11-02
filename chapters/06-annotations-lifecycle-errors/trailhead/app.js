@@ -38,6 +38,8 @@ if ('modelContext' in document) {
     await registerCompareTool(signal);
     if (debug) await registerDebugTools(signal);
   } catch (err) {
+    // All or nothing: roll back the tools that did register (Chrome's best practices).
+    agentTools.abort();
     console.warn('WebMCP tools not registered:', err.name, err.message);
   }
   cart.subscribe(syncCheckoutTool);

@@ -71,8 +71,15 @@ export async function registerWidgetTools({ signal, exposedTo = [] }) {
     async execute(args, { signal }) {
       const invalid = checkArgs(ticketSchema, args);
       if (invalid) return invalid;
+      const duplicate = await helpdesk.findDuplicate(args);
+      if (duplicate) {                                                    // ④
+        return refuse('DUPLICATE_TICKET',
+          `An identical ticket, ${duplicate.id}, was opened at ${duplicate.openedAt} (UTC). ` +
+          'Give the user that ticket ID instead of opening a second one.',
+          { ticketId: duplicate.id });
+      }
       const quota = await helpdesk.ticketQuota();
-      if (quota.remaining === 0) {                                        // ④
+      if (quota.remaining === 0) {                                        // ⑤
         return refuse('TICKET_LIMIT',
           `This account has opened ${quota.used} tickets in the past hour, the most allowed. ` +
           `Tell the user they can open another after ${quota.resetsAt} (UTC).`,
@@ -98,14 +105,14 @@ export async function registerWidgetTools({ signal, exposedTo = [] }) {
       const invalid = checkArgs(statusSchema, args);
       if (invalid) return invalid;
       const ticket = await helpdesk.getTicket(args.ticketId);
-      if (!ticket) {                                                      // ⑤
+      if (!ticket) {                                                      // ⑥
         return fail('TICKET_NOT_FOUND',
           `No ticket ${args.ticketId} on this account. Check the ID with the user; it is in ` +
           'the confirmation email.');
       }
       return {
         ticketId: ticket.id,
-        ticketState: ticket.state,                                        // ⑥
+        ticketState: ticket.state,                                        // ⑦
         updated: ticket.updated,
         latestReply: ticket.latestReply,
       };

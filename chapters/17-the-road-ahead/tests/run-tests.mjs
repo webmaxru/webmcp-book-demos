@@ -187,6 +187,20 @@ await test('Listing 17.3: the probe reports this browser and cleans up after its
   assert.deepEqual(left, ['search_products']);
 });
 
+await test('Listing 17.2: one failed registration rolls back the whole batch', async () => {
+  const result = await page.evaluate(async () => {
+    const { registerCatalog } = await import('/src/adapter.js');
+    const def = { name: 'rollback_probe', description: 'Rollback test.', run: () => ({}) };
+    let rejected = null;
+    try { await registerCatalog([def, def], { signal: new AbortController().signal }); }
+    catch (e) { rejected = e.name; }
+    await new Promise((r) => setTimeout(r, 200));   // let the rollback settle
+    return { rejected, names: (await document.modelContext.getTools()).map((t) => t.name) };
+  });
+  assert.ok(result.rejected, 'the duplicate name is rejected');
+  assert.deepEqual(result.names, ['search_products'], 'the first rollback_probe was rolled back');
+});
+
 await test('Listing 17.2: aborting the signal unregisters the catalog', async () => {
   await page.evaluate(() => window.__trailhead.unregister());
   await page.waitForFunction(async () => (await document.modelContext.getTools()).length === 0);

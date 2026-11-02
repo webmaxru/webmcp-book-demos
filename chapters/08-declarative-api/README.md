@@ -6,7 +6,7 @@ Fjord Table's search and booking forms become WebMCP tools through HTML attribut
 `respondWith()`, the `toolactivated` / `toolcancel` events and the `:tool-form-active` /
 `:tool-submit-active` pseudo-classes.
 
-> **Status (14 October 2026).** The declarative API was removed from the WebMCP specification on
+> **Status (14 October 2026, re-checked 2 November 2026).** The declarative API was removed from the WebMCP specification on
 > 8 October 2026 (webmachinelearning/webmcp PR #338). It still ships in Chrome's WebMCP implementation
 > and Chrome still documents it. Everything here was tested against **Chromium 156.0.8078.4** with
 > `--enable-features=WebMCPTesting` (the switch behind `chrome://flags/#enable-webmcp-testing`).
@@ -73,7 +73,7 @@ npm test
 There is deliberately **no `document.modelContext` mock** here: what this chapter documents is the browser's own
 form-to-tool behaviour (schema synthesis, filling, submission), which a mock would only imitate.
 
-Result on 14 October 2026, Chromium 156.0.8078.4 (Playwright 1.64): **17 passed, 0 failed.** Re-run from a fresh clone during the technical review on 15 October 2026, after `book_table` adopted Chapter 11's result convention: **17 passed, 0 failed.**
+Result on 14 October 2026, Chromium 156.0.8078.4 (Playwright 1.64): **17 passed, 0 failed.** Re-run from a fresh clone during the technical review on 15 October 2026, after `book_table` adopted Chapter 11's result convention: **17 passed, 0 failed.** Re-run for the second edition on 2 November 2026 (same Chromium 156.0.8078.4 build, Playwright 1.64.1; the declarative API was still outside the 27 October 2026 spec draft): **17 passed, 0 failed.**
 
 ## Other observations behind the chapter (one-off probes, Chromium 156, 14 October 2026)
 

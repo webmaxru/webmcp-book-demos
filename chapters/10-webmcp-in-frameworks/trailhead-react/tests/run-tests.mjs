@@ -186,6 +186,23 @@ await test('checkout waits for the person: Cancel returns "cancelled_by_user", P
   await close();
 });
 
+await test('checkout orders exactly the cart the person confirmed; a change behind the dialog is refused', async () => {
+  const { page, close } = await open(webmcp);
+  await waitForTools(page, (n) => n.length === 4, 'ready');
+  await call(page, 'add_to_cart', { sku: 'TH-TENT-01', quantity: 1 });
+  await page.getByTestId('cart-link').click();
+  await waitForTools(page, (n) => n.includes('checkout'), 'with checkout');
+  await startCall(page, 'checkout');
+  await page.getByRole('dialog').waitFor();
+  await call(page, 'add_to_cart', { sku: 'TH-SB-02', quantity: 1 });   // the cart changes while the question is open
+  await page.getByRole('dialog').getByRole('button', { name: 'Place order' }).click();
+  const r = (await settle(page)).ok;
+  eq([r?.status, r?.code], ['refused', 'CART_CHANGED'], 'a stale confirmation is refused');
+  assert(/nothing was ordered/.test(r.message), 'the message says nothing was ordered');
+  eq(await page.getByTestId('cart-link').textContent(), 'Cart (2)', 'nothing ordered, the cart is intact');
+  await close();
+});
+
 await test('an in-flight checkout survives navigation that unregisters the tool', async () => {
   const { page, close } = await open(webmcp);
   await waitForTools(page, (n) => n.length === 4, 'ready');

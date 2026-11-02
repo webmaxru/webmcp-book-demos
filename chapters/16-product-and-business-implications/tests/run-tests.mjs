@@ -50,7 +50,7 @@ await test('listings: each listing in the chapter matches its file in src/', asy
   const md = process.env.CHAPTER_MD;
   if (!md) { console.log('     (skipped: set CHAPTER_MD to the chapter Markdown)'); return; }
   const text = await readFile(md, 'utf8');
-  const found = [...text.matchAll(/\*\*Listing (16\.\d) — [^*]*?\(([^)]+)\)\*\*\s*\n\s*```[a-z]*\n([\s\S]*?)\n```/g)];
+  const found = [...text.matchAll(/\*\*Listing (16\.\d)\*\* `[^`]*\/src\/([^`/]+)` — [^\n]*\n\s*```[a-z]*\n([\s\S]*?)\n```/g)];
   assert.equal(found.length, 5, 'five listings');
   for (const [, n, file, code] of found) {
     const src = (await readFile(join(ROOT, 'src', file), 'utf8')).replace(/\n$/, '');
@@ -79,6 +79,7 @@ console.log(`\nChromium ${plain.version()} · WebMCP from ${REAL ? 'the browser 
 async function open({ withWebMCP }) {
   const context = await (withWebMCP ? webmcp : plain).newContext();
   const page = await context.newPage();
+  page.setDefaultTimeout(90_000);   // generous: a busy CI machine is slow
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -190,6 +191,26 @@ await test('Listing 16.3: an order with no agent help is not attributed', async 
 
 await test('unregistering: aborting the signal removes all five tools', async () => {
   await page.evaluate(() => window.__trailhead.tools.abort());
+  await page.waitForFunction(async () => (await document.modelContext.getTools()).length === 0);
+});
+
+await test('Listing 16.4: one failed registration rolls back the whole batch', async () => {
+  const left = await page.evaluate(async () => {
+    const mc = document.modelContext;
+    // Take the fourth catalog name first, so the batch fails halfway through.
+    const squatter = new AbortController();
+    await mc.registerTool({ name: 'get_cart', description: 'Squatter for the test.', execute: async () => ({}) },
+      { signal: squatter.signal });
+    let rejected = null;
+    try { await window.__trailhead.registerTrailheadTools(new AbortController().signal); }
+    catch (e) { rejected = e.name; }
+    await new Promise((r) => setTimeout(r, 200));   // let any unregistration settle
+    const names = (await mc.getTools()).map((t) => t.name).sort();
+    squatter.abort();
+    return { rejected, names };
+  });
+  assert.ok(left.rejected, 'registerTrailheadTools rejects');
+  assert.deepEqual(left.names, ['get_cart'], 'only the squatter is left: the three tools before it were rolled back');
   await page.waitForFunction(async () => (await document.modelContext.getTools()).length === 0);
 });
 

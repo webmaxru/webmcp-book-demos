@@ -111,6 +111,8 @@ try {
     await new Promise((r) => setTimeout(r, 100));
     out.cleared = await names();
     try { await set.replace([tool('dup'), tool('dup')]); out.dup = 'resolved'; } catch (e) { out.dup = e.name; }
+    await new Promise((r) => setTimeout(r, 100));
+    out.afterDup = await names();
     other.abort(); set.clear();
     return out;
   });
@@ -121,6 +123,9 @@ try {
   });
   await test('Listing D.4: a duplicate name inside one set rejects (InvalidStateError)', () => {
     assert.equal(s.dup, 'InvalidStateError');
+  });
+  await test('Listing D.4: a failed replace() rolls back the whole set (all or nothing)', () => {
+    assert.deepEqual(s.afterDup, ['someone_elses_tool']);
   });
   await test('no page errors in the "after" page', () => assert.deepEqual(errors, []));
 

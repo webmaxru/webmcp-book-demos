@@ -213,6 +213,13 @@ async function helpdeskSuite(suite, browser) {
   check(suite, 'fourth ticket in an hour -> refused TICKET_LIMIT before the form opens', r.value.status === 'refused' && r.value.code === 'TICKET_LIMIT' && formHidden, JSON.stringify(r.value));
   observations[`${suite}ExampleErrors2`].limit = r.value;
 
+  r = await call('create_ticket', { ...draft, subject: `${draft.subject} (1)` });
+  const formHidden2 = await page.evaluate(() => document.getElementById('ticket-form').hidden);
+  check(suite, 'the same ticket sent twice -> refused DUPLICATE_TICKET with the first ticket ID, form stays hidden',
+    r.value.status === 'refused' && r.value.code === 'DUPLICATE_TICKET' && r.value.ticketId === created[0].ticketId && formHidden2,
+    JSON.stringify(r.value));
+  observations[`${suite}ExampleErrors2`].duplicate = r.value;
+
   r = await call('get_ticket_status', { ticketId: 'SUP-1042' });
   check(suite, 'get_ticket_status SUP-1042 -> ticketState waiting_on_user, reply quoted', r.ok && r.value.ticketState === 'waiting_on_user' && r.value.latestReply.author && !('status' in r.value), JSON.stringify(r.value));
   const foreign = await call('get_ticket_status', { ticketId: 'SUP-1043' });

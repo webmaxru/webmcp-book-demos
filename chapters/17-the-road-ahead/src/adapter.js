@@ -8,28 +8,36 @@ export function webmcpAvailable() {
 
 export async function registerCatalog(catalog, { signal, exposedTo } = {}) {
   if (!webmcpAvailable()) return [];
+  // All or nothing: if one registration fails, the ones before it are rolled back.
+  const batch = new AbortController();
+  const batchSignal = signal ? AbortSignal.any([signal, batch.signal]) : batch.signal;
   const registered = [];
-  for (const def of catalog) {
-    const tool = {
-      name: def.name,
-      title: def.title,
-      description: def.description,
-      inputSchema: def.inputSchema,
-      outputSchema: def.outputSchema,
-      annotations: def.annotations,
-      async execute(input, { signal: callSignal } = {}) {
-        // The browser does not check input against inputSchema. We do.
-        const problems = checkInput(def.inputSchema, input);
-        if (problems.length > 0) {
-          return { status: 'error', code: 'INVALID_ARGUMENT', message: problems.join('; ') };
-        }
-        return def.run(input, { signal: callSignal });
-      },
-    };
-    const options = { signal };
-    if (exposedTo) options.exposedTo = exposedTo;
-    await document.modelContext.registerTool(tool, options);
-    registered.push(def.name);
+  try {
+    for (const def of catalog) {
+      const tool = {
+        name: def.name,
+        title: def.title,
+        description: def.description,
+        inputSchema: def.inputSchema,
+        outputSchema: def.outputSchema,
+        annotations: def.annotations,
+        async execute(input, { signal: callSignal } = {}) {
+          // The browser does not check input against inputSchema. We do.
+          const problems = checkInput(def.inputSchema, input);
+          if (problems.length > 0) {
+            return { status: 'error', code: 'INVALID_ARGUMENT', message: problems.join('; ') };
+          }
+          return def.run(input, { signal: callSignal });
+        },
+      };
+      const options = { signal: batchSignal };
+      if (exposedTo) options.exposedTo = exposedTo;
+      await document.modelContext.registerTool(tool, options);
+      registered.push(def.name);
+    }
+  } catch (err) {
+    batch.abort();
+    throw err;
   }
   return registered;
 }

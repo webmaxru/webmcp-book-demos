@@ -9,7 +9,7 @@ Fjord Table, the small Oslo restaurant-booking site from the book *Tools, Not Cl
 | `snippets/check-webmcp.js` | 9.1 | Paste into the DevTools console. The tests evaluate it in the page. |
 | `webmcp/enable.js` | 9.2 | Chooses `native`, `polyfill` or `off`, with a reason. |
 | `webmcp/tools.js` | 9.3 | `search_availability` and `book_table` as thin wrappers over the page's own code. |
-| `app.js` | 9.4 | Start-up: the page first, then the tools, then the Test Agent with `?test-agent`. |
+| `app.js` | 9.4 | Start-up: the page first, then the tools (all or nothing: one `AbortController`, aborted if any registration fails), then the Test Agent with `?test-agent`. |
 | `test-agent.js` | 9.5 | The Test Agent: `getTools()` + `executeTool()` with a pluggable planner; `scripted()` planner. |
 | `prompt-planner.js` | 9.6 | A planner using Chrome's Prompt API (`LanguageModel`, `responseConstraint`). |
 | `deploy/claude_desktop_config.json` | 9.7 | MCP client entry for `@mcp-b/webmcp-local-relay@6.0.3`, restricted with `--widget-origin`. |
@@ -30,7 +30,7 @@ The two short inline snippets in the chapter's prose (a `scripted()` run and a c
 npm install
 npx playwright install chromium
 npm start                      # http://localhost:3000/
-npm test                       # 20 checks (21 with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md)
+npm test                       # 21 checks (22 with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md)
 ```
 
 Open `http://localhost:3000/?test-agent` in Chrome with `chrome://flags/#enable-webmcp-testing` enabled, then in the console:
@@ -41,13 +41,13 @@ await testAgent.call('search_availability', { date: '2026-11-20', partySize: 4 }
 
 Add `&webmcp-polyfill` (or use `?webmcp-polyfill` alone) to try the polyfill path in a browser without WebMCP.
 
-## Test results (14 October 2026)
+## Test results (14 October 2026, re-run 2 November 2026)
 
-Run with Playwright 1.64 and its Chromium **156.0.8078.4**: plain, with `--enable-features=WebMCPTesting`, and with `--host-resolver-rules=MAP fjord.test 127.0.0.1` for an insecure origin. **21 passed, 0 failed** (with `CHAPTER_MD` set).
+Run with Playwright 1.64 and its Chromium **156.0.8078.4**: plain, with `--enable-features=WebMCPTesting`, and with `--host-resolver-rules=MAP fjord.test 127.0.0.1` for an insecure origin. **21 passed, 0 failed** (with `CHAPTER_MD` set) on 14 October 2026. Re-run for the second edition on 2 November 2026, same Chromium build, after `app.js` started rolling back the whole tool surface when one registration fails (Chrome's WebMCP best practices, "Register tools all at once", 30 October 2026): **22 passed, 0 failed** (with `CHAPTER_MD` set). Spec draft at the time: 27 October 2026. Packages: `playwright@1.64.1`, `@mcp-b/webmcp-polyfill@6.0.3`.
 
 - Static: `node --check` on every `.js`/`.mjs` file; the relay config parses and pins 6.0.3 with `--widget-origin`; the SRI hash in `webmcp/enable.js` matches `@mcp-b/webmcp-polyfill@6.0.3/dist/index.iife.js` (the same bytes jsDelivr served on 14 October 2026); listings match the chapter.
 - Plain Chromium: tools off (`not-supported`) and a person can search and book; Listing 9.1 output; the polyfill path (`?webmcp-polyfill`, CDN URL served from the installed package so SRI still applies) registers both tools and the Test Agent books with the guest's confirmation; a blocked polyfill request leaves tools off (`polyfill-failed`); the Test Agent books against the mock.
-- WebMCPTesting: both tools registered with their annotations; the Test Agent searches and books, and `book_table` stays pending until the guest clicks; Cancel gives `{ status: 'cancelled_by_user', message }`; a scripted `run()` plans its second step from the first result; invalid input comes back as `{ status: 'error', code: 'INVALID_INPUT', message }` (Chapter 11's result convention, adopted in the 15 October 2026 technical review); Listing 9.1 output; the DevTools Protocol `WebMCP` domain sees both tools and `invokeTool` returns `Completed`; `http://fjord.test` (insecure) has no `document.modelContext`; `Permissions-Policy: tools=()` makes `registerTool()` throw `NotAllowedError`, and the page still works; `server.js` headers; an invalid `Origin-Trial` token is ignored without errors; the Prompt API planner drives the Test Agent against a **stub** `LanguageModel`.
+- WebMCPTesting: both tools registered with their annotations; the Test Agent searches and books, and `book_table` stays pending until the guest clicks; Cancel gives `{ status: 'cancelled_by_user', message }`; a scripted `run()` plans its second step from the first result; invalid input comes back as `{ status: 'error', code: 'INVALID_INPUT', message }` (Chapter 11's result convention, adopted in the 15 October 2026 technical review); Listing 9.1 output; the DevTools Protocol `WebMCP` domain sees both tools and `invokeTool` returns `Completed`; `http://fjord.test` (insecure) has no `document.modelContext`; `Permissions-Policy: tools=()` makes `registerTool()` throw `NotAllowedError`, and the page still works; when the second registration is refused (a test wraps `registerTool()` to reject `book_table` with `InvalidStateError`), `app.js` aborts its signal and `getTools()` returns `[]`, and the page still works; `server.js` headers; an invalid `Origin-Trial` token is ignored without errors; the Prompt API planner drives the Test Agent against a **stub** `LanguageModel`.
 
 ### Observed in Chromium 156 (the facts the chapter quotes)
 

@@ -68,7 +68,7 @@ Chromium with `--enable-features=WebMCPTesting`). Without WebMCP the page still 
 npm test
 ```
 
-Last run on 15 October 2026 (UTC, tech review), Playwright 1.64 with Chromium 156.0.8078.4: **30/30 passed**.
+First run on 15 October 2026 (UTC, tech review), re-run on 2 November 2026 (second edition), Playwright 1.64 with Chromium 156.0.8078.4: **30/30 passed** both times.
 
 - 11 syntax checks (`node --check` on every script, JSON parse of the manifest)
 - 1 unit test of the agent loop and `runTool()` against the dev-only mock (plain Chromium, no WebMCP)
@@ -81,7 +81,7 @@ Last run on 15 October 2026 (UTC, tech review), Playwright 1.64 with Chromium 15
 - 1 extension test: Listings 7.8–7.10 loaded unpacked into full Chromium 156; both frames report their own tools and the
   service worker runs `search_articles` in Supportly's frame
 
-### Chromium 156 vs the 15 October 2026 draft (observed)
+### Chromium 156 vs the 27 October 2026 draft (observed, same algorithms as 15 October)
 
 | Situation | Draft | Chromium 156 |
 |---|---|---|

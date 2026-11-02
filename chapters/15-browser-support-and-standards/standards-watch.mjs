@@ -10,6 +10,7 @@ const SOURCES = {
   mozilla: 'https://github.com/mozilla/standards-positions/issues/1412',
   webkit: 'https://github.com/WebKit/standards-positions/issues/670',
   tag: 'https://github.com/w3ctag/design-reviews/issues/1238',
+  charter: 'https://github.com/w3c/strategy/issues/576',
 };
 
 export const parse = {
@@ -42,6 +43,7 @@ const PARSERS = {
   edgeTrial: parse.edgeTrial,
   mozilla: parse.labels(['position:']), webkit: parse.labels(['position:']),
   tag: parse.labels(['Progress:', 'Missing:', 'Resolution:']),
+  charter: parse.labels(['In Charter', 'AC review', 'Council']),
 };
 
 async function fetchText(url) {

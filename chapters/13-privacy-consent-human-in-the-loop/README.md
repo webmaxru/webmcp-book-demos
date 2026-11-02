@@ -30,9 +30,9 @@ npm start       # serve the page; enable chrome://flags/#enable-webmcp-testing t
 
 The test runner serves the page as `https://shop.trailhead.example` through Playwright request routing.
 
-## What passed (15 October 2026, Chromium 156.0.8078.4, Playwright 1.64)
+## What passed (2 November 2026, Chromium 156.0.8078.4, Playwright 1.64)
 
-16 of 16 (re-run in the tech review, 15 October 2026):
+16 of 16 (re-run on 2 November 2026; first run in the tech review, 15 October 2026):
 
 - `node --check` on all 7 JavaScript files.
 - Mock (plain Chromium): tools follow the session; declining returns a `cancelled_by_user` value; the presence banner announces the call.

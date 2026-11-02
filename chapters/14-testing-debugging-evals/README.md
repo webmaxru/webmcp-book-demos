@@ -60,6 +60,8 @@ ok   Test Agent (Chapter 9), in the page  (pass 2, fail 0)
 all checks passed
 ```
 
+Second edition, 2 November 2026: `npm test` re-run unchanged (Node 22, Playwright 1.64, Chromium 156.0.8078.4): the same 17 `node --check` passes and 4 + 3 + 4 + 3 + 5 + 2 tests, all checks passed. No listing changed (the WebMCP IDL is identical in the 27 October 2026 draft), and every listing in the rewritten chapter was compared byte for byte with its file here. The real-model eval runs were not repeated for the second edition.
+
 ## Run the evals against a real model
 
 ```sh
@@ -76,7 +78,7 @@ EVAL_BASE_URL=https://api.openai.com/v1 EVAL_API_KEY=… EVAL_MODEL=… \
 
 Five runs of three cases against one model is a smoke test, not a benchmark.
 
-## Observed in Chromium 156 (14 October 2026, re-confirmed 15 October 2026)
+## Observed in Chromium 156 (14 October 2026, re-confirmed 15 October 2026; the test suite passed again on 2 November 2026)
 
 - `WebMCP.toolsAdded` fires once per registration, with `frameId` and the registration's stack trace; `WebMCP.enable` replays it for tools already registered.
 - `invokeTool` with an unknown tool name fails the command with `Tool not found`.

@@ -7,7 +7,7 @@ Every listing in the chapter is a file here, byte-identical to the code printed 
 
 | File | Book | What it shows |
 |---|---|---|
-| — | Listing 6.1 | `ToolAnnotations` IDL excerpt from the 15 October 2026 draft (WebIDL, not runnable; not in this folder) |
+| — | Listing 6.1 | `ToolAnnotations` IDL excerpt from the 27 October 2026 draft (unchanged since 15 October) (WebIDL, not runnable; not in this folder) |
 | `trailhead/product-tools.js` | Listing 6.2 | `search_products` (`readOnlyHint`) and `get_product_reviews` (`readOnlyHint` + `untrustedContentHint`) |
 | `trailhead/checkout-tool.js` | Listing 6.3 | `checkout` (`consequentialHint`), confirmed in the page's own dialog, signal checked before the order |
 | `trailhead/debug-tools.js` | Listing 6.4 | `debug_dump_cart_state` (`debugging: true`), registered in development builds only |
@@ -19,7 +19,7 @@ Every listing in the chapter is a file here, byte-identical to the code printed 
 Support files (not printed in the book, added so the listings run):
 
 - `trailhead/index.html` — a minimal Trailhead page (product list, cart, confirmation `<dialog>`, agent banner, activity log).
-- `trailhead/app.js` — wiring: the page for people, then the agent layer as a progressive enhancement (`'modelContext' in document`). `?debug` stands in for a development build and registers the debugging tool.
+- `trailhead/app.js` — wiring: the page for people, then the agent layer as a progressive enhancement (`'modelContext' in document`). `?debug` stands in for a development build and registers the debugging tool. Since the second edition (2 November 2026) a failed registration aborts the shared controller, so the tools registered so far are rolled back as one batch, as Chrome's WebMCP best practices recommend ("Register tools all at once").
 - `trailhead/store.js` — fake in-memory backend (catalogue, reviews, stock, cart, orders). Every async method takes an `AbortSignal`. Exposes `window.__trailheadLatency` so tests can slow parts of it down.
 - `trailhead/ui.js` — DOM helpers: product list, cart, `confirmCheckout()` (closes the dialog when the call's signal aborts), agent banner, activity log.
 - `tests/mock-model-context.js` — **dev-only** mock of `document.modelContext` that follows the draft (never loaded by the app).
@@ -51,7 +51,7 @@ The runner:
 3. Runs the **same 31 scenarios against Chromium's real WebMCP implementation** (`--enable-features=WebMCPTesting`), playing the agent with `getTools()` / `executeTool()`.
 4. Runs a **platform probe** that records how Chromium reports lifecycle events, cancellation and errors, and writes it to `tests/results/chromium-observations.json`.
 
-Result on 15 October 2026 (tech review, after aligning result shapes with Chapter 11), Chromium 156.0.8078.4 (Playwright 1.64): **73 passed, 0 failed** (10 syntax + 31 mock + 1 availability + 31 Chromium). See `tests/results/summary.json`.
+Result on 15 October 2026 (tech review, after aligning result shapes with Chapter 11), Chromium 156.0.8078.4 (Playwright 1.64): **73 passed, 0 failed** (10 syntax + 31 mock + 1 availability + 31 Chromium). Re-run on 2 November 2026 (second edition), same Chromium build, after the `app.js` rollback change below: **73 passed, 0 failed**. See `tests/results/summary.json`.
 
 ### What Chromium 156.0.8078.4 did (probe output, 14 October 2026)
 

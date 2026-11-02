@@ -14,4 +14,4 @@ document.addEventListener('click', (e) => {
   }
 });
 
-Object.assign(window, { __trailhead: { sent, tools, breakHandlerForTest, ready: true } });
+Object.assign(window, { __trailhead: { sent, tools, breakHandlerForTest, registerTrailheadTools, ready: true } });

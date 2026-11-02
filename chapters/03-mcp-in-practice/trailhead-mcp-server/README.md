@@ -18,14 +18,15 @@ npm run inspect      # the MCP Inspector web UI against the stdio server
 npm test             # the test suite (see below)
 ```
 
-Node.js 20 or later. Pinned versions (all checked on npm on 15 Oct 2026): `@modelcontextprotocol/server` 2.3.1,
-`@modelcontextprotocol/client` 2.3.1, `@modelcontextprotocol/node` 2.1.1, `zod` 4.6.7,
-`@modelcontextprotocol/inspector` 2.11.0 (dev only).
+Node.js 20 or later. Pinned versions (all checked on npm on 2 Nov 2026, the latest releases on that day): `@modelcontextprotocol/server` 2.4.0,
+`@modelcontextprotocol/client` 2.4.0, `@modelcontextprotocol/node` 2.1.2, `zod` 4.6.7,
+`@modelcontextprotocol/inspector` 2.13.0 (dev only). The book's first edition (15 Oct 2026) pinned 2.3.1 / 2.3.1 / 2.1.1 / 4.6.7 / 2.11.0;
+no source file or captured wire listing changed with the upgrade.
 
 ## Files and the listings they match
 
 Every numbered listing in the chapter is byte-identical to its file here (apart from the file's final newline).
-`node tests/check-listings.mjs <path to WebMCP_Ch03_MCP_in_Practice.md>` verifies that.
+`node tests/check-listings.mjs <path to manuscript/03-mcp-in-practice.md>` verifies that (book v2 label format: **Listing 3.N** `path` — title).
 
 | Listing | File | What it is |
 |---|---|---|
@@ -66,13 +67,15 @@ parsing, so key order and whitespace don't matter.
 10. Listing 3.7 on a real port: modern client works; a POST without `Mcp-Method` gets HTTP 400; with it, 200; `Host: evil.example` gets HTTP 403 (DNS-rebinding guard).
 11. Listing 3.10: the Inspector CLI lists the tools and calls `search_products`.
 
-Result on 15 Oct 2026, re-run from a fresh clone during the tech review (Node.js 22.23.2, Linux): **11 passed, 0 failed**; `npm run check` clean; `check:listings` 10 of 10 identical.
+Result on 2 Nov 2026 with the versions above (Node.js 22.23.2, Linux): **11 passed, 0 failed** (about 4 s); `check:listings` 10 of 10 identical against the v2 manuscript.
+Previous result: 15 Oct 2026 with the first-edition pins, 11 passed, 0 failed.
 
 ## Observations worth knowing
 
 - The SDK speaks the 2025 handshake unless you opt in. `serveStdio()` and `createMcpHandler()` serve both eras;
   clients need `versionNegotiation: { mode: 'auto' }` (or a pin) to use 2026-07-28.
-- MCP Inspector CLI 2.11.0 opens with a 2025-11-25 `initialize`, so it exercises the server's legacy path.
+- MCP Inspector CLI 2.13.0 (like 2.11.0 before it) opens with a 2025-11-25 `initialize`, so it exercises the server's legacy path
+  (checked 2 Nov 2026 with `tests/wire-tap.mjs` between the Inspector and the server).
 - On Streamable HTTP (2026-07-28), a request without the `Mcp-Method` header is rejected with HTTP 400 even when
   `MCP-Protocol-Version` is present.
 - No WebMCP / browser code in this chapter, so there is no Chromium test here; Trailhead's WebMCP tools arrive in later chapters.

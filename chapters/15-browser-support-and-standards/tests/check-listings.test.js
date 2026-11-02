@@ -10,13 +10,13 @@ const files = {
   '15.1': ['origin-trial-head.html', 'origin-trial.headers.txt'],
   '15.2': ['webmcp-support.js'],
   '15.3': ['standards-watch.mjs'],
-  '15.4': ['snapshots/2026-10-15.json'],
+  '15.4': ['snapshots/2026-11-02.json'],
 };
 
 test('listings match the files', { skip: !md || !existsSync(md) ? 'set CHAPTER_MD' : false }, async () => {
   const text = await readFile(md, 'utf8');
   for (const [n, names] of Object.entries(files)) {
-    const start = text.indexOf(`**Listing ${n} —`);
+    const start = text.indexOf(`**Listing ${n}**`);
     assert.ok(start >= 0, `Listing ${n} heading`);
     const next = text.indexOf('**Listing ', start + 10);
     const section = text.slice(start, next < 0 ? undefined : next);

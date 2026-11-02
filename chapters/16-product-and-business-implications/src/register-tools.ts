@@ -13,17 +13,25 @@ function report(record: ToolCallRecord) {
 export async function registerTrailheadTools(signal: AbortSignal): Promise<void> {
   const modelContext = document.modelContext;
   if (!modelContext) return;                 // progressive enhancement: no WebMCP, no tools
-  for (const entry of toolCatalog) {
-    const name: ToolName = entry.name;
-    const tool: WebMCP.ModelContextTool = {
-      name,
-      title: entry.title,
-      description: entry.description,
-      inputSchema: schemas[name],
-      annotations: entry.annotations,
-      // Delegate, so the store can swap a handler without re-registering.
-      execute: (input, options) => handlers[name](input, options),
-    };
-    await modelContext.registerTool(withMeasurement(tool, report), { signal });
+  // All or nothing: if one registration fails, roll back the ones before it.
+  const batch = new AbortController();
+  const both = AbortSignal.any([signal, batch.signal]);
+  try {
+    for (const entry of toolCatalog) {
+      const name: ToolName = entry.name;
+      const tool: WebMCP.ModelContextTool = {
+        name,
+        title: entry.title,
+        description: entry.description,
+        inputSchema: schemas[name],
+        annotations: entry.annotations,
+        // Delegate, so the store can swap a handler without re-registering.
+        execute: (input, options) => handlers[name](input, options),
+      };
+      await modelContext.registerTool(withMeasurement(tool, report), { signal: both });
+    }
+  } catch (err) {
+    batch.abort();
+    throw err;
   }
 }

@@ -21,11 +21,13 @@ const webmcp = await enableWebMCP({ polyfill: params.has('webmcp-polyfill') });
 if (webmcp.mode === 'off') {
   chip.textContent = `Agent tools off (${webmcp.reason}). The booking page works as usual.`;
 } else {
+  const tools = new AbortController();     // one signal for the whole tool surface
   try {
     const { registerFjordTools } = await import('./webmcp/tools.js');
-    const names = await registerFjordTools({ signal: new AbortController().signal });
+    const names = await registerFjordTools({ signal: tools.signal });
     chip.textContent = `Agent tools on (${webmcp.mode}): ${names.join(', ')}`;
   } catch (err) {
+    tools.abort();                         // all or nothing: withdraw what did register
     // NotAllowedError: a "tools" Permissions Policy blocks this document.
     chip.textContent = `Agent tools unavailable (${err.name}). The booking page works as usual.`;
   }

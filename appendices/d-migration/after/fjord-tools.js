@@ -1,4 +1,4 @@
-// AFTER (document.modelContext, 15 October 2026 draft; Chromium 156).
+// AFTER (document.modelContext, 27 October 2026 draft; Chromium 156).
 // One registerTool() call per tool, one AbortController per view.
 export async function registerFjordTools({ availability, bookings, confirmBooking }) {
   if (!('modelContext' in document)) return null;   // progressive enhancement

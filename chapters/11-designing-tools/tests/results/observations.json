@@ -1,6 +1,6 @@
 {
   "observations": {
-    "date": "2026-10-14T23:02:59.592Z",
+    "date": "2026-11-02T09:04:08.363Z",
     "lintBefore": [
       {
         "name": "search_products",
@@ -201,8 +201,14 @@
       "limit": {
         "status": "refused",
         "code": "TICKET_LIMIT",
-        "message": "This account has opened 3 tickets in the past hour, the most allowed. Tell the user they can open another after 00:03 (UTC).",
-        "resetsAt": "00:03"
+        "message": "This account has opened 3 tickets in the past hour, the most allowed. Tell the user they can open another after 10:04 (UTC).",
+        "resetsAt": "10:04"
+      },
+      "duplicate": {
+        "status": "refused",
+        "code": "DUPLICATE_TICKET",
+        "message": "An identical ticket, SUP-1044, was opened at 09:04 (UTC). Give the user that ticket ID instead of opening a second one.",
+        "ticketId": "SUP-1044"
       }
     },
     "chromiumVersion": "156.0.8078.4",
@@ -301,8 +307,14 @@
       "limit": {
         "status": "refused",
         "code": "TICKET_LIMIT",
-        "message": "This account has opened 3 tickets in the past hour, the most allowed. Tell the user they can open another after 00:03 (UTC).",
-        "resetsAt": "00:03"
+        "message": "This account has opened 3 tickets in the past hour, the most allowed. Tell the user they can open another after 10:04 (UTC).",
+        "resetsAt": "10:04"
+      },
+      "duplicate": {
+        "status": "refused",
+        "code": "DUPLICATE_TICKET",
+        "message": "An identical ticket, SUP-1044, was opened at 09:04 (UTC). Give the user that ticket ID instead of opening a second one.",
+        "ticketId": "SUP-1044"
       }
     }
   },
@@ -657,6 +669,12 @@
     },
     {
       "suite": "mock",
+      "name": "the same ticket sent twice -> refused DUPLICATE_TICKET with the first ticket ID, form stays hidden",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "mock",
       "name": "get_ticket_status SUP-1042 -> ticketState waiting_on_user, reply quoted",
       "ok": true,
       "detail": ""
@@ -874,6 +892,12 @@
     {
       "suite": "chromium",
       "name": "fourth ticket in an hour -> refused TICKET_LIMIT before the form opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "suite": "chromium",
+      "name": "the same ticket sent twice -> refused DUPLICATE_TICKET with the first ticket ID, form stays hidden",
       "ok": true,
       "detail": ""
     },

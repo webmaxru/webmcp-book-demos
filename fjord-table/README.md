@@ -18,7 +18,7 @@ Open the address it prints (usually http://localhost:3000). Any static server wo
 
 ## Try it with WebMCP in Chrome
 
-Checked on 14 October 2026 against Chrome's [WebMCP overview](https://developer.chrome.com/docs/ai/webmcp) (page last updated 7 October 2026) and the [Chrome Status entry](https://chromestatus.com/feature/5117755740913664). This changes often, so re-check those two pages.
+Checked on 14 October 2026 and again on 2 November 2026 against Chrome's [WebMCP overview](https://developer.chrome.com/docs/ai/webmcp) (page last updated 7 October 2026) and the [Chrome Status entry](https://chromestatus.com/feature/5117755740913664). This changes often, so re-check those two pages.
 
 **Local development: the flag.**
 
@@ -50,7 +50,7 @@ For scripted tests, the same switch is `--enable-features=WebMCPTesting` on the 
 
 | File | Book | Notes |
 |---|---|---|
-| `search-availability.js` | Listing 4.1 (ch. 4) = Listing 5.1 (ch. 5) | Verbatim, with two `import` lines added. The book names this file `agent-tools.js`. The demo gives that name to Listing 5.3, so this registration moved here. |
+| `search-availability.js` | Listing 4.1 (ch. 4) = Listing 5.1 (ch. 5) | Verbatim, with two `import` lines added. The second edition names this file in both listing labels. (The first edition called it `agent-tools.js`, the name the demo gives to Listing 5.3.) |
 | `agent-tools.js` | Listing 5.3 (ch. 5) | Verbatim. `registerAgentTool()`: feature detection plus error handling. |
 | `booking-tools.js` | Listing 5.4 (ch. 5) | Verbatim, with two `import` lines added. The `book_table` tool, `checkBookingInput()`, recoverable failures returned as values. |
 | `booking-view.js` | Listing 5.5 (ch. 5) | Verbatim, plus a minimal `localizeTool()` (Norwegian title and description) that the listing calls but the book doesn't define. |
@@ -59,6 +59,7 @@ For scripted tests, the same switch is `--enable-features=WebMCPTesting` on the 
 | `availability.js` | none | The fake backend: in memory, deterministic, resets on reload. Open Tuesday to Sunday, 17:00 to 21:30 every 30 minutes, closed Mondays. Window, indoor and heated-terrace seating. |
 | `booking-panel.js` | none | The site's own UI that the listings call: `bookingPanel.showSlots()` and `bookingPanel.confirmWithUser()`. Humans use the same two methods. |
 | `app.js`, `index.html`, `styles.css` | none | Page wiring: three views (Home, Menu, Book a table), the human search form, the WebMCP status bar, and the tool-language switch. |
+| `dev/in-page-agent.js` | Listing 4.2 (ch. 4) | Verbatim. Paste it into the console, or import it from a module, to act as an in-page agent. |
 | `dev/model-context-mock.js` | none | **Test-only.** A small stand-in for `document.modelContext`, following the 13 Oct 2026 draft. The app never loads it. |
 | `tests/run-tests.mjs` | none | End-to-end tests (Playwright). |
 
@@ -100,7 +101,7 @@ Both test runs cover the same things:
 
 ### What Chromium 156 did differently from the draft
 
-On 15 October 2026, after the result-convention change above, `npm test` and `npm run test:chrome` both passed again on Chromium 156.0.8078.4. On 14 October 2026 `npm run test:chrome` passed on Chromium 156.0.8078.4 (Playwright 1.64's build) with `--enable-features=WebMCPTesting`. In a separate probe, that build differed from the 13 October 2026 draft in these places:
+On 2 November 2026, for the book's second edition, `npm test`, `npm run test:chrome` and `npm run typecheck` all passed again on Chromium 156.0.8078.4, and the chapter 5 probe showed the same differences as below. On 15 October 2026, after the result-convention change above, `npm test` and `npm run test:chrome` both passed again on Chromium 156.0.8078.4. On 14 October 2026 `npm run test:chrome` passed on Chromium 156.0.8078.4 (Playwright 1.64's build) with `--enable-features=WebMCPTesting`. In a separate probe, that build differed from the 13 October 2026 draft in these places:
 
 | Case | Draft says | Chromium 156 did |
 |---|---|---|
@@ -110,6 +111,8 @@ On 15 October 2026, after the result-convention change above, `npm test` and `np
 | `execute` throws | `OperationError` | `UnknownError` ("Tool was executed but the invocation failed"); the thrown message is logged to the page's console, not returned |
 | `executeTool()` for a tool that isn't registered | `NotFoundError` | `UnknownError` |
 | `getTools()` entries | `name`, `title`, `description`, `inputSchema` (object), `window`, `origin`, `annotations` | the same; `annotations` also carries defaults such as `readOnlyHint: false` |
+
+On 26 October 2026, in [issue #361](https://github.com/webmachinelearning/webmcp/issues/361), François Beaufort said the spec is right about strings and Chrome is wrong, and proposed that `undefined` should become `null` (the string `"null"`) instead of failing. That proposal isn't in the draft yet.
 
 Fjord Table's tools always return objects and never rely on a thrown message, so they behave the same either way. That is chapter 5's advice in practice.
 

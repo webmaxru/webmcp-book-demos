@@ -29,9 +29,9 @@ npm test
 
 The runner serves every page under its book origin (`https://app.ledgerly.example`, `https://widget.supportly.example`, `https://partner.example`) through Playwright request routing, so the listings run unchanged with real cross-origin frames and real Permissions-Policy headers. Browser tests use Chromium with `--enable-features=WebMCPTesting` (the switch behind `chrome://flags/#enable-webmcp-testing`).
 
-## What passed (15 October 2026, Chromium 156.0.8078.4, Playwright 1.64)
+## What passed (2 November 2026, Chromium 156.0.8078.4, Playwright 1.64)
 
-26 of 26 (re-run in the tech review, 15 October 2026):
+26 of 26 (re-run on 2 November 2026; first run in the tech review, 15 October 2026):
 
 - `node --check` on all 8 JavaScript files.
 - Unit tests in Node for the guard, the result shaper and the audit.

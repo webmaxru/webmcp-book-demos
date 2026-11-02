@@ -18,6 +18,8 @@ const tickets = new Map([
 let next = 1044;
 const opened = [];   // timestamps of tickets opened by this account
 const HOURLY_LIMIT = 3;
+const recentKeys = new Map();   // idempotency key (the exact ticket content) -> { id, at }
+const ticketKey = ({ subject, body, priority }) => JSON.stringify([subject, body, priority]);
 
 const words = (s) => s.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2);
 
@@ -37,9 +39,16 @@ export const helpdesk = {
     const resetsAt = recent.length ? new Date(recent[0] + 3600_000).toISOString().slice(11, 16) : null;
     return { used: recent.length, remaining: Math.max(0, HOURLY_LIMIT - recent.length), resetsAt };
   },
+  // The same subject, body and priority within an hour is the same request sent twice.
+  async findDuplicate(draft) {
+    const hit = recentKeys.get(ticketKey(draft));
+    return hit && hit.at > Date.now() - 3600_000
+      ? { id: hit.id, openedAt: new Date(hit.at).toISOString().slice(11, 16) } : null;
+  },
   async createTicket({ subject, body, priority }) {
     const id = `SUP-${next++}`;
     opened.push(Date.now());
+    recentKeys.set(ticketKey({ subject, body, priority }), { id, at: Date.now() });
     tickets.set(id, { id, account: ACCOUNT, subject, body, priority, state: 'open', updated: new Date().toISOString(), latestReply: null });
     const expectedReply = { low: 'within 2 business days', normal: 'within 1 business day', high: 'within 4 hours' }[priority];
     return { id, expectedReply };

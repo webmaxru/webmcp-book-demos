@@ -1,6 +1,7 @@
 // Checks that every numbered listing in the Chapter 3 Markdown is byte-identical
 // to its file in this folder (ignoring the file's final newline).
-// Usage: node tests/check-listings.mjs path/to/WebMCP_Ch03_MCP_in_Practice.md
+// Usage: node tests/check-listings.mjs path/to/manuscript/03-mcp-in-practice.md
+// Label format (book v2): **Listing 3.N** `trailhead-mcp-server/<file>` — title, a blank line, then the fence.
 import { readFileSync } from 'node:fs';
 
 const files = {
@@ -10,7 +11,7 @@ const files = {
   '3.10': 'scripts/inspect.sh'
 };
 const md = readFileSync(process.argv[2], 'utf8');
-const re = /\*\*Listing (3\.\d+) — [^\n]*\*\*\n\n```\w*\n([\s\S]*?)\n```/g;
+const re = /\*\*Listing (3\.\d+)\*\*[^\n]*\n\n```\w*\n([\s\S]*?)\n```/g;
 let seen = 0, bad = 0;
 for (const [, id, body] of md.matchAll(re)) {
   seen++;

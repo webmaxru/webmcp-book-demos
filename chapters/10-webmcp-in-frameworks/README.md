@@ -1,7 +1,7 @@
 # Chapter 10: WebMCP in Frameworks
 
 Runnable code for chapter 10 of *Tools, Not Clicks: Building Agent-Ready Websites with WebMCP*.
-Every listing in the chapter is a file here, byte-identical to the book (`node check-listings.mjs <chapter.md>` verifies it).
+Every listing in the chapter is a file here, byte-identical to the book (`node check-listings.mjs path/to/manuscript/10-webmcp-in-frameworks.md` verifies it).
 
 - `trailhead-react/`: Trailhead, the outdoor-gear store, in React 19 + Vite + TypeScript, with WebMCP tools registered through `usewebmcp`.
 - `angular/`: the chapter's Angular listings (app-wide tools, a route-scoped tool, a Signal Form as a tool), type-checked and run in Chromium.
@@ -15,7 +15,7 @@ Every listing in the chapter is a file here, byte-identical to the book (`node c
 | 10.3 `search_products` as a thin wrapper | `trailhead-react/src/agent/search-products.ts` |
 | 10.4 One cart for the buttons and the tools | `trailhead-react/src/cart-store.ts` |
 | 10.5 A view-scoped, consequential tool | `trailhead-react/src/pages/CartPage.tsx` |
-| 10.6 One checkout path | `trailhead-react/src/checkout.ts` |
+| 10.6 One checkout path, with a commit point | `trailhead-react/src/checkout.ts` |
 | 10.7 A confirmation that survives navigation | `trailhead-react/src/confirm-store.ts` |
 | 10.8 Showing the person what the agent is doing | `trailhead-react/src/agent/AgentActivity.tsx` |
 | 10.9 An app-wide tool in the application config | `angular/src/app.config.ts` |
@@ -50,19 +50,13 @@ npm run test:chrome          # the same against Chromium's own WebMCP
 
 To try the store with a real agent, open it in Chrome with `chrome://flags/#enable-webmcp-testing` enabled (see `fjord-table/README.md` and chapter 9).
 
-## Test results (14 October 2026; re-run 15 October 2026)
+## Test results
 
-Playwright 1.64.1, Chromium 156.0.8078.4. Versions: React 19.3.1, React Router 8.4.0, usewebmcp 6.0.3, Vite 8.3.4, TypeScript 7.0.2, Angular 22.2.2.
+2 November 2026 (second edition): Playwright 1.64.1, Chromium 156.0.8078.4 (Chrome 156 is the Stable channel since 20 October 2026). Versions: React 19.3.1, React Router 8.4.0, usewebmcp 6.0.3, Vite 8.3.4, TypeScript 7.0.2, Angular 22.2.2.
 
-| Suite | Mock | Chromium WebMCPTesting |
-|---|---|---|
-| `trailhead-react` (11 tests) | 11 passed | 11 passed |
-| `angular` (5 tests, after `tsc` and an esbuild bundle) | 5 passed | 5 passed |
+| Suite | Mock | Chromium WebMCPTesting | Run |
+|---|---|---|---|
+| `trailhead-react` (12 tests) | 12 passed | 12 passed | 2 November 2026 |
+| `angular` (5 tests, after `tsc` and an esbuild bundle) | 5 passed | 5 passed | 14 October 2026 (listings unchanged since) |
 
-Re-run from a fresh clone on 15 October 2026 during the technical review, after the tools adopted Chapter 11's result convention (`{ status: 'error' | 'refused' | 'cancelled_by_user', code, message }`; success results unchanged): the same 11 + 11 and 5 + 5 passed.
-
-What the React tests cover: the store works without WebMCP; app-wide tools register once under StrictMode; `search_products` results and validation errors; `add_to_cart`/`get_cart` share state with the UI; `compare_products` navigates and shows the table; `checkout` exists only on `/cart` with a non-empty cart; `checkout` waits for the person (Cancel and Place order); an in-flight `checkout` survives the person pressing Back (the tool unregisters, the call still resolves); an agent abort closes the dialog and fires `toolcancel`; `toolactivated` drives the status pill; Listing 10.1's hook registers once, calls see the latest state, a description change re-registers, unmount unregisters.
-
-What the Angular tests cover: `search_products` from `provideExperimentalWebMcpTools()` with `inject()`; `get_cart` appears on `/cart` and disappears after leaving (`withAutoCleanupInjectors()`); the Signal Form becomes `request_stock_alert` with an inferred schema; invalid input returns the validation message and saves nothing; valid input submits and fills the visible form.
-
-Observed in Chromium 156 while writing the chapter: `inputSchema: null` rejects with `TypeError` (`undefined` is fine); register → abort → register with the same name in one tick works (the first promise rejects with `AbortError`); unregistering does not cancel an in-flight call; aborting `executeTool()`'s signal rejects with `AbortError`, aborts the tool's signal and fires `toolcancel`; `toolactivated` fires when a call starts.
+Changed in the second edition: `src/checkout.ts` refuses with `CART_CHANGED` when the cart changed while the person was confirming (Chrome's "stale workflow state" best practice), `src/pages/CartPage.tsx` describes that outcome, and `tests/run-tests.mjs` has a test for it.
