@@ -3,9 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js 22.22+](https://img.shields.io/badge/node-%E2%89%A522.22-339933.svg)](#requirements)
 
-Runnable, tested code for every listing in the book *[Tools, Not Clicks: Building Agent-Ready Websites with WebMCP](https://vibeprogrammer.github.io/webmcp-book/)* by Maxim Salnikov.
+Runnable, tested code for every listing in the book *[Tools, Not Clicks: Building Agent-Ready Websites with WebMCP](https://webmcp.salnikov.no/)* by Maxim Salnikov.
 
-The book is free to read online at **[vibeprogrammer.github.io/webmcp-book](https://vibeprogrammer.github.io/webmcp-book/)**, and its manuscript lives in [vibeprogrammer/webmcp-book](https://github.com/vibeprogrammer/webmcp-book). Each folder here belongs to one chapter or appendix. Every listing in the book is a file here, byte-identical to the printed code, and each folder has its own tests that run against Chromium's built-in WebMCP and against a `document.modelContext` mock.
+The book is free to read online at **[webmcp.salnikov.no](https://webmcp.salnikov.no/)**, and its manuscript lives in [vibeprogrammer/webmcp-book](https://github.com/vibeprogrammer/webmcp-book). Each folder here belongs to one chapter or appendix. Every listing in the book is a file here, byte-identical to the printed code, and each folder has its own tests that run against Chromium's built-in WebMCP and against a `document.modelContext` mock.
 
 ## Table of contents
 
@@ -55,24 +55,24 @@ The book follows three running projects: **Fjord Table**, a restaurant-booking s
 
 | Folder | Chapter | What it is | Real Chromium in `npm test` |
 |---|:---:|---|:---:|
-| [`fjord-table/`](fjord-table/) | [4](https://vibeprogrammer.github.io/webmcp-book/chapters/04-enter-webmcp.html), [5](https://vibeprogrammer.github.io/webmcp-book/chapters/05-registering-tools.html) | Fjord Table, a restaurant-booking site in plain HTML and JS modules with the `search_availability` and `book_table` tools: feature detection, validation in code, a confirm step in the page's own UI, and registration scoped with `AbortController` | `npm run test:chrome` |
-| [`chapters/03-mcp-in-practice/trailhead-mcp-server/`](chapters/03-mcp-in-practice/trailhead-mcp-server/) | [3](https://vibeprogrammer.github.io/webmcp-book/chapters/03-mcp-in-practice.html) | Trailhead's backend MCP server (Node.js and the official MCP TypeScript SDK v2) over stdio and Streamable HTTP | not needed |
-| [`chapters/05-registering-tools/`](chapters/05-registering-tools/) | [5](https://vibeprogrammer.github.io/webmcp-book/chapters/05-registering-tools.html) | A Chromium probe that backs the chapter's statements about Chromium 156 (the chapter's listings live in `fjord-table/`) | ✓ |
-| [`chapters/06-annotations-lifecycle-errors/`](chapters/06-annotations-lifecycle-errors/) | [6](https://vibeprogrammer.github.io/webmcp-book/chapters/06-annotations-lifecycle-errors.html) | Trailhead: annotations, the tool lifecycle, events and errors | ✓ |
-| [`chapters/07-frames-origins-agents/`](chapters/07-frames-origins-agents/) | [7](https://vibeprogrammer.github.io/webmcp-book/chapters/07-frames-origins-agents.html) | The Supportly Helpdesk Widget: cross-origin frames, `allow="tools"` and page-embedded agents | ✓ |
-| [`chapters/08-declarative-api/`](chapters/08-declarative-api/) | [8](https://vibeprogrammer.github.io/webmcp-book/chapters/08-declarative-api.html) | Fjord Table's forms as tools through HTML attributes (the declarative API) | ✓ |
-| [`chapters/09-first-webmcp-app/`](chapters/09-first-webmcp-app/) | [9](https://vibeprogrammer.github.io/webmcp-book/chapters/09-first-webmcp-app.html) | Fjord Table end to end, as a progressive enhancement with an opt-in pinned polyfill and the Test Agent | ✓ |
-| [`chapters/10-webmcp-in-frameworks/trailhead-react/`](chapters/10-webmcp-in-frameworks/trailhead-react/) | [10](https://vibeprogrammer.github.io/webmcp-book/chapters/10-webmcp-in-frameworks.html) | Trailhead in React 19, Vite and TypeScript, with tools registered through `usewebmcp` | `npm run test:chrome` |
-| [`chapters/10-webmcp-in-frameworks/angular/`](chapters/10-webmcp-in-frameworks/angular/) | [10](https://vibeprogrammer.github.io/webmcp-book/chapters/10-webmcp-in-frameworks.html) | The chapter's Angular listings (Angular 22) | `npm run test:chrome` |
-| [`chapters/11-designing-tools/`](chapters/11-designing-tools/) | [11](https://vibeprogrammer.github.io/webmcp-book/chapters/11-designing-tools.html) | Trailhead's catalogue and cart tools and the Supportly widget's tools, redesigned from the model's side | ✓ |
-| [`chapters/12-threat-models/`](chapters/12-threat-models/) | [12](https://vibeprogrammer.github.io/webmcp-book/chapters/12-threat-models.html) | Result shaping, input guards, a tool-surface audit and a demonstration of the `registerTool()` wrapper attack | ✓ |
-| [`chapters/13-privacy-consent-human-in-the-loop/`](chapters/13-privacy-consent-human-in-the-loop/) | [13](https://vibeprogrammer.github.io/webmcp-book/chapters/13-privacy-consent-human-in-the-loop.html) | Trailhead's checkout, built so that an order never completes without a person | ✓ |
-| [`chapters/14-testing-debugging-evals/`](chapters/14-testing-debugging-evals/) | [14](https://vibeprogrammer.github.io/webmcp-book/chapters/14-testing-debugging-evals.html) | Tool tests over CDP, instrumentation, the Test Agent in Fjord Table and an eval harness | ✓ |
-| [`chapters/15-browser-support-and-standards/`](chapters/15-browser-support-and-standards/) | [15](https://vibeprogrammer.github.io/webmcp-book/chapters/15-browser-support-and-standards.html) | Origin-trial tokens, `detectWebMCP()` feature detection and a standards-watch script | ✓ |
-| [`chapters/16-product-and-business-implications/`](chapters/16-product-and-business-implications/) | [16](https://vibeprogrammer.github.io/webmcp-book/chapters/16-product-and-business-implications.html) | Trailhead's tool catalog, a CI check for Chrome's character budgets, measurement and order attribution | `npm run test:chrome` |
-| [`chapters/17-the-road-ahead/`](chapters/17-the-road-ahead/) | [17](https://vibeprogrammer.github.io/webmcp-book/chapters/17-the-road-ahead.html) | Trailhead's tools as plain data, one adapter for the WebMCP API shape and a support probe | `npm run test:chrome` |
-| [`appendices/a-api-reference/`](appendices/a-api-reference/) | [App. A](https://vibeprogrammer.github.io/webmcp-book/appendices/a-api-reference.html) | The WebMCP IDL, an error classifier and probes of Chromium's behaviour | ✓ |
-| [`appendices/d-migration/`](appendices/d-migration/) | [App. D](https://vibeprogrammer.github.io/webmcp-book/appendices/d-migration.html) | Before and after: moving from `navigator.modelContext` and `provideContext()` to `document.modelContext` | ✓ |
+| [`fjord-table/`](fjord-table/) | [4](https://webmcp.salnikov.no/04-enter-webmcp.html), [5](https://webmcp.salnikov.no/05-registering-tools.html) | Fjord Table, a restaurant-booking site in plain HTML and JS modules with the `search_availability` and `book_table` tools: feature detection, validation in code, a confirm step in the page's own UI, and registration scoped with `AbortController` | `npm run test:chrome` |
+| [`chapters/03-mcp-in-practice/trailhead-mcp-server/`](chapters/03-mcp-in-practice/trailhead-mcp-server/) | [3](https://webmcp.salnikov.no/03-mcp-in-practice.html) | Trailhead's backend MCP server (Node.js and the official MCP TypeScript SDK v2) over stdio and Streamable HTTP | not needed |
+| [`chapters/05-registering-tools/`](chapters/05-registering-tools/) | [5](https://webmcp.salnikov.no/05-registering-tools.html) | A Chromium probe that backs the chapter's statements about Chromium 156 (the chapter's listings live in `fjord-table/`) | ✓ |
+| [`chapters/06-annotations-lifecycle-errors/`](chapters/06-annotations-lifecycle-errors/) | [6](https://webmcp.salnikov.no/06-annotations-lifecycle-errors.html) | Trailhead: annotations, the tool lifecycle, events and errors | ✓ |
+| [`chapters/07-frames-origins-agents/`](chapters/07-frames-origins-agents/) | [7](https://webmcp.salnikov.no/07-frames-origins-agents.html) | The Supportly Helpdesk Widget: cross-origin frames, `allow="tools"` and page-embedded agents | ✓ |
+| [`chapters/08-declarative-api/`](chapters/08-declarative-api/) | [8](https://webmcp.salnikov.no/08-declarative-api.html) | Fjord Table's forms as tools through HTML attributes (the declarative API) | ✓ |
+| [`chapters/09-first-webmcp-app/`](chapters/09-first-webmcp-app/) | [9](https://webmcp.salnikov.no/09-first-webmcp-app.html) | Fjord Table end to end, as a progressive enhancement with an opt-in pinned polyfill and the Test Agent | ✓ |
+| [`chapters/10-webmcp-in-frameworks/trailhead-react/`](chapters/10-webmcp-in-frameworks/trailhead-react/) | [10](https://webmcp.salnikov.no/10-webmcp-in-frameworks.html) | Trailhead in React 19, Vite and TypeScript, with tools registered through `usewebmcp` | `npm run test:chrome` |
+| [`chapters/10-webmcp-in-frameworks/angular/`](chapters/10-webmcp-in-frameworks/angular/) | [10](https://webmcp.salnikov.no/10-webmcp-in-frameworks.html) | The chapter's Angular listings (Angular 22) | `npm run test:chrome` |
+| [`chapters/11-designing-tools/`](chapters/11-designing-tools/) | [11](https://webmcp.salnikov.no/11-designing-tools.html) | Trailhead's catalogue and cart tools and the Supportly widget's tools, redesigned from the model's side | ✓ |
+| [`chapters/12-threat-models/`](chapters/12-threat-models/) | [12](https://webmcp.salnikov.no/12-threat-models.html) | Result shaping, input guards, a tool-surface audit and a demonstration of the `registerTool()` wrapper attack | ✓ |
+| [`chapters/13-privacy-consent-human-in-the-loop/`](chapters/13-privacy-consent-human-in-the-loop/) | [13](https://webmcp.salnikov.no/13-privacy-consent-human-in-the-loop.html) | Trailhead's checkout, built so that an order never completes without a person | ✓ |
+| [`chapters/14-testing-debugging-evals/`](chapters/14-testing-debugging-evals/) | [14](https://webmcp.salnikov.no/14-testing-debugging-evals.html) | Tool tests over CDP, instrumentation, the Test Agent in Fjord Table and an eval harness | ✓ |
+| [`chapters/15-browser-support-and-standards/`](chapters/15-browser-support-and-standards/) | [15](https://webmcp.salnikov.no/15-browser-support-and-standards.html) | Origin-trial tokens, `detectWebMCP()` feature detection and a standards-watch script | ✓ |
+| [`chapters/16-product-and-business-implications/`](chapters/16-product-and-business-implications/) | [16](https://webmcp.salnikov.no/16-product-and-business-implications.html) | Trailhead's tool catalog, a CI check for Chrome's character budgets, measurement and order attribution | `npm run test:chrome` |
+| [`chapters/17-the-road-ahead/`](chapters/17-the-road-ahead/) | [17](https://webmcp.salnikov.no/17-the-road-ahead.html) | Trailhead's tools as plain data, one adapter for the WebMCP API shape and a support probe | `npm run test:chrome` |
+| [`appendices/a-api-reference/`](appendices/a-api-reference/) | [App. A](https://webmcp.salnikov.no/appendix-a-api-reference.html) | The WebMCP IDL, an error classifier and probes of Chromium's behaviour | ✓ |
+| [`appendices/d-migration/`](appendices/d-migration/) | [App. D](https://webmcp.salnikov.no/appendix-d-migration.html) | Before and after: moving from `navigator.modelContext` and `provideContext()` to `document.modelContext` | ✓ |
 
 Each folder's README maps every file to its listing number and says exactly what its tests check.
 
@@ -98,7 +98,7 @@ To use WebMCP on a real origin without flags, register for an origin trial and a
 
 ## WebMCP status
 
-WebMCP is a [Draft Community Group Report](https://webmachinelearning.github.io/webmcp/) of the W3C Web Machine Learning Community Group ([repository](https://github.com/webmachinelearning/webmcp)). It is not a W3C standard and is not on the standards track, and the API changes between drafts and browser releases. The code here follows the draft of 15 October 2026 and was re-tested on that date. Where Chromium 156 differs from the draft, the probes for Chapter 5 and Appendix A record it. [Appendix D](https://vibeprogrammer.github.io/webmcp-book/appendices/d-migration.html) covers the move from `navigator.modelContext` and `provideContext()` to `document.modelContext`.
+WebMCP is a [Draft Community Group Report](https://webmachinelearning.github.io/webmcp/) of the W3C Web Machine Learning Community Group ([repository](https://github.com/webmachinelearning/webmcp)). It is not a W3C standard and is not on the standards track, and the API changes between drafts and browser releases. The code here follows the draft of 15 October 2026 and was re-tested on that date. Where Chromium 156 differs from the draft, the probes for Chapter 5 and Appendix A record it. [Appendix D](https://webmcp.salnikov.no/appendix-d-migration.html) covers the move from `navigator.modelContext` and `provideContext()` to `document.modelContext`.
 
 ## Issues and contributions
 
@@ -108,4 +108,4 @@ WebMCP is a [Draft Community Group Report](https://webmachinelearning.github.io/
 
 ## License
 
-The code in this repository is released under the [MIT License](LICENSE). The book's text is © 2026 Maxim Salnikov, all rights reserved; it is [free to read online](https://vibeprogrammer.github.io/webmcp-book/).
+The code in this repository is released under the [MIT License](LICENSE). The book's text is © 2026 Maxim Salnikov, all rights reserved; it is [free to read online](https://webmcp.salnikov.no/).
