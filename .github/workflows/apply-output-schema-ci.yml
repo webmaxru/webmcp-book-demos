@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [output-schema-update]
+    paths-ignore:
+      - .github/workflow-logs/**
 
 permissions:
   contents: write
@@ -125,14 +127,37 @@ jobs:
             git commit -m "Apply outputSchema demo and test updates"
             git push origin HEAD:output-schema-update
           fi
-      - name: Run demo suites
+      - name: Run demo suites and save detailed output
+        shell: bash
         run: |
-          set -euo pipefail
+          set +e
+          log="$GITHUB_WORKSPACE/.github/workflow-logs/output-schema-tests.txt"
+          mkdir -p "$(dirname "$log")"
+          : > "$log"
+          status=0
           for directory in chapters/09-first-webmcp-app chapters/17-the-road-ahead appendices/a-api-reference; do
-            echo "=== $directory ==="
-            cd "$GITHUB_WORKSPACE/$directory"
-            npm install
-            npx playwright install --with-deps chromium
-            npm test
-            npm run test:chrome --if-present
+            echo "=== $directory ===" | tee -a "$log"
+            (
+              cd "$GITHUB_WORKSPACE/$directory" || exit 1
+              npm install
+              npx playwright install --with-deps chromium
+              npm test
+              npm run test:chrome --if-present
+            ) >> "$log" 2>&1
+            result=$?
+            if [ "$result" -ne 0 ]; then
+              printf 'FAILED: %s (exit %s)\n' "$directory" "$result" | tee -a "$log"
+              status=$result
+              break
+            fi
+            printf 'PASSED: %s\n' "$directory" | tee -a "$log"
           done
+          cat "$log"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$log"
+          if ! git diff --cached --quiet; then
+            git commit -m "Record outputSchema GitHub Actions test output"
+            git push origin HEAD:output-schema-update
+          fi
+          exit "$status"
