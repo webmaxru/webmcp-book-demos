@@ -1,0 +1,76 @@
+name: Verify WebMCP outputSchema demos
+
+on:
+  push:
+    branches: [output-schema-update]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: output-schema-update
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fix Test Agent readiness guard
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('chapters/09-first-webmcp-app/tests/run-tests.mjs')
+          text = path.read_text()
+          bad = "    const r = await page.waitForFunction(() => typeof window.testAgent?.call === 'function');\\n"
+          if bad in text:
+              text = text.replace(bad, '', 1)
+              path.write_text(text)
+              print('Removed redundant waitForFunction result binding')
+          else:
+              print('No redundant waitForFunction binding found')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+actions[bot]@users.noreply.github.com"
+          git add chapters/09-first-webmcp-app/tests/run-tests.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix Test Agent readiness check in Chapter 9 tests"
+            git push origin HEAD:output-schema-update
+          fi
+      - name: Run all outputSchema suites
+        shell: bash
+        run: |
+          set +e
+          status=0
+          for directory in chapters/09-first-webmcp-app chapters/17-the-road-ahead appendices/a-api-reference; do
+            echo "===== $directory ====="
+            cd "$GITHUB_WORKSPACE/$directory"
+            npm install
+            install_status=$?
+            if [ "$install_status" -eq 0 ]; then
+              npx playwright install --with-deps chromium
+              install_status=$?
+            fi
+            test_status=0
+            if [ "$install_status" -eq 0 ]; then
+              npm test
+              test_status=$?
+            else
+              test_status=$install_status
+            fi
+            if [ "$install_status" -eq 0 ]; then
+              npm run test:chrome --if-present
+              chrome_status=$?
+              if [ "$chrome_status" -ne 0 ]; then test_status=$chrome_status; fi
+            fi
+            if [ "$test_status" -eq 0 ]; then
+              echo "PASSED: $directory"
+            else
+              echo "FAILED: $directory (exit $test_status)"
+              status=1
+            fi
+          done
+          exit "$status"
