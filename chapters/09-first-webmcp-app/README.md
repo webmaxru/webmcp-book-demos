@@ -18,7 +18,7 @@ Fjord Table, the small Oslo restaurant-booking site from the book *Tools, Not Cl
 | `index.html`, `styles.css` | (none) | The page. Demo code. |
 | `availability.js`, `booking-panel.js` | (none) | Copied **unchanged** from the Chapter 4–5 demo (`fjord-table/`): the fake booking back end and the booking UI. |
 | `dev/model-context-mock.js` | (none) | Dev-only `document.modelContext` mock (unchanged from `fjord-table/dev/`). Never loaded by the page; the tests inject it. |
-| `tests/run-tests.mjs` | (none) | The test suite (below). `tests/listings.json` maps listings to files. |
+| `tests/run-tests.mjs`, `tests/output-schema.test.mjs` | (none) | Browser/static and output-schema checks (below). `tests/listings.json` maps listings to files. |
 
 Every listing file is byte-identical to the code in the chapter. The test `every listing file matches the code in the chapter` checks this when `CHAPTER_MD` points at the chapter's Markdown (it lives in the `webmcp-book` repository, `chapters/09-first-webmcp-app/`). No listing needed filling in.
 
@@ -30,7 +30,7 @@ The two short inline snippets in the chapter's prose (a `scripted()` run and a c
 npm install
 npx playwright install chromium
 npm start                      # http://localhost:3000/
-npm test                       # 21 checks (22 with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md)
+npm test                       # 21 browser/static checks + 5 output-schema tests; +1 listing check with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md
 ```
 
 Open `http://localhost:3000/?test-agent` in Chrome with `chrome://flags/#enable-webmcp-testing` enabled, then in the console:
@@ -67,3 +67,13 @@ Run with Playwright 1.64 and its Chromium **156.0.8078.4**: plain, with `--enabl
 - The Model Context Tool Inspector, the Example Agentic Chrome Extension and the DevTools WebMCP pane: described in the chapter from their documentation; not run.
 - The local relay with a real desktop MCP client (only the config file is checked).
 - A real origin-trial token: tokens are issued per registered origin, so only an invalid token's behaviour (ignored) was tested.
+
+## Output-schema validation (15 November 2026)
+
+`search_availability` and `book_table` declare optional JSON Schemas for their return values. The Test Agent parses each `executeTool()` result and validates it against the tool's `outputSchema` before it enters the transcript or the next planner request. A mismatch becomes a concise validation error with a schema path and safe reason; the malformed result is not retained or sent to the planner. Tools without `outputSchema` still pass their results through, including tools that return plain text.
+
+WebMCP PR #254 added `outputSchema` to the tool dictionaries. Issue #92 remains open on whether native `executeTool()` must reject an output mismatch, so validation in this demo is an agent-harness safeguard. The task-supplied Chrome build is `159.0.8140.0`; the GitHub Actions tests below use Chromium 156 and do not verify that build. For another host-side validation example, see GoogleChromeLabs/webmcp-extension PR #98.
+
+The GitHub Actions run at [43772716193](https://github.com/webmaxru/webmcp-book-demos/actions/runs/43772716193) passed `npm test` in Chapter 9, Chapter 17 and Appendix A. The Chapter 17 job also passed `npm run test:chrome`. The Chapter 9 command includes the 21 browser/static checks and 5 output-schema tests listed above.
+
+Sources: [WebMCP PR #254](https://github.com/webmachinelearning/webmcp/pull/254), [issue #92](https://github.com/webmachinelearning/webmcp/issues/92), [WebMCP Extension PR #98](https://github.com/GoogleChromeLabs/webmcp-extension/pull/98).
