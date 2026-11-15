@@ -1,6 +1,8 @@
 // test-agent.js: the Test Agent, a minimal in-page agent for development and CI.
 // It lists tools with getTools(), asks a planner what to do next, runs each call
 // with executeTool() and keeps a transcript. It is a harness, not a product agent.
+import { Validator } from './node_modules/@cfworker/json-schema/dist/esm/index.js';
+
 export function createTestAgent({ planner, maxSteps = 6, log = console.info } = {}) {
   const transcript = [];
 
@@ -12,10 +14,14 @@ export function createTestAgent({ planner, maxSteps = 6, log = console.info } = 
     const entry = { name, args };
     transcript.push(entry);
     try {
-      entry.raw = await document.modelContext.executeTool(tool, args, { signal });
-      entry.result = parse(entry.raw);
-      log('[test-agent]', name, args, '->', entry.result);
-      return entry.result;
+      const raw = await document.modelContext.executeTool(tool, args, { signal });
+      const result = parse(raw);
+      checkOutput(tool.outputSchema, result);
+      // Keep raw output only after validation: the planner reads this transcript.
+      entry.raw = raw;
+      entry.result = result;
+      log('[test-agent]', name, args, '->', result);
+      return result;
     } catch (err) {
       entry.error = `${err.name}: ${err.message}`;
       log('[test-agent]', name, args, 'failed:', entry.error);
@@ -43,4 +49,20 @@ export const scripted = (...steps) => ({ transcript }) => {
 
 function parse(raw) {
   try { return JSON.parse(raw); } catch { return raw; }   // Chromium returns plain strings as-is
+}
+
+function checkOutput(schema, result) {
+  if (schema === undefined) return;                     // an output schema is optional
+  let validation;
+  try {
+    validation = new Validator(schema, '2020-12').validate(result);
+  } catch {
+    // Fail closed: never pass on an output we could not check.
+    throw new Error('Could not validate the tool output against its outputSchema');
+  }
+  if (!validation.valid) {
+    const path = validation.errors[0]?.keywordLocation;
+    const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';
+    throw new Error(`Tool output does not match its outputSchema${safePath}`);
+  }
 }
