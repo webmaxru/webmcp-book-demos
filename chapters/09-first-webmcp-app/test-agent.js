@@ -61,10 +61,43 @@ function checkOutput(schema, result) {
     throw new Error('Could not validate the tool output against its outputSchema');
   }
   if (!validation.valid) {
-    const path = validation.errors[0]?.keywordLocation;
-    const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';
-    const keyword = typeof path === 'string' ? path.split('/').at(-1) : '';
-    const safeReason = /^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(keyword) ? ` (${keyword} keyword)` : '';
-    throw new Error(`Tool output does not match its outputSchema${safePath}${safeReason}`);
+    // Applicator summaries such as "properties" point only to a parent schema
+    // node. Prefer the most specific assertion while never including the bad value.
+    const summaryKeywords = new Set([
+      'properties', 'patternProperties', 'allOf', 'anyOf', 'oneOf', 'not',
+      'if', 'then', 'else', '$ref', '$recursiveRef', 'dependentSchemas',
+      'items', 'prefixItems', 'contains', 'propertyNames',
+      'unevaluatedProperties', 'unevaluatedItems'
+    ]);
+    const errors = Array.isArray(validation.errors) ? validation.errors : [];
+    const details = errors
+      .filter((error) => typeof error.keyword === 'string' && !summaryKeywords.has(error.keyword))
+      .slice()
+      .sort((a, b) => (b.keywordLocation?.length ?? 0) - (a.keywordLocation?.length ?? 0));
+    const detail = details[0] ?? errors[0];
+    const path = detail?.keywordLocation;
+    const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path)
+      ? ` at ${path}`
+      : '';
+    const keyword = detail?.keyword;
+    const safeKeyword = typeof keyword === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(keyword)
+      ? keyword
+      : '';
+    const reasons = {
+      type: 'value has the wrong type',
+      required: 'a required property is missing',
+      enum: 'value is outside the allowed set',
+      const: 'value does not match the required constant',
+      minimum: 'value is below the minimum',
+      maximum: 'value is above the maximum',
+      minLength: 'string is too short',
+      maxLength: 'string is too long',
+      minItems: 'array has too few items',
+      maxItems: 'array has too many items',
+      additionalProperties: 'an unexpected property is present'
+    };
+    const suffix = safeKeyword ? ` (${safeKeyword} keyword)` : '';
+    const reason = safeKeyword ? (reasons[safeKeyword] ?? `the ${safeKeyword} constraint failed`) : 'validation failed';
+    throw new Error(`Tool output does not match its outputSchema${safePath}${suffix}: ${reason}`);
   }
 }
