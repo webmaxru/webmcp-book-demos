@@ -19,25 +19,73 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fix Test Agent readiness guard
+      - name: Fix Chapter 9 test setup and version the Appendix A expectations
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('chapters/09-first-webmcp-app/tests/run-tests.mjs')
-          text = path.read_text()
-          bad = "    const r = await page.waitForFunction(() => typeof window.testAgent?.call === 'function');\\n"
-          if bad in text:
-              text = text.replace(bad, '', 1)
-              path.write_text(text)
-              print('Removed redundant waitForFunction result binding')
+
+          chapter9 = Path('chapters/09-first-webmcp-app/tests/run-tests.mjs')
+          lines = chapter9.read_text().splitlines(keepends=True)
+          target = "const r = await page.waitForFunction(() => typeof window.testAgent?.call === 'function');"
+          fixed = [line for line in lines if line.strip() != target]
+          if fixed != lines:
+              chapter9.write_text(''.join(fixed))
+              print('Removed redundant waitForFunction binding')
           else:
               print('No redundant waitForFunction binding found')
+
+          path = Path('appendices/a-api-reference/tests/run-tests.mjs')
+          source = path.read_text()
+          def replace_once(old, new, label):
+              global source
+              if new in source:
+                  return
+              if old not in source:
+                  raise SystemExit(f'Expected Appendix A test anchor not found: {label}')
+              source = source.replace(old, new, 1)
+
+          replace_once(
+              "assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')\n        ? ['description', 'name', 'origin', 'outputSchema', 'title', 'window']\n        : ['description', 'name', 'origin', 'title', 'window']);",
+              "assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')\n        ? []\n        : ['description', 'name', 'origin', 'title', 'window']);",
+              'Tool interface enumeration'
+          )
+          replace_once(
+              "await test('Chromium differs: thrown/rejected execute -> UnknownError (draft: OperationError)', () => {\n  assert.match(b.execThrow, /^UnknownError/); assert.match(b.execReject, /^UnknownError/);\n});",
+              "await test('execute errors: Chromium 156 UnknownError, newer Chromium OperationError', () => {\n  assert.match(b.execThrow, versionAtLeast(out.version, '159.0.8140.0') ? /^OperationError/ : /^UnknownError/);\n  assert.match(b.execReject, versionAtLeast(out.version, '159.0.8140.0') ? /^OperationError/ : /^UnknownError/);\n});",
+              'execute failure names'
+          )
+          replace_once(
+              "await test('Chromium differs: unregistered, forged name, forged origin -> UnknownError (draft: NotFoundError)', () => {\n  for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);\n  assert.equal(b.afterUnregister, false);\n});",
+              "await test('stale tools and plain objects use the browser-version-specific error', () => {\n  if (versionAtLeast(out.version, '159.0.8140.0')) {\n    assert.match(b.execUnregistered, /^NotFoundError/);\n    assert.match(b.execForgedName, /^TypeError/);\n    assert.match(b.execForgedOrigin, /^TypeError/);\n  } else {\n    for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);\n  }\n  assert.equal(b.afterUnregister, false);\n});",
+              'stale and forged tools'
+          )
+          replace_once(
+              "await test('opaque origin \\\"null\\\" -> NotSupportedError (agrees)', () => assert.match(b.execOpaqueOrigin, /^NotSupportedError/));",
+              "await test('opaque-origin Tool argument uses a browser-version-specific error', () => {\n  assert.match(b.execOpaqueOrigin, versionAtLeast(out.version, '159.0.8140.0') ? /^TypeError/ : /^NotSupportedError/);\n});",
+              'opaque origin'
+          )
+          replace_once(
+              "await test('Permissions-Policy: tools=() -> NotAllowedError from all three methods', () => {\n  assert.equal(out.blocked.allowsFeature, false);\n  assert.deepEqual([out.blocked.register, out.blocked.getTools, out.blocked.execute], ['NotAllowedError', 'NotAllowedError', 'NotAllowedError']);\n});",
+              "await test('Permissions-Policy blocks registration and getTools; executeTool checks its Tool argument', () => {\n  assert.equal(out.blocked.allowsFeature, false);\n  assert.deepEqual([out.blocked.register, out.blocked.getTools], ['NotAllowedError', 'NotAllowedError']);\n  assert.equal(out.blocked.execute, versionAtLeast(out.version, '159.0.8140.0') ? 'TypeError' : 'NotAllowedError');\n});",
+              'permissions policy'
+          )
+          replace_once(
+              "await test('Chromium differs: target frame removed mid-call -> UnknownError (draft: AbortError)', () => {\n  assert.match(out.frames.frameRemovedMidCall, /^UnknownError/);\n});",
+              "await test('removed frame aborts in newer Chromium; Chromium 156 reports UnknownError', () => {\n  assert.match(out.frames.frameRemovedMidCall, versionAtLeast(out.version, '159.0.8140.0') ? /^AbortError/ : /^UnknownError/);\n});",
+              'removed frame'
+          )
+          replace_once(
+              "await test('Chromium differs: re-registering the name during inputSchema serialization kills the renderer, crbug 573722078 (draft: InvalidStateError)', () => {\n  assert.equal(crashed, true, JSON.stringify(reentrant));\n});",
+              "await test('re-entrant registration: Chromium 156 renderer crash, newer Chromium rejects the duplicate', () => {\n  if (versionAtLeast(out.version, '159.0.8140.0')) {\n    assert.equal(crashed, false, JSON.stringify(reentrant));\n    assert.deepEqual(reentrant, { outer: 'InvalidStateError', inner: 'resolved' });\n  } else {\n    assert.equal(crashed, true, JSON.stringify(reentrant));\n  }\n});",
+              're-entrant registration'
+          )
+          path.write_text(source)
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+actions[bot]@users.noreply.github.com"
-          git add chapters/09-first-webmcp-app/tests/run-tests.mjs
+          git add chapters/09-first-webmcp-app/tests/run-tests.mjs appendices/a-api-reference/tests/run-tests.mjs
           if ! git diff --cached --quiet; then
-            git commit -m "Fix Test Agent readiness check in Chapter 9 tests"
+            git commit -m "Fix WebMCP 159 output-schema test expectations"
             git push origin HEAD:output-schema-update
           fi
       - name: Run all outputSchema suites
