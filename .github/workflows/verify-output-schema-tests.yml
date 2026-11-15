@@ -34,8 +34,6 @@ jobs:
             chrome_test: false
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: output-schema-update
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
