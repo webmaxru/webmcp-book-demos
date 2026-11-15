@@ -1,61 +1,89 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-const replace = async (path, before, after, { all = false } = {}) => {
-  const source = await readFile(path, 'utf8');
-  if (!source.includes(before)) {
-    if (source.includes(after)) return;
-    throw new Error(`Expected source text was not found in ${path}`);
-  }
-  const next = all ? source.replaceAll(before, after) : source.replace(before, after);
-  await writeFile(path, next);
-};
+async function edit(path, transform) {
+  const original = await readFile(path, 'utf8');
+  const eol = original.includes('\r\n') ? '\r\n' : '\n';
+  const source = original.replace(/\r\n/g, '\n');
+  const next = transform(source);
+  if (next !== source) await writeFile(path, next.replace(/\n/g, eol));
+}
 
-const runners = [
+function replaceOnce(source, before, after, path) {
+  if (!source.includes(before)) throw new Error(`Expected text not found in ${path}: ${before.slice(0, 100)}`);
+  return source.replace(before, after);
+}
+
+function replaceRegex(source, pattern, replacement, path) {
+  if (!pattern.test(source)) throw new Error(`Expected pattern not found in ${path}: ${pattern}`);
+  return source.replace(pattern, replacement);
+}
+
+for (const path of [
   'chapters/09-first-webmcp-app/tests/run-tests.mjs',
   'chapters/17-the-road-ahead/tests/run-tests.mjs',
   'appendices/a-api-reference/tests/run-tests.mjs',
-];
-for (const path of runners) {
-  await replace(path, '--enable-features=WebMCPTesting',
-    '--enable-features=WebMCP,WebMCPTesting', { all: true });
+]) {
+  await edit(path, (source) => {
+    if (!source.includes('--enable-features=WebMCPTesting')) {
+      throw new Error(`Expected WebMCPTesting flag not found in ${path}`);
+    }
+    return source.replaceAll('--enable-features=WebMCPTesting', '--enable-features=WebMCP,WebMCPTesting');
+  });
 }
 
-// Keep the test mock's getTools() output aligned with the new optional IDL member.
-await replace('chapters/17-the-road-ahead/dev/model-context-mock.js',
-  "        const schemaJSON = tool.inputSchema === undefined ? '' : JSON.stringify(tool.inputSchema);\n        tools.set(tool.name, { tool, schemaJSON });",
-  "        const schemaJSON = tool.inputSchema === undefined ? '' : JSON.stringify(tool.inputSchema);\n        const outputSchemaJSON = tool.outputSchema === undefined ? '' : JSON.stringify(tool.outputSchema);\n        tools.set(tool.name, { tool, schemaJSON, outputSchemaJSON });");
-await replace('chapters/17-the-road-ahead/dev/model-context-mock.js',
-  '        return [...tools.values()].map(({ tool, schemaJSON }) => ({',
-  '        return [...tools.values()].map(({ tool, schemaJSON, outputSchemaJSON }) => ({');
-await replace('chapters/17-the-road-ahead/dev/model-context-mock.js',
-  '          ...(schemaJSON ? { inputSchema: JSON.parse(schemaJSON) } : {}),\n          window, origin: location.origin, annotations: { ...(tool.annotations ?? {}) }',
-  '          ...(schemaJSON ? { inputSchema: JSON.parse(schemaJSON) } : {}),\n          ...(outputSchemaJSON ? { outputSchema: JSON.parse(outputSchemaJSON) } : {}),\n          window, origin: location.origin, annotations: { ...(tool.annotations ?? {}) }');
+await edit('chapters/17-the-road-ahead/dev/model-context-mock.js', (source) => {
+  let next = replaceRegex(source,
+    /([ \t]*)const schemaJSON = tool\.inputSchema === undefined \? '' : JSON\.stringify\(tool\.inputSchema\);\n\1tools\.set\(tool\.name, \{ tool, schemaJSON \}\);/,
+    (_match, indent) => `${indent}const schemaJSON = tool.inputSchema === undefined ? '' : JSON.stringify(tool.inputSchema);\n${indent}const outputSchemaJSON = tool.outputSchema === undefined ? '' : JSON.stringify(tool.outputSchema);\n${indent}tools.set(tool.name, { tool, schemaJSON, outputSchemaJSON });`,
+    'chapters/17-the-road-ahead/dev/model-context-mock.js');
+  next = replaceOnce(next,
+    'return [...tools.values()].map(({ tool, schemaJSON }) => ({',
+    'return [...tools.values()].map(({ tool, schemaJSON, outputSchemaJSON }) => ({',
+    'chapters/17-the-road-ahead/dev/model-context-mock.js');
+  next = replaceRegex(next,
+    /([ \t]*)\.\.\.\(schemaJSON \? \{ inputSchema: JSON\.parse\(schemaJSON\) \} : \{\}\),\n([ \t]*)window,/,
+    (_match, firstIndent, secondIndent) => `${firstIndent}...(schemaJSON ? { inputSchema: JSON.parse(schemaJSON) } : {}),\n${firstIndent}...(outputSchemaJSON ? { outputSchema: JSON.parse(outputSchemaJSON) } : {}),\n${secondIndent}window,`,
+    'chapters/17-the-road-ahead/dev/model-context-mock.js');
+  return next;
+});
 
-// Both the mock and the browser probe must preserve outputSchema through getTools().
-await replace('chapters/17-the-road-ahead/tests/run-tests.mjs',
-  '    assert.equal(report.outputSchemaReflected, false);',
-  '    assert.equal(report.outputSchemaReflected, true);');
+await edit('chapters/17-the-road-ahead/tests/run-tests.mjs', (source) =>
+  replaceOnce(source, 'assert.equal(report.outputSchemaReflected, false);',
+    'assert.equal(report.outputSchemaReflected, true);', 'chapters/17-the-road-ahead/tests/run-tests.mjs'));
 
-// The API reference fixture now verifies the optional schema on a registered tool.
-await replace('appendices/a-api-reference/webmcp.idl',
-  '    object inputSchema;\n',
-  '    object inputSchema;\n    object outputSchema;\n', { all: true });
-await replace('appendices/a-api-reference/tests/run-tests.mjs',
-  "    await mc.registerTool(ok('echo', (i) => ({ got: i })));",
-  "    await mc.registerTool(ok('echo', (i) => ({ got: i }), { outputSchema: { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] } }));");
-await replace('appendices/a-api-reference/tests/run-tests.mjs',
-  "    r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();",
-  "    r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();\n    r.outputSchema = T('echo').outputSchema;");
-await replace('appendices/a-api-reference/tests/run-tests.mjs',
-  "    assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'title', 'window']);",
-  "    assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'outputSchema', 'title', 'window']);\n    assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });");
+await edit('appendices/a-api-reference/webmcp.idl', (source) => {
+  const pattern = /^([ \t]*)object inputSchema;$/gm;
+  if (!pattern.test(source)) throw new Error('No inputSchema members found in appendices/a-api-reference/webmcp.idl');
+  pattern.lastIndex = 0;
+  return source.replace(pattern, '$1object inputSchema;\n$1object outputSchema;');
+});
 
-// The Test Agent reports only a safe schema location and keyword, never the rejected value.
-await replace('chapters/09-first-webmcp-app/test-agent.js',
-  "      const path = validation.errors[0]?.keywordLocation;\n      const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';\n      throw new Error(`Tool output does not match its outputSchema${safePath}`);",
-  "      const path = validation.errors[0]?.keywordLocation;\n      const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';\n      const keyword = typeof path === 'string' ? path.split('/').at(-1) : '';\n      const safeReason = /^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(keyword) ? ` (${keyword} keyword)` : '';\n      throw new Error(`Tool output does not match its outputSchema${safePath}${safeReason}`);");
-await replace('chapters/09-first-webmcp-app/tests/output-schema.test.mjs',
-  "      await assert.rejects(agent.call('weather'), /does not match its outputSchema/);\n      assert.equal(agent.transcript[0].raw, undefined);",
-  "      await assert.rejects(agent.call('weather'), /does not match its outputSchema/);\n      if (result.temperature === 'SECRET_PAYLOAD') {\n        assert.match(agent.transcript[0].error, /at #\\/properties\\/temperature\\/type \(type keyword\)/);\n      }\n      assert.equal(agent.transcript[0].raw, undefined);");
+await edit('appendices/a-api-reference/tests/run-tests.mjs', (source) => {
+  let next = replaceOnce(source,
+    "await mc.registerTool(ok('echo', (i) => ({ got: i })));",
+    "await mc.registerTool(ok('echo', (i) => ({ got: i }), { outputSchema: { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] } }));",
+    'appendices/a-api-reference/tests/run-tests.mjs');
+  next = replaceOnce(next,
+    "r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();",
+    "r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();\n    r.outputSchema = T('echo').outputSchema;",
+    'appendices/a-api-reference/tests/run-tests.mjs');
+  next = replaceOnce(next,
+    "assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'title', 'window']);",
+    "assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'outputSchema', 'title', 'window']);\n    assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });",
+    'appendices/a-api-reference/tests/run-tests.mjs');
+  return next;
+});
 
-console.log('Prepared CI test flags and outputSchema assertions');
+await edit('chapters/09-first-webmcp-app/test-agent.js', (source) => {
+  const needle = "      const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';\n      throw new Error(`Tool output does not match its outputSchema${safePath}`);";
+  const replacement = "      const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';\n      const keyword = typeof path === 'string' ? path.split('/').at(-1) : '';\n      const safeReason = /^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(keyword) ? ` (${keyword} keyword)` : '';\n      throw new Error(`Tool output does not match its outputSchema${safePath}${safeReason}`);";
+  return replaceOnce(source, needle, replacement, 'chapters/09-first-webmcp-app/test-agent.js');
+});
+
+await edit('chapters/09-first-webmcp-app/tests/output-schema.test.mjs', (source) => {
+  const needle = "      await assert.rejects(agent.call('weather'), /does not match its outputSchema/);\n      assert.equal(agent.transcript[0].raw, undefined);";
+  const replacement = "      await assert.rejects(agent.call('weather'), /does not match its outputSchema/);\n      if (result.temperature === 'SECRET_PAYLOAD') {\n        assert.match(agent.transcript[0].error, /at #\\/properties\\/temperature\\/type \\(type keyword\\)/);\n      }\n      assert.equal(agent.transcript[0].raw, undefined);";
+  return replaceOnce(source, needle, replacement, 'chapters/09-first-webmcp-app/tests/output-schema.test.mjs');
+});
+
+console.log('Prepared WebMCP outputSchema changes for verification');
