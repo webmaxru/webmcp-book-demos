@@ -17,6 +17,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Repair nested template literals in the preparation script
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/scripts/prepare-output-schema-ci.mjs')
+          source = path.read_text()
+          old = "assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);"
+          new = "assert.equal(result.valid, true, String(value) + ': ' + JSON.stringify(result.errors));"
+          if old in source:
+              source = source.replace(old, new)
+          elif new not in source:
+              raise SystemExit('Expected nested template assertion not found')
+          path.write_text(source)
+          PY
       - name: Correct and apply prepared outputSchema changes
         run: |
           python3 - <<'PY'
@@ -48,9 +62,11 @@ jobs:
           source = source[:start] + replacement + source[end:]
           old = "slots: { type: 'array', items: { type: 'string' } }"
           new = "slots: { type: 'array', items: { type: 'object', properties: { time: { type: 'string' }, seating: { type: 'array', items: { type: 'string' } } }, required: ['time', 'seating'] } }"
-          if old not in source:
+          if old in source:
+              source = source.replace(old, new, 1)
+          elif new not in source:
               raise SystemExit('Expected Fjord Table slot output schema template not found')
-          path.write_text(source.replace(old, new, 1))
+          path.write_text(source)
           PY
           node .github/scripts/prepare-output-schema-ci.mjs
       - name: Commit prepared source changes
