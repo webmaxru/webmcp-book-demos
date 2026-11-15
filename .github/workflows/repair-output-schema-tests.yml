@@ -23,15 +23,23 @@ jobs:
           from pathlib import Path
           path = Path('chapters/09-first-webmcp-app/tests/run-tests.mjs')
           source = path.read_text()
-          before = "    const r = await page.evaluate((date) => window.testAgent.call('book_table', { date, time: '7pm', partySize: 2 }), DATE);"
-          after = "    await page.waitForFunction(() => typeof window.testAgent?.call === 'function');\n" + before
-          if after in source:
+          test_marker = "native: invalid input comes back as a value the planner can read"
+          call_marker = "page.evaluate((date) => window.testAgent.call('book_table'"
+          if test_marker not in source:
+              raise SystemExit('Invalid-input test marker not found')
+          start = source.index(test_marker)
+          call = source.find(call_marker, start)
+          if call < 0:
+              raise SystemExit('Invalid-input Test Agent call not found')
+          line_start = source.rfind('\n', 0, call) + 1
+          indent = source[line_start:call]
+          guard = indent + "await page.waitForFunction(() => typeof window.testAgent?.call === 'function');\n"
+          if "window.testAgent?.call === 'function'" in source[start:call]:
               print('Test Agent readiness guard already present')
-          elif before in source:
-              path.write_text(source.replace(before, after, 1))
-              print('Added Test Agent readiness guard')
           else:
-              raise SystemExit('Invalid-input call anchor not found')
+              source = source[:line_start] + guard + source[line_start:]
+              path.write_text(source)
+              print('Added Test Agent readiness guard')
           PY
       - name: Commit repair
         run: |
