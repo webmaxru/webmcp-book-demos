@@ -17,8 +17,42 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply prepared outputSchema changes
-        run: node .github/scripts/prepare-output-schema-ci.mjs
+      - name: Correct and apply prepared outputSchema changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/scripts/prepare-output-schema-ci.mjs')
+          source = path.read_text()
+          start = source.index("await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs'")
+          end = source.index("\n\nawait edit('chapters/17-the-road-ahead/dev/model-context-mock.js'", start)
+          replacement = r"""await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs', (source) => {
+            let next = replaceOnce(
+              source,
+              `const DATE = iso(day);`,
+              `const DATE = iso(day);\n\n${versionHelper('versionAtLeast')}`,
+              'Chapter 9 test runner'
+            );
+            next = replaceOnce(
+              next,
+              `ts.map((t) => ({ name: t.name, annotations: t.annotations, required: t.inputSchema?.required }))`,
+              `ts.map((t) => ({ name: t.name, annotations: t.annotations, required: t.inputSchema?.required, outputSchema: t.outputSchema }))`,
+              'Chapter 9 test runner'
+            );
+            return replaceOnce(
+              next,
+              `assert.deepEqual(byName.book_table.required, ['date', 'time', 'partySize']);`,
+              `assert.deepEqual(byName.book_table.required, ['date', 'time', 'partySize']);\n    const supportsOutputSchema = versionAtLeast(webmcp.version(), '159.0.8140.0');\n    assert.equal(Boolean(byName.search_availability.outputSchema), supportsOutputSchema);\n    assert.equal(Boolean(byName.book_table.outputSchema), supportsOutputSchema);`,
+              'Chapter 9 test runner'
+            );
+          });"""
+          source = source[:start] + replacement + source[end:]
+          old = "slots: { type: 'array', items: { type: 'string' } }"
+          new = "slots: { type: 'array', items: { type: 'object', properties: { time: { type: 'string' }, seating: { type: 'array', items: { type: 'string' } } }, required: ['time', 'seating'] } }"
+          if old not in source:
+              raise SystemExit('Expected Fjord Table slot output schema template not found')
+          path.write_text(source.replace(old, new, 1))
+          PY
+          node .github/scripts/prepare-output-schema-ci.mjs
       - name: Commit prepared source changes
         run: |
           git config user.name "github-actions[bot]"
