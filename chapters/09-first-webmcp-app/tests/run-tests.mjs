@@ -254,7 +254,7 @@ await test('native: scripted run() uses one result to plan the next call', async
 
 await test('native: invalid input comes back as a value the planner can read', async () => {
   const { page, context } = await openPage(webmcp, { url: BASE + '?test-agent' });
-  const r = await await page.waitForFunction(() => typeof window.testAgent?.call === 'function');
+await page.waitForFunction(() => typeof window.testAgent?.call === 'function');
   const r = await page.evaluate((date) => window.testAgent.call('book_table', { date, time: '7pm', partySize: 2 }), DATE);
   assert.equal(r.status, 'error');
   assert.equal(r.code, 'INVALID_INPUT');

@@ -235,8 +235,8 @@ await test('getTools(): sorted by name, title "", window and origin present', ()
   assert.deepEqual(b.tools, [...b.tools].sort());
   assert.equal(b.title, '""'); assert.equal(b.windowIsSelf, true);
   assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')
-      ? ['description', 'name', 'origin', 'outputSchema', 'title', 'window']
-      : ['description', 'name', 'origin', 'title', 'window']);
+        ? []
+        : ['description', 'name', 'origin', 'title', 'window']);
     if (versionAtLeast(out.version, '159.0.8140.0')) {
       assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });
     }
@@ -249,17 +249,28 @@ await test('executeTool(): object result is JSON, plain string is not quoted, no
 await test('Chromium differs: undefined -> "undefined", 10n -> "10" (draft: OperationError)', () => {
   assert.equal(b.execUndef, 'resolved:"undefined"'); assert.equal(b.execBigint, 'resolved:"10"');
 });
-await test('Chromium differs: thrown/rejected execute -> UnknownError (draft: OperationError)', () => {
-  assert.match(b.execThrow, /^UnknownError/); assert.match(b.execReject, /^UnknownError/);
+await test('execute errors vary by browser version', () => {
+  const modern = versionAtLeast(out.version, '159.0.8140.0');
+  assert.match(b.execThrow, modern ? /^OperationError/ : /^UnknownError/);
+  assert.match(b.execReject, modern ? /^OperationError/ : /^UnknownError/);
 });
-await test('Chromium differs: unregistered, forged name, forged origin -> UnknownError (draft: NotFoundError)', () => {
-  for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);
+await test('stale tools and plain objects use version-specific errors', () => {
+  const modern = versionAtLeast(out.version, '159.0.8140.0');
+  if (modern) {
+    assert.match(b.execUnregistered, /^NotFoundError/);
+    assert.match(b.execForgedName, /^TypeError/);
+    assert.match(b.execForgedOrigin, /^TypeError/);
+  } else {
+    for (const key of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[key], /^UnknownError/, key);
+  }
   assert.equal(b.afterUnregister, false);
 });
 await test('TypeError: toJSON() -> undefined inputSchema; circular executeTool() input (agrees)', () => {
   assert.match(b.toJsonUndef, /^TypeError/); assert.match(b.execCircularInput, /^TypeError/);
 });
-await test('opaque origin "null" -> NotSupportedError (agrees)', () => assert.match(b.execOpaqueOrigin, /^NotSupportedError/));
+await test('opaque-origin Tool argument uses version-specific errors', () => {
+  assert.match(b.execOpaqueOrigin, versionAtLeast(out.version, '159.0.8140.0') ? /^TypeError/ : /^NotSupportedError/);
+});
 await test('caller abort -> AbortError, execute signal aborts, toolcancel fires', () => {
   assert.match(b.execAborted, /^AbortError/);
   assert.ok(b.events.includes('execSignalAborted')); assert.ok(b.events.includes('toolcancel:slow'));
@@ -269,9 +280,10 @@ await test('events: toolchange on register/unregister, toolactivated per executi
   assert.equal(b.events.filter((e) => e.startsWith('toolchange')).length, 9);
   assert.ok(b.events.includes('toolactivated:echo'));
 });
-await test('Permissions-Policy: tools=() -> NotAllowedError from all three methods', () => {
+await test('Permissions-Policy blocks registration and getTools; executeTool checks its Tool argument', () => {
   assert.equal(out.blocked.allowsFeature, false);
-  assert.deepEqual([out.blocked.register, out.blocked.getTools, out.blocked.execute], ['NotAllowedError', 'NotAllowedError', 'NotAllowedError']);
+  assert.deepEqual([out.blocked.register, out.blocked.getTools], ['NotAllowedError', 'NotAllowedError']);
+  assert.equal(out.blocked.execute, versionAtLeast(out.version, '159.0.8140.0') ? 'TypeError' : 'NotAllowedError');
 });
 await test('cross-origin iframe without allow="tools" -> NotAllowedError', () => assert.equal(out.frames.noAllow, 'reg:NotAllowedError'));
 await test('exposedTo + fromOrigins: the frame tool is visible only when both say yes', () => {
@@ -280,8 +292,8 @@ await test('exposedTo + fromOrigins: the frame tool is visible only when both sa
   assert.deepEqual(out.frames.fromOrigins, ['frame_tool@http://127.0.0.1:8612']);
   assert.deepEqual(out.frames.notExposed, []);
 });
-await test('Chromium differs: target frame removed mid-call -> UnknownError (draft: AbortError)', () => {
-  assert.match(out.frames.frameRemovedMidCall, /^UnknownError/);
+await test('removed frame reports the browser-version-specific error', () => {
+  assert.match(out.frames.frameRemovedMidCall, versionAtLeast(out.version, '159.0.8140.0') ? /^AbortError/ : /^UnknownError/);
 });
 await test('declarative <form toolname> still registers a tool in Chromium 156', () => {
   assert.equal(out.declarative.length, 1);
@@ -289,9 +301,13 @@ await test('declarative <form toolname> still registers a tool in Chromium 156',
   assert.deepEqual(out.declarative[0].schema.required, ['date', 'partySize']);
 });
 
-await test('Chromium differs: re-registering the name during inputSchema serialization kills the renderer, crbug 573722078 (draft: InvalidStateError)', () => {
-  assert.equal(crashed, true, JSON.stringify(reentrant));
+await test('re-entrant registration is rejected without a renderer crash in newer Chromium', () => {
+  if (versionAtLeast(out.version, '159.0.8140.0')) {
+    assert.equal(crashed, false, JSON.stringify(reentrant));
+    assert.deepEqual(reentrant, { outer: 'InvalidStateError', inner: 'resolved' });
+  } else {
+    assert.equal(crashed, true, JSON.stringify(reentrant));
+  }
 });
-
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
