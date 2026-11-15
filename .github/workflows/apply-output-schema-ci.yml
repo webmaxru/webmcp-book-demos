@@ -44,7 +44,7 @@ jobs:
           end = source.index("\n\nawait edit('fjord-table/booking-tools.js'", start)
           replacement = r"""await edit('fjord-table/search-availability.js', (source) => {
             if (source.includes('outputSchema:')) return source;
-            const marker = "      annotations: { readOnlyHint: true },";
+            const marker = "annotations: { readOnlyHint: true },";
             if (!source.includes(marker)) throw new Error('Search outputSchema insertion point not found');
             const schema = `      outputSchema: {
               type: 'object',
@@ -55,7 +55,7 @@ jobs:
               },
               required: ['date', 'partySize', 'slots']
             },
-          `;
+            `;
             return source.replace(marker, `${schema}${marker}`);
           });"""
           source = source[:start] + replacement + source[end:]
@@ -64,9 +64,9 @@ jobs:
           end = source.index("\n\nawait edit('chapters/09-first-webmcp-app/webmcp/tools.js'", start)
           replacement = r"""await edit('fjord-table/booking-tools.js', (source) => {
             if (source.includes('outputSchema:')) return source;
-            const marker = "    annotations: { consequentialHint: true },";
+            const marker = "annotations: { consequentialHint: true },";
             if (!source.includes(marker)) throw new Error('Booking outputSchema insertion point not found');
-            const schema = `    outputSchema: {
+            const schema = `      outputSchema: {
               type: 'object',
               properties: {
                 status: { type: 'string', enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
@@ -85,7 +85,7 @@ jobs:
                 { properties: { status: { const: 'cancelled_by_user' } }, required: ['message'] }
               ]
             },
-          `;
+            `;
             return source.replace(marker, `${schema}${marker}`);
           });"""
           source = source[:start] + replacement + source[end:]
