@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestAgent } from '../test-agent.js';
+import { Validator } from '@cfworker/json-schema';
+import { searchAvailability, bookTable } from '../webmcp/tools.js';
+import { bookTable as chapter5BookTable } from '../../../fjord-table/booking-tools.js';
 
 const schema = {
   type: 'object',
@@ -28,6 +31,9 @@ test('a wrong type or missing required property is rejected without retaining th
     installTool(schema, result);
     const agent = createTestAgent({ log: () => {} });
     await assert.rejects(agent.call('weather'), /does not match its outputSchema/);
+    if (result.temperature === 'SECRET_PAYLOAD') {
+      assert.match(agent.transcript[0].error, /at #\/properties\/temperature\/type \(type keyword\)/);
+    }
     assert.equal(agent.transcript[0].raw, undefined);
     assert.equal(agent.transcript[0].result, undefined);
     assert.doesNotMatch(JSON.stringify(agent.transcript), /SECRET_PAYLOAD/);
@@ -52,4 +58,35 @@ test('tools with no output schema still pass their result through', async () => 
   installTool(undefined, { anything: 'allowed' });
   const agent = createTestAgent({ log: () => {} });
   assert.deepEqual(await agent.call('weather'), { anything: 'allowed' });
+});
+
+test('Fjord Table outputSchema covers every documented return branch', () => {
+  const valid = (outputSchema, value) => new Validator(outputSchema, '2020-12').validate(value);
+  const search = valid(searchAvailability.outputSchema, {
+    date: '2026-11-20', partySize: 2, slots: [{ time: '19:00', seating: ['window'] }]
+  });
+  assert.equal(search.valid, true, JSON.stringify(search.errors));
+
+  const bookingResults = [
+    { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },
+    { status: 'refused', code: 'SLOT_UNAVAILABLE', message: 'Search current slots.' },
+    { status: 'booked', reference: 'FT-1042', date: '2026-11-20', time: '19:00' },
+    { status: 'cancelled_by_user', message: 'Nothing was booked.' },
+  ];
+  for (const value of bookingResults) {
+    const result = valid(bookTable.outputSchema, value);
+    assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);
+  }
+  assert.equal(valid(bookTable.outputSchema, { status: 'booked', date: '2026-11-20', time: '19:00' }).valid, false);
+
+  const chapter5Results = [
+    { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },
+    { status: 'refused', code: 'SLOT_UNAVAILABLE', message: 'Search current slots.' },
+    { status: 'booked', reference: 'FT-1042', date: '2026-11-20', time: '19:00', partySize: 2 },
+    { status: 'cancelled_by_user', message: 'Nothing was booked.' },
+  ];
+  for (const value of chapter5Results) {
+    const result = valid(chapter5BookTable.outputSchema, value);
+    assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);
+  }
 });
