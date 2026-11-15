@@ -4,7 +4,7 @@ import { bookingPanel } from '../booking-panel.js';
 
 const SEATING = ['window', 'indoor', 'terrace'];
 
-const searchAvailability = {
+export const searchAvailability = {
   name: 'search_availability',
   title: 'Search available tables',
   description: 'Find open tables at Fjord Table for a date and party size. ' +
@@ -42,7 +42,7 @@ const searchAvailability = {
   }
 };
 
-const bookTable = {
+export const bookTable = {
   name: 'book_table',
   title: 'Book a table',
   description: 'Book a slot returned by search_availability. Opens the filled-in ' +

@@ -1,5 +1,5 @@
 // Appendix A checks: runs the error-name and API-shape probes behind Table A.6 in
-// Chromium with --enable-features=WebMCPTesting and compares them with the values the
+// Chromium with --enable-features=WebMCP,WebMCPTesting and compares them with the values the
 // book prints. Also unit-tests Listing A.2 (classify-tool-error.js).
 // Run: npm install && npx playwright install chromium && npm test
 import http from 'node:http';
@@ -11,6 +11,14 @@ import { chromium } from 'playwright';
 import { classifyToolError } from '../classify-tool-error.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+function versionAtLeast(actual, minimum) {
+  const a = String(actual).split('.').map((part) => Number(part) || 0);
+  const b = minimum.split('.').map((part) => Number(part) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return true;
+}
 let passed = 0, failed = 0;
 async function test(name, fn) {
   try { await fn(); passed++; console.log('ok   ' + name); }
@@ -65,7 +73,7 @@ await new Promise((r) => setTimeout(r, 200));
 // --- Chromium probes ---------------------------------------------------------
 const out = {};
 let crashed = false, reentrant = null; // set by the re-entrant registration probe
-const browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+const browser = await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] });
 try {
 
 
@@ -86,7 +94,7 @@ out.basic = await page.evaluate(async () => {
   mc.addEventListener('toolcancel', (e) => r.events.push('toolcancel:' + e.toolName));
   const err = async (p) => { try { const v = await p; return 'resolved:' + JSON.stringify(v); } catch (e) { return e.name + ': ' + e.message; } };
   const ok = (name, execute, extra = {}) => ({ name, description: 'd', execute, ...extra });
-  r.regValue = await err(mc.registerTool(ok('echo', (i) => ({ got: i }))));
+  r.regValue = await err(mc.registerTool(ok('echo', (i) => ({ got: i }), { outputSchema: { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] } })));
   r.badName = await err(mc.registerTool(ok('bad name', () => 1)));
   r.longName = await err(mc.registerTool(ok('x'.repeat(129), () => 1)));
   r.emptyDesc = await err(mc.registerTool({ name: 'nodesc', description: '', execute: () => 1 }));
@@ -109,6 +117,7 @@ out.basic = await page.evaluate(async () => {
   const tools = await mc.getTools();
   r.tools = tools.map((t) => t.name);
   r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();
+    r.outputSchema = tools.find((t) => t.name === 'echo').outputSchema;
   r.toolOrigin = tools[0].origin; r.windowIsSelf = tools[0].window === window; r.title = JSON.stringify(tools[0].title);
   const T = (n) => tools.find((t) => t.name === n);
   r.execEcho = await err(mc.executeTool(T('echo'), { a: 1 }));
@@ -225,7 +234,12 @@ await test('SecurityError: insecure exposedTo, insecure or unparsable fromOrigin
 await test('getTools(): sorted by name, title "", window and origin present', () => {
   assert.deepEqual(b.tools, [...b.tools].sort());
   assert.equal(b.title, '""'); assert.equal(b.windowIsSelf, true);
-  assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'title', 'window']);
+  assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')
+      ? ['description', 'name', 'origin', 'outputSchema', 'title', 'window']
+      : ['description', 'name', 'origin', 'title', 'window']);
+    if (versionAtLeast(out.version, '159.0.8140.0')) {
+      assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });
+    }
 });
 await test('executeTool(): object result is JSON, plain string is not quoted, no input -> {}', () => {
   assert.equal(b.execEcho, 'resolved:' + JSON.stringify(JSON.stringify({ got: { a: 1 } })));

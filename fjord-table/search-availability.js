@@ -24,7 +24,16 @@ if ('modelContext' in document) {
       },
       required: ['date', 'partySize']
     },
-    annotations: { readOnlyHint: true },
+          outputSchema: {
+    type: 'object',
+    properties: {
+      date: { type: 'string' },
+      partySize: { type: 'integer' },
+      slots: { type: 'array', items: { type: 'string' } }
+    },
+    required: ['date', 'partySize', 'slots']
+  },
+  annotations: { readOnlyHint: true },
     async execute({ date, time, partySize }, { signal }) {
       // The same function the date picker calls when a human searches.
       const slots = await availability.search({ date, time, partySize, signal });

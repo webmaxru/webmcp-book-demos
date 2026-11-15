@@ -6,7 +6,7 @@
 //    src/ are byte-identical to the book.
 // 2. Browser (tests/index.html + src/), in Chromium:
 //      npm test             WebMCP comes from dev/model-context-mock.js, injected before the page loads
-//      npm run test:chrome  WebMCP comes from Chromium itself (--enable-features=WebMCPTesting); no mock
+//      npm run test:chrome  WebMCP comes from Chromium itself (--enable-features=WebMCP,WebMCPTesting); no mock
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
@@ -17,6 +17,15 @@ import assert from 'node:assert/strict';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const REAL = process.env.WEBMCP === 'chrome';
+
+function versionAtLeast(actual, minimum) {
+  const a = String(actual).split('.').map((part) => Number(part) || 0);
+  const b = minimum.split('.').map((part) => Number(part) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return true;
+}
 let failures = 0;
 async function test(name, fn) {
   try { await fn(); console.log(`ok   ${name}`); }
@@ -91,7 +100,7 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const PAGE = `http://localhost:${server.address().port}/tests/index.html`;   // localhost is a secure context
 
 const plain = await chromium.launch();
-const webmcp = REAL ? await chromium.launch({ args: ['--enable-features=WebMCPTesting'] }) : plain;
+const webmcp = REAL ? await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] }) : plain;
 console.log(`\nChromium ${plain.version()} · WebMCP from ${REAL ? 'the browser (flag)' : 'dev/model-context-mock.js'}`);
 
 async function open({ withWebMCP }) {
@@ -175,7 +184,7 @@ await test('Listing 17.3: the probe reports this browser and cleans up after its
   assert.equal(report.getTools, true);
   assert.equal(report.executeTool, true);
   assert.ok(report.executeOptions.includes('signal'));
-  assert.equal(report.outputSchemaReflected, false);
+  assert.equal(report.outputSchemaReflected, !REAL || versionAtLeast(plain.version(), '159.0.8140.0'));
   if (REAL) {
     // What Chromium 156 with WebMCPTesting reports. A later release may differ; that is the point.
     assert.equal(report.legacyNavigatorModelContext, false);

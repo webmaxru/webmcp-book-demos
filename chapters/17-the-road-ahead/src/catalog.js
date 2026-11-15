@@ -32,7 +32,7 @@ export const catalog = [
       },
       required: ['query'],
     },
-    // Not in the draft yet (issue #9, PR #254). Browsers that don't know it ignore it.
+    // Optional JSON Schema return contract; agents should validate results before passing them to a model.
     outputSchema: {
       type: 'object',
       properties: {
