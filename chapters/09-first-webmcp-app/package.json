@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/run-tests.mjs"
+    "test": "node tests/run-tests.mjs && node --test tests/output-schema.test.mjs"
   },
   "dependencies": {
     "@cfworker/json-schema": "4.1.6"
