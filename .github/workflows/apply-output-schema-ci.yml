@@ -23,9 +23,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chapters/09-first-webmcp-app/test-agent.js chapters/09-first-webmcp-app/tests/output-schema.test.mjs chapters/09-first-webmcp-app/tests/run-tests.mjs chapters/17-the-road-ahead/dev/model-context-mock.js chapters/17-the-road-ahead/tests/run-tests.mjs appendices/a-api-reference/webmcp.idl appendices/a-api-reference/tests/run-tests.mjs
+          git add chapters/09-first-webmcp-app/tests/run-tests.mjs chapters/09-first-webmcp-app/webmcp/tools.js chapters/17-the-road-ahead/dev/model-context-mock.js chapters/17-the-road-ahead/src/catalog.js chapters/17-the-road-ahead/tests/run-tests.mjs appendices/a-api-reference/webmcp.idl appendices/a-api-reference/tests/run-tests.mjs fjord-table/search-availability.js fjord-table/booking-tools.js
           if ! git diff --cached --quiet; then
-            git commit -m "Apply outputSchema CI fixes"
+            git commit -m "Apply outputSchema demo and test updates"
             git push origin HEAD:output-schema-update
           fi
       - name: Run demo suites
