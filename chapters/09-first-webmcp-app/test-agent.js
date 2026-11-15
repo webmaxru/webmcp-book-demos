@@ -63,6 +63,8 @@ function checkOutput(schema, result) {
   if (!validation.valid) {
     const path = validation.errors[0]?.keywordLocation;
     const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path) ? ` at ${path}` : '';
-    throw new Error(`Tool output does not match its outputSchema${safePath}`);
+    const keyword = typeof path === 'string' ? path.split('/').at(-1) : '';
+    const safeReason = /^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(keyword) ? ` (${keyword} keyword)` : '';
+    throw new Error(`Tool output does not match its outputSchema${safePath}${safeReason}`);
   }
 }
