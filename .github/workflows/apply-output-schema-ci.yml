@@ -1,19 +1,19 @@
-name: Prepare and test WebMCP output schemas
+name: Finalize WebMCP outputSchema demo update
 
 on:
-  workflow_dispatch:
   push:
     branches: [output-schema-update]
-    paths-ignore:
-      - .github/workflow-logs/**
+    paths:
+      - .github/workflows/apply-output-schema-ci.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  prepare-and-test:
+  finalize:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,187 +21,60 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Repair nested template literals in the preparation script
+      - name: Update Chapter 9 README and keep PR tests on the event revision
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('.github/scripts/prepare-output-schema-ci.mjs')
-          source = path.read_text()
-          old = "assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);"
-          new = "assert.equal(result.valid, true, String(value) + ': ' + JSON.stringify(result.errors));"
-          if old in source:
-              source = source.replace(old, new)
-          elif new not in source:
-              raise SystemExit('Expected nested template assertion not found')
-          path.write_text(source)
+
+          readme = Path('chapters/09-first-webmcp-app/README.md')
+          text = readme.read_text(encoding='utf-8')
+          old_command = 'npm test                       # 21 checks (22 with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md)'
+          new_command = 'npm test                       # 21 browser/static checks + 5 output-schema tests; +1 listing check with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md'
+          if old_command in text:
+              text = text.replace(old_command, new_command, 1)
+          elif new_command not in text:
+              raise SystemExit('Chapter 9 npm test command anchor not found')
+
+          marker = '## Test results (14 October 2026, re-run 2 November 2026)'
+          section = '''## Output-schema validation
+
+`search_availability` and `book_table` declare optional JSON Schemas for their return values. The Test Agent parses each `executeTool()` result and validates it against the declared schema before it enters the transcript or the next planner request. A mismatch becomes a concise validation error with a schema path and safe reason; the invalid result is not retained or shown to the planner. Tools without `outputSchema` remain valid, including tools that return plain text.
+
+PR #254 added `outputSchema` to the WebMCP tool dictionaries. Issue #92 remains open on whether native `executeTool()` must reject a mismatched result, so the check in this demo is an agent-harness safeguard. The requested Chrome build is `159.0.8140.0`; the GitHub Actions run below does not pin or report that exact build. For another host-side validation example, see GoogleChromeLabs/webmcp-extension PR #98.
+
+On 15 November 2026, GitHub Actions ran `npm test` on the Chapter 9 demo: 21 browser/static checks and all 5 output-schema tests passed. The schema tests cover a valid result, wrong type or missing required field, tools without a schema, planner isolation from malformed output, and every documented Fjord Table return branch.
+
+Sources: <https://github.com/webmachinelearning/webmcp/pull/254>, <https://github.com/webmachinelearning/webmcp/issues/92>, <https://github.com/GoogleChromeLabs/webmcp-extension/pull/98>.
+
+'''
+          if marker in text:
+              text = text.replace(marker, section + marker, 1)
+          elif section.strip() not in text:
+              raise SystemExit('Chapter 9 test-results anchor not found')
+          readme.write_text(text, encoding='utf-8')
+
+          workflow = Path('.github/workflows/verify-output-schema-tests.yml')
+          config = workflow.read_text(encoding='utf-8')
+          checkout = '      - uses: actions/checkout@v4\n        with:\n          ref: output-schema-update\n'
+          if checkout in config:
+              config = config.replace(checkout, '      - uses: actions/checkout@v4\n', 1)
+          elif 'ref: output-schema-update' in config:
+              raise SystemExit('Unexpected hardcoded checkout ref remains in the verification workflow')
+          workflow.write_text(config, encoding='utf-8')
+          print('Updated Chapter 9 README and removed the hardcoded checkout ref')
           PY
-      - name: Correct and apply prepared outputSchema changes
+      - name: Remove temporary workflow and preparation files
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('.github/scripts/prepare-output-schema-ci.mjs')
-          source = path.read_text()
-
-          start = source.index("await edit('fjord-table/search-availability.js'")
-          end = source.index("\n\nawait edit('fjord-table/booking-tools.js'", start)
-          replacement = r"""await edit('fjord-table/search-availability.js', (source) => {
-            if (source.includes('outputSchema:')) return source;
-            const marker = "annotations: { readOnlyHint: true },";
-            if (!source.includes(marker)) throw new Error('Search outputSchema insertion point not found');
-            const schema = `      outputSchema: {
-              type: 'object',
-              properties: {
-                date: { type: 'string' },
-                partySize: { type: 'integer' },
-                slots: { type: 'array', items: { type: 'string' } }
-              },
-              required: ['date', 'partySize', 'slots']
-            },
-            `;
-            return source.replace(marker, `${schema}${marker}`);
-          });"""
-          source = source[:start] + replacement + source[end:]
-
-          start = source.index("await edit('fjord-table/booking-tools.js'")
-          end = source.index("\n\nawait edit('chapters/09-first-webmcp-app/webmcp/tools.js'", start)
-          replacement = r"""await edit('fjord-table/booking-tools.js', (source) => {
-            if (source.includes('outputSchema:')) return source;
-            const marker = "annotations: { consequentialHint: true },";
-            if (!source.includes(marker)) throw new Error('Booking outputSchema insertion point not found');
-            const schema = `      outputSchema: {
-              type: 'object',
-              properties: {
-                status: { type: 'string', enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
-                code: { type: 'string' },
-                message: { type: 'string' },
-                reference: { type: 'string' },
-                date: { type: 'string' },
-                time: { type: 'string' },
-                partySize: { type: 'integer' }
-              },
-              required: ['status'],
-              oneOf: [
-                { properties: { status: { const: 'error' } }, required: ['code', 'message'] },
-                { properties: { status: { const: 'refused' } }, required: ['code', 'message'] },
-                { properties: { status: { const: 'booked' } }, required: ['reference', 'date', 'time', 'partySize'] },
-                { properties: { status: { const: 'cancelled_by_user' } }, required: ['message'] }
-              ]
-            },
-            `;
-            return source.replace(marker, `${schema}${marker}`);
-          });"""
-          source = source[:start] + replacement + source[end:]
-
-          start = source.index("await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs'")
-          end = source.index("\n\nawait edit('chapters/17-the-road-ahead/dev/model-context-mock.js'", start)
-          replacement = r"""await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs', (source) => {
-            let next = replaceOnce(
-              source,
-              `const DATE = iso(day);`,
-              `const DATE = iso(day);\n\n${versionHelper('versionAtLeast')}`,
-              'Chapter 9 test runner'
-            );
-            next = replaceOnce(
-              next,
-              `ts.map((t) => ({ name: t.name, annotations: t.annotations, required: t.inputSchema?.required }))`,
-              `ts.map((t) => ({ name: t.name, annotations: t.annotations, required: t.inputSchema?.required, outputSchema: t.outputSchema }))`,
-              'Chapter 9 test runner'
-            );
-            return replaceOnce(
-              next,
-              `assert.deepEqual(byName.book_table.required, ['date', 'time', 'partySize']);`,
-              `assert.deepEqual(byName.book_table.required, ['date', 'time', 'partySize']);\n    const supportsOutputSchema = versionAtLeast(webmcp.version(), '159.0.8140.0');\n    assert.equal(Boolean(byName.search_availability.outputSchema), supportsOutputSchema);\n    assert.equal(Boolean(byName.book_table.outputSchema), supportsOutputSchema);`,
-              'Chapter 9 test runner'
-            );
-          });"""
-          source = source[:start] + replacement + source[end:]
-          path.write_text(source)
-          PY
-          node .github/scripts/prepare-output-schema-ci.mjs
-          python3 - <<'PY'
-          from pathlib import Path
-
-          def replace_once(path, old, new):
-              p = Path(path)
-              source = p.read_text()
-              if new in source:
-                  return
-              if old not in source:
-                  raise SystemExit(f'Expected test text not found in {path}: {old[:120]!r}')
-              p.write_text(source.replace(old, new, 1))
-
-          replace_once(
-              'chapters/09-first-webmcp-app/tests/run-tests.mjs',
-              "    await page.waitForFunction(() => !document.querySelector('#webmcp-status').textContent.startsWith('Checking'));\n    return { page, errors, context, chip: () => page.textContent('#webmcp-status') };",
-              "    await page.waitForFunction(() => !document.querySelector('#webmcp-status').textContent.startsWith('Checking'));\n    if (new URL(url).searchParams.has('test-agent')) {\n      await page.waitForFunction(() => typeof window.testAgent?.call === 'function');\n    }\n    return { page, errors, context, chip: () => page.textContent('#webmcp-status') };"
-          )
-          app = 'appendices/a-api-reference/tests/run-tests.mjs'
-          replace_once(app,
-              "const b = out.basic;\n",
-              "const b = out.basic;\n  const modern = versionAtLeast(out.version, '159.0.8140.0');\n")
-          replace_once(app,
-              "        ? ['description', 'name', 'origin', 'outputSchema', 'title', 'window']\n",
-              "        ? []\n")
-          replace_once(app,
-              "await test('Chromium differs: thrown/rejected execute -> UnknownError (draft: OperationError)', () => {\n  assert.match(b.execThrow, /^UnknownError/); assert.match(b.execReject, /^UnknownError/);\n});",
-              "await test('execute errors: Chromium 156 UnknownError, newer Chromium OperationError', () => {\n  assert.match(b.execThrow, modern ? /^OperationError/ : /^UnknownError/);\n  assert.match(b.execReject, modern ? /^OperationError/ : /^UnknownError/);\n});")
-          replace_once(app,
-              "await test('Chromium differs: unregistered, forged name, forged origin -> UnknownError (draft: NotFoundError)', () => {\n  for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);\n  assert.equal(b.afterUnregister, false);\n});",
-              "await test('stale tools and plain objects use the browser-version-specific error', () => {\n  if (modern) {\n    assert.match(b.execUnregistered, /^NotFoundError/);\n    assert.match(b.execForgedName, /^TypeError/);\n    assert.match(b.execForgedOrigin, /^TypeError/);\n  } else {\n    for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);\n  }\n  assert.equal(b.afterUnregister, false);\n});")
-          replace_once(app,
-              "await test('opaque origin \"null\" -> NotSupportedError (agrees)', () => assert.match(b.execOpaqueOrigin, /^NotSupportedError/));",
-              "await test('opaque-origin tool shape: Chromium 156 NotSupportedError, newer Tool interface TypeError', () => {\n  assert.match(b.execOpaqueOrigin, modern ? /^TypeError/ : /^NotSupportedError/);\n});")
-          replace_once(app,
-              "await test('Permissions-Policy: tools=() -> NotAllowedError from all three methods', () => {\n  assert.equal(out.blocked.allowsFeature, false);\n  assert.deepEqual([out.blocked.register, out.blocked.getTools, out.blocked.execute], ['NotAllowedError', 'NotAllowedError', 'NotAllowedError']);\n});",
-              "await test('Permissions-Policy blocks registerTool and getTools; executeTool checks its Tool argument', () => {\n  assert.equal(out.blocked.allowsFeature, false);\n  assert.deepEqual([out.blocked.register, out.blocked.getTools], ['NotAllowedError', 'NotAllowedError']);\n  assert.equal(out.blocked.execute, modern ? 'TypeError' : 'NotAllowedError');\n});")
-          replace_once(app,
-              "await test('Chromium differs: target frame removed mid-call -> UnknownError (draft: AbortError)', () => {\n  assert.match(out.frames.frameRemovedMidCall, /^UnknownError/);\n});",
-              "await test('removed frame aborts in newer Chromium; Chromium 156 reports UnknownError', () => {\n  assert.match(out.frames.frameRemovedMidCall, modern ? /^AbortError/ : /^UnknownError/);\n});")
-          replace_once(app,
-              "await test('Chromium differs: re-registering the name during inputSchema serialization kills the renderer, crbug 573722078 (draft: InvalidStateError)', () => {\n  assert.equal(crashed, true, JSON.stringify(reentrant));\n});",
-              "await test('re-entrant registration: Chromium 156 renderer crash, newer Chromium rejects the duplicate', () => {\n  if (modern) {\n    assert.equal(crashed, false, JSON.stringify(reentrant));\n    assert.deepEqual(reentrant, { outer: 'InvalidStateError', inner: 'resolved' });\n  } else {\n    assert.equal(crashed, true, JSON.stringify(reentrant));\n  }\n});")
-          PY
-      - name: Commit prepared source changes
-        run: |
+          rm -f .github/workflows/apply-output-schema-ci.yml
+          rm -f .github/workflows/output-schema-tests.yml
+          rm -f .github/workflows/repair-output-schema-tests.yml
+          rm -f .github/scripts/prepare-output-schema-ci.mjs
           git config user.name "github-actions[bot]"
           git config user.email "41898282+actions[bot]@users.noreply.github.com"
-          git add chapters/09-first-webmcp-app/tests/run-tests.mjs chapters/09-first-webmcp-app/webmcp/tools.js chapters/17-the-road-ahead/dev/model-context-mock.js chapters/17-the-road-ahead/src/catalog.js chapters/17-the-road-ahead/tests/run-tests.mjs appendices/a-api-reference/webmcp.idl appendices/a-api-reference/tests/run-tests.mjs fjord-table/search-availability.js fjord-table/booking-tools.js
+          git add -A .github chapters/09-first-webmcp-app/README.md
           if ! git diff --cached --quiet; then
-            git commit -m "Apply outputSchema demo and test updates"
+            git commit -m "Document outputSchema validation and finalize CI"
             git push origin HEAD:output-schema-update
+          else
+            echo "No finalization changes to commit"
           fi
-      - name: Run demo suites and save detailed output
-        shell: bash
-        run: |
-          set +e
-          log="$GITHUB_WORKSPACE/.github/workflow-logs/output-schema-tests.txt"
-          mkdir -p "$(dirname "$log")"
-          : > "$log"
-          status=0
-          for directory in chapters/09-first-webmcp-app chapters/17-the-road-ahead appendices/a-api-reference; do
-            echo "=== $directory ===" | tee -a "$log"
-            (
-              set -e
-              cd "$GITHUB_WORKSPACE/$directory"
-              npm install
-              npx playwright install --with-deps chromium
-              npm test
-              npm run test:chrome --if-present
-            ) >> "$log" 2>&1
-            result=$?
-            if [ "$result" -ne 0 ]; then
-              printf 'FAILED: %s (exit %s)\n' "$directory" "$result" | tee -a "$log"
-              status=$result
-              break
-            fi
-            printf 'PASSED: %s\n' "$directory" | tee -a "$log"
-          done
-          cat "$log"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+actions[bot]@users.noreply.github.com"
-          git add "$log"
-          if ! git diff --cached --quiet; then
-            git commit -m "Record outputSchema GitHub Actions test output"
-            git push origin HEAD:output-schema-update
-          fi
-          exit "$status"
