@@ -2,8 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestAgent } from '../test-agent.js';
 import { Validator } from '@cfworker/json-schema';
-import { searchAvailability, bookTable } from '../webmcp/tools.js';
-import { bookTable as chapter5BookTable } from '../../../fjord-table/booking-tools.js';
+
+// Chapter 5's registration helper detects WebMCP at module load, so supply a
+// minimal document before importing the example tool definitions.
+globalThis.document = { modelContext: {} };
+const { searchAvailability, bookTable } = await import('../webmcp/tools.js');
+const { bookTable: chapter5BookTable } = await import('../../../fjord-table/booking-tools.js');
 
 const schema = {
   type: 'object',
