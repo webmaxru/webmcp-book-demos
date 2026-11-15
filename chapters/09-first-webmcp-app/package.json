@@ -9,6 +9,9 @@
     "start": "node server.js",
     "test": "node tests/run-tests.mjs"
   },
+  "dependencies": {
+    "@cfworker/json-schema": "4.1.6"
+  },
   "devDependencies": {
     "@mcp-b/webmcp-polyfill": "6.0.3",
     "playwright": "^1.64.1"
