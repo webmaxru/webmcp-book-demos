@@ -2,6 +2,8 @@ name: Prepare and test WebMCP output schemas
 
 on:
   workflow_dispatch:
+  push:
+    branches: [output-schema-update]
 
 permissions:
   contents: write
