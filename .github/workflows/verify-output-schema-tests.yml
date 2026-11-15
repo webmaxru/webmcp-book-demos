@@ -61,6 +61,7 @@ jobs:
           set -uo pipefail
           cd "$GITHUB_WORKSPACE/${{ matrix.directory }}"
           status=0
+          set +e
           npm test >/tmp/npm-test.log 2>&1
           test_status=$?
           echo "===== npm test (exit $test_status) ====="
