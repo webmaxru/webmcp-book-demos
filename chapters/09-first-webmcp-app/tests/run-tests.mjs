@@ -117,6 +117,9 @@ async function openPage(browser, { url = BASE, mock = false, polyfill = false, i
   }
   await page.goto(url);
   await page.waitForFunction(() => !document.querySelector('#webmcp-status').textContent.startsWith('Checking'));
+  if (new URL(url).searchParams.has('test-agent')) {
+    await page.waitForFunction(() => typeof window.testAgent?.call === 'function');
+  }
   return { page, errors, context, chip: () => page.textContent('#webmcp-status') };
 }
 
