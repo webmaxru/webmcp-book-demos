@@ -1,0 +1,43 @@
+name: Prepare and test WebMCP output schemas
+
+on:
+  push:
+    branches:
+      - output-schema-update
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: output-schema-update
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply prepared outputSchema changes
+        run: node .github/scripts/prepare-output-schema-ci.mjs
+      - name: Commit prepared source changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chapters/09-first-webmcp-app/test-agent.js chapters/09-first-webmcp-app/tests/output-schema.test.mjs chapters/09-first-webmcp-app/tests/run-tests.mjs chapters/17-the-road-ahead/dev/model-context-mock.js chapters/17-the-road-ahead/tests/run-tests.mjs chapters/17-the-road-ahead/tests/run-tests.mjs appendices/a-api-reference/webmcp.idl appendices/a-api-reference/tests/run-tests.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply outputSchema CI fixes"
+            git push origin HEAD:output-schema-update
+          fi
+      - name: Run demo suites
+        run: |
+          set -euo pipefail
+          for directory in chapters/09-first-webmcp-app chapters/17-the-road-ahead appendices/a-api-reference; do
+            echo "=== $directory ==="
+            cd "$GITHUB_WORKSPACE/$directory"
+            npm install
+            npx playwright install --with-deps chromium
+            npm test
+            npm run test:chrome --if-present
+          done
