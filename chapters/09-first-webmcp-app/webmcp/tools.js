@@ -19,6 +19,20 @@ const searchAvailability = {
     },
     required: ['date', 'partySize']
   },
+  outputSchema: {
+    type: 'object',
+    properties: {
+      date: { type: 'string' },
+      partySize: { type: 'integer' },
+      slots: { type: 'array', items: {
+        type: 'object', properties: {
+          time: { type: 'string' },
+          seating: { type: 'array', items: { type: 'string' } }
+        }, required: ['time', 'seating']
+      } }
+    },
+    required: ['date', 'partySize', 'slots']
+  },
   annotations: { readOnlyHint: true },
   async execute({ date, partySize, time, seating }, { signal }) {
     let slots = await availability.search({ date, time, partySize, signal });
@@ -43,6 +57,21 @@ const bookTable = {
       notes: { type: 'string', description: 'Allergies or occasion, in the guest’s words' }
     },
     required: ['date', 'time', 'partySize']
+  },
+  outputSchema: {
+    type: 'object',
+    properties: {
+      status: { enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
+      code: { type: 'string' }, message: { type: 'string' },
+      reference: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }
+    },
+    required: ['status'],
+    oneOf: [
+      { properties: { status: { const: 'error' } }, required: ['code', 'message'] },
+      { properties: { status: { const: 'refused' } }, required: ['code', 'message'] },
+      { properties: { status: { const: 'booked' } }, required: ['reference', 'date', 'time'] },
+      { properties: { status: { const: 'cancelled_by_user' } }, required: ['message'] }
+    ]
   },
   annotations: { consequentialHint: true },
   async execute(input, { signal }) {
