@@ -39,6 +39,57 @@ jobs:
           from pathlib import Path
           path = Path('.github/scripts/prepare-output-schema-ci.mjs')
           source = path.read_text()
+
+          start = source.index("await edit('fjord-table/search-availability.js'")
+          end = source.index("\n\nawait edit('fjord-table/booking-tools.js'", start)
+          replacement = r"""await edit('fjord-table/search-availability.js', (source) => {
+            if (source.includes('outputSchema:')) return source;
+            const marker = "      annotations: { readOnlyHint: true },";
+            if (!source.includes(marker)) throw new Error('Search outputSchema insertion point not found');
+            const schema = `      outputSchema: {
+              type: 'object',
+              properties: {
+                date: { type: 'string' },
+                partySize: { type: 'integer' },
+                slots: { type: 'array', items: { type: 'string' } }
+              },
+              required: ['date', 'partySize', 'slots']
+            },
+          `;
+            return source.replace(marker, `${schema}${marker}`);
+          });"""
+          source = source[:start] + replacement + source[end:]
+
+          start = source.index("await edit('fjord-table/booking-tools.js'")
+          end = source.index("\n\nawait edit('chapters/09-first-webmcp-app/webmcp/tools.js'", start)
+          replacement = r"""await edit('fjord-table/booking-tools.js', (source) => {
+            if (source.includes('outputSchema:')) return source;
+            const marker = "    annotations: { consequentialHint: true },";
+            if (!source.includes(marker)) throw new Error('Booking outputSchema insertion point not found');
+            const schema = `    outputSchema: {
+              type: 'object',
+              properties: {
+                status: { type: 'string', enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
+                code: { type: 'string' },
+                message: { type: 'string' },
+                reference: { type: 'string' },
+                date: { type: 'string' },
+                time: { type: 'string' },
+                partySize: { type: 'integer' }
+              },
+              required: ['status'],
+              oneOf: [
+                { properties: { status: { const: 'error' } }, required: ['code', 'message'] },
+                { properties: { status: { const: 'refused' } }, required: ['code', 'message'] },
+                { properties: { status: { const: 'booked' } }, required: ['reference', 'date', 'time', 'partySize'] },
+                { properties: { status: { const: 'cancelled_by_user' } }, required: ['message'] }
+              ]
+            },
+          `;
+            return source.replace(marker, `${schema}${marker}`);
+          });"""
+          source = source[:start] + replacement + source[end:]
+
           start = source.index("await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs'")
           end = source.index("\n\nawait edit('chapters/17-the-road-ahead/dev/model-context-mock.js'", start)
           replacement = r"""await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs', (source) => {
@@ -62,12 +113,6 @@ jobs:
             );
           });"""
           source = source[:start] + replacement + source[end:]
-          old = "slots: { type: 'array', items: { type: 'string' } }"
-          new = "slots: { type: 'array', items: { type: 'object', properties: { time: { type: 'string' }, seating: { type: 'array', items: { type: 'string' } } }, required: ['time', 'seating'] } }"
-          if old in source:
-              source = source.replace(old, new, 1)
-          elif new not in source:
-              raise SystemExit('Expected Fjord Table slot output schema template not found')
           path.write_text(source)
           PY
           node .github/scripts/prepare-output-schema-ci.mjs
