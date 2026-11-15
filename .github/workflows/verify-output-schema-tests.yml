@@ -3,15 +3,35 @@ name: Verify WebMCP outputSchema demos
 on:
   push:
     branches: [output-schema-update]
+    paths:
+      - '.github/workflows/verify-output-schema-tests.yml'
+      - 'chapters/09-first-webmcp-app/**'
+      - 'chapters/17-the-road-ahead/**'
+      - 'appendices/a-api-reference/**'
+  pull_request:
+    paths:
+      - 'chapters/09-first-webmcp-app/**'
+      - 'chapters/17-the-road-ahead/**'
+      - 'appendices/a-api-reference/**'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
+    name: ${{ matrix.directory }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: chapters/09-first-webmcp-app
+            chrome_test: false
+          - directory: chapters/17-the-road-ahead
+            chrome_test: true
+          - directory: appendices/a-api-reference
+            chrome_test: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,128 +39,38 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Repair the browser-version assertions and Chapter 9 test setup
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          chapter9 = Path('chapters/09-first-webmcp-app/tests/run-tests.mjs')
-          source = chapter9.read_text()
-          fixed, count = re.subn(
-              r"(?m)^\s*const r = await(?: await)? page\.waitForFunction\(\(\) => typeof window\.testAgent\?\.call === 'function'\);",
-              "await page.waitForFunction(() => typeof window.testAgent?.call === 'function');",
-              source,
-              count=1,
-          )
-          if count == 0 and "await page.waitForFunction(() => typeof window.testAgent?.call === 'function');" not in source:
-              raise SystemExit('Chapter 9 Test Agent readiness wait not found')
-          chapter9.write_text(fixed)
-
-          appendix = Path('appendices/a-api-reference/tests/run-tests.mjs')
-          source = appendix.read_text()
-
-          def replace_block(start_marker, next_marker, replacement):
-              global source
-              start = source.find(start_marker)
-              if start < 0:
-                  if replacement.strip() in source:
-                      return
-                  raise SystemExit(f'Appendix A test not found: {start_marker}')
-              end = source.find(next_marker, start + len(start_marker))
-              if end < 0:
-                  raise SystemExit(f'Appendix A next test not found: {next_marker}')
-              source = source[:start] + replacement.rstrip() + '\n' + source[end:]
-
-          shape = re.compile(
-              r"assert\.deepEqual\(b\.toolShape,\s*versionAtLeast\(out\.version, '159\.0\.8140\.0'\)\s*\?\s*\[[^\]]*\]\s*:\s*\[[^\]]*\]\s*\);"
-          )
-          source, count = shape.subn(
-              "assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')\n        ? []\n        : ['description', 'name', 'origin', 'title', 'window']);",
-              source,
-              count=1,
-          )
-          if count == 0 and "assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')\n        ? []" not in source:
-              raise SystemExit('Appendix A Tool interface shape assertion not found')
-
-          replace_block(
-              "await test('Chromium differs: thrown/rejected execute",
-              "await test('Chromium differs: unregistered, forged name",
-              """await test('execute errors vary by browser version', () => {
-            const modern = versionAtLeast(out.version, '159.0.8140.0');
-            assert.match(b.execThrow, modern ? /^OperationError/ : /^UnknownError/);
-            assert.match(b.execReject, modern ? /^OperationError/ : /^UnknownError/);
-          });""",
-          )
-          replace_block(
-              "await test('Chromium differs: unregistered, forged name",
-              "await test('TypeError: toJSON()",
-              """await test('stale tools and plain objects use version-specific errors', () => {
-            const modern = versionAtLeast(out.version, '159.0.8140.0');
-            if (modern) {
-              assert.match(b.execUnregistered, /^NotFoundError/);
-              assert.match(b.execForgedName, /^TypeError/);
-              assert.match(b.execForgedOrigin, /^TypeError/);
-            } else {
-              for (const key of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[key], /^UnknownError/, key);
-            }
-            assert.equal(b.afterUnregister, false);
-          });""",
-          )
-          replace_block(
-              "await test('opaque origin",
-              "await test('caller abort",
-              """await test('opaque-origin Tool argument uses version-specific errors', () => {
-            assert.match(b.execOpaqueOrigin, versionAtLeast(out.version, '159.0.8140.0') ? /^TypeError/ : /^NotSupportedError/);
-          });""",
-          )
-          replace_block(
-              "await test('Permissions-Policy: tools=()",
-              "await test('cross-origin iframe",
-              """await test('Permissions-Policy blocks registration and getTools; executeTool checks its Tool argument', () => {
-            assert.equal(out.blocked.allowsFeature, false);
-            assert.deepEqual([out.blocked.register, out.blocked.getTools], ['NotAllowedError', 'NotAllowedError']);
-            assert.equal(out.blocked.execute, versionAtLeast(out.version, '159.0.8140.0') ? 'TypeError' : 'NotAllowedError');
-          });""",
-          )
-          replace_block(
-              "await test('Chromium differs: target frame removed mid-call",
-              "await test('declarative <form toolname>",
-              """await test('removed frame reports the browser-version-specific error', () => {
-            assert.match(out.frames.frameRemovedMidCall, versionAtLeast(out.version, '159.0.8140.0') ? /^AbortError/ : /^UnknownError/);
-          });""",
-          )
-          replace_block(
-              "await test('Chromium differs: re-registering the name",
-              "console.log(`\\n${passed} passed",
-              """await test('re-entrant registration is rejected without a renderer crash in newer Chromium', () => {
-            if (versionAtLeast(out.version, '159.0.8140.0')) {
-              assert.equal(crashed, false, JSON.stringify(reentrant));
-              assert.deepEqual(reentrant, { outer: 'InvalidStateError', inner: 'resolved' });
-            } else {
-              assert.equal(crashed, true, JSON.stringify(reentrant));
-            }
-          });
-          """,
-          )
-          appendix.write_text(source)
-          PY
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+actions[bot]@users.noreply.github.com"
-          git add chapters/09-first-webmcp-app/tests/run-tests.mjs appendices/a-api-reference/tests/run-tests.mjs
-          if ! git diff --cached --quiet; then
-            git commit -m "Fix WebMCP 159 output-schema tests"
-            git push origin HEAD:output-schema-update
-          fi
-      - name: Run the three outputSchema suites
+      - name: Install dependencies and Chromium
         shell: bash
         run: |
-          set -euo pipefail
-          for directory in chapters/09-first-webmcp-app chapters/17-the-road-ahead appendices/a-api-reference; do
-            echo "===== $directory ====="
-            cd "$GITHUB_WORKSPACE/$directory"
-            npm install
-            npx playwright install --with-deps chromium
-            npm test
-            npm run test:chrome --if-present
-          done
+          cd "$GITHUB_WORKSPACE/${{ matrix.directory }}"
+          if ! npm install --no-audit --no-fund >/tmp/npm-install.log 2>&1; then
+            echo 'npm install failed:'
+            tail -n 80 /tmp/npm-install.log
+            exit 1
+          fi
+          if ! npx playwright install --with-deps chromium >/tmp/playwright-install.log 2>&1; then
+            echo 'Playwright Chromium installation failed:'
+            tail -n 80 /tmp/playwright-install.log
+            exit 1
+          fi
+          node --version
+          npm --version
+      - name: Run tests and show concise logs
+        shell: bash
+        run: |
+          set -uo pipefail
+          cd "$GITHUB_WORKSPACE/${{ matrix.directory }}"
+          status=0
+          npm test >/tmp/npm-test.log 2>&1
+          test_status=$?
+          echo "===== npm test (exit $test_status) ====="
+          tail -n 140 /tmp/npm-test.log
+          if [ "$test_status" -ne 0 ]; then status=1; fi
+          if [ "${{ matrix.chrome_test }}" = 'true' ]; then
+            npm run test:chrome >/tmp/chrome-test.log 2>&1
+            chrome_status=$?
+            echo "===== npm run test:chrome (exit $chrome_status) ====="
+            tail -n 140 /tmp/chrome-test.log
+            if [ "$chrome_status" -ne 0 ]; then status=1; fi
+          fi
+          exit "$status"
