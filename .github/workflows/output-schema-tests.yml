@@ -1,8 +1,6 @@
 name: WebMCP output schema tests
 
 on:
-  push:
-    branches: [output-schema-update]
   pull_request:
 
 permissions:
