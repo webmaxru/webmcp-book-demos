@@ -92,8 +92,8 @@ await edit('chapters/09-first-webmcp-app/tests/run-tests.mjs', (source) => {
 await edit('chapters/17-the-road-ahead/dev/model-context-mock.js', (source) => {
   let next = replaceRegex(
     source,
-    /([ \\t]*)const schemaJSON = tool\\.inputSchema === undefined \\? '' : JSON\\.stringify\\(tool\\.inputSchema\\);\\n\\1tools\\.set\\(tool\\.name, \\{ tool, schemaJSON \\}\\);/,
-    (_m, indent) => `${indent}const schemaJSON = tool.inputSchema === undefined ? '' : JSON.stringify(tool.inputSchema);\\n${indent}const outputSchemaJSON = tool.outputSchema === undefined ? '' : JSON.stringify(tool.outputSchema);\\n${indent}tools.set(tool.name, { tool, schemaJSON, outputSchemaJSON });`,
+    /([ \t]*)const schemaJSON = tool\.inputSchema === undefined \? '' : JSON\.stringify\(tool\.inputSchema\);\n\1tools\.set\(tool\.name, \{ tool, schemaJSON \}\);/,
+    (_m, indent) => `${indent}const schemaJSON = tool.inputSchema === undefined ? '' : JSON.stringify(tool.inputSchema);\n${indent}const outputSchemaJSON = tool.outputSchema === undefined ? '' : JSON.stringify(tool.outputSchema);\n${indent}tools.set(tool.name, { tool, schemaJSON, outputSchemaJSON });`,
     'const outputSchemaJSON = tool.outputSchema',
     'chapters/17-the-road-ahead/dev/model-context-mock.js'
   );
@@ -105,8 +105,8 @@ await edit('chapters/17-the-road-ahead/dev/model-context-mock.js', (source) => {
   );
   return replaceRegex(
     next,
-    /([ \\t]*)\\.\\.\\.\\(schemaJSON \\? \\{ inputSchema: JSON\\.parse\\(schemaJSON\\) \\} : \\{\\}\\),\\n([ \\t]*)window,/,
-    (_m, indent, nextIndent) => `${indent}...(schemaJSON ? { inputSchema: JSON.parse(schemaJSON) } : {}),\\n${indent}...(outputSchemaJSON ? { outputSchema: JSON.parse(outputSchemaJSON) } : {}),\\n${nextIndent}window,`,
+    /([ \t]*)\.\.\.\(schemaJSON \? \{ inputSchema: JSON\.parse\(schemaJSON\) \} : \{\}\),\n([ \t]*)window,/,
+    (_m, indent, nextIndent) => `${indent}...(schemaJSON ? { inputSchema: JSON.parse(schemaJSON) } : {}),\n${indent}...(outputSchemaJSON ? { outputSchema: JSON.parse(outputSchemaJSON) } : {}),\n${nextIndent}window,`,
     '...(outputSchemaJSON ? { outputSchema: JSON.parse(outputSchemaJSON) } : {}),',
     'chapters/17-the-road-ahead/dev/model-context-mock.js'
   );
@@ -135,7 +135,7 @@ await edit('chapters/17-the-road-ahead/src/catalog.js', (source) => replaceOnce(
 ));
 
 await edit('appendices/a-api-reference/webmcp.idl', (source) => {
-  const lines = source.split('\\n');
+  const lines = source.split('\n');
   let found = 0;
   const result = [];
   for (let i = 0; i < lines.length; i++) {
@@ -143,31 +143,60 @@ await edit('appendices/a-api-reference/webmcp.idl', (source) => {
     if (lines[i].trim() !== 'object inputSchema;') continue;
     found++;
     if (lines[i + 1]?.trim() !== 'object outputSchema;') {
-      const indent = lines[i].match(/^[ \\t]*/)[0];
+      const indent = lines[i].match(/^[ \t]*/)[0];
       result.push(`${indent}object outputSchema;`);
     }
   }
   if (found === 0) throw new Error('No inputSchema members found in Appendix A IDL');
-  return result.join('\\n');
+  return result.join('\n');
 });
 
 await edit('chapters/09-first-webmcp-app/tests/output-schema.test.mjs', (source) => {
   let next = replaceOnce(
     source,
     "import { createTestAgent } from '../test-agent.js';",
-    "import { createTestAgent } from '../test-agent.js';\\nimport { Validator } from '@cfworker/json-schema';\\nimport { searchAvailability, bookTable } from '../webmcp/tools.js';\\nimport { bookTable as chapter5BookTable } from '../../../fjord-table/booking-tools.js';",
+    "import { createTestAgent } from '../test-agent.js';\nimport { Validator } from '@cfworker/json-schema';\nimport { searchAvailability, bookTable } from '../webmcp/tools.js';\nimport { bookTable as chapter5BookTable } from '../../../fjord-table/booking-tools.js';",
     'Chapter 9 output-schema tests'
   );
   const marker = "test('Fjord Table outputSchema covers every documented return branch', () => {";
   if (next.includes(marker)) return next;
-  return `${next.trimEnd()}\\n\\n${marker}\n  const valid = (schema, value) => new Validator(schema, '2020-12').validate(value);\n  const search = valid(searchAvailability.outputSchema, {\n    date: '2026-11-20', partySize: 2, slots: [{ time: '19:00', seating: ['window'] }]\n  });\n  assert.equal(search.valid, true, JSON.stringify(search.errors));\n\n  const bookingResults = [\n    { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },\n    { status: 'refused', code: 'SLOT_UNAVAILABLE', message: 'Search current slots.' },\n    { status: 'booked', reference: 'FT-1042', date: '2026-11-20', time: '19:00' },\n    { status: 'cancelled_by_user', message: 'Nothing was booked.' },\n  ];\n  for (const value of bookingResults) {\n    const result = valid(bookTable.outputSchema, value);\n    assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);\n  }\n  assert.equal(valid(bookTable.outputSchema, { status: 'booked', date: '2026-11-20', time: '19:00' }).valid, false);\n\n  const chapter5Results = [\n    { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },\n    { status: 'refused', code: 'SLOT_UNAVAILABLE', message: 'Search current slots.' },\n    { status: 'booked', reference: 'FT-1042', date: '2026-11-20', time: '19:00', partySize: 2 },\n    { status: 'cancelled_by_user', message: 'Nothing was booked.' },\n  ];\n  for (const value of chapter5Results) {\n    const result = valid(chapter5BookTable.outputSchema, value);\n    assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);\n  }\n});\\n`;
+  return `${next.trimEnd()}\n\n${marker}
+  const valid = (schema, value) => new Validator(schema, '2020-12').validate(value);
+  const search = valid(searchAvailability.outputSchema, {
+    date: '2026-11-20', partySize: 2, slots: [{ time: '19:00', seating: ['window'] }]
+  });
+  assert.equal(search.valid, true, JSON.stringify(search.errors));
+
+  const bookingResults = [
+    { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },
+    { status: 'refused', code: 'SLOT_UNAVAILABLE', message: 'Search current slots.' },
+    { status: 'booked', reference: 'FT-1042', date: '2026-11-20', time: '19:00' },
+    { status: 'cancelled_by_user', message: 'Nothing was booked.' },
+  ];
+  for (const value of bookingResults) {
+    const result = valid(bookTable.outputSchema, value);
+    assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);
+  }
+  assert.equal(valid(bookTable.outputSchema, { status: 'booked', date: '2026-11-20', time: '19:00' }).valid, false);
+
+  const chapter5Results = [
+    { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },
+    { status: 'refused', code: 'SLOT_UNAVAILABLE', message: 'Search current slots.' },
+    { status: 'booked', reference: 'FT-1042', date: '2026-11-20', time: '19:00', partySize: 2 },
+    { status: 'cancelled_by_user', message: 'Nothing was booked.' },
+  ];
+  for (const value of chapter5Results) {
+    const result = valid(chapter5BookTable.outputSchema, value);
+    assert.equal(result.valid, true, `${JSON.stringify(value)}: ${JSON.stringify(result.errors)}`);
+  }
+});\n`;
 });
 
 await edit('appendices/a-api-reference/tests/run-tests.mjs', (source) => {
   let next = replaceOnce(
     source,
     `const here = path.dirname(fileURLToPath(import.meta.url));`,
-    `const here = path.dirname(fileURLToPath(import.meta.url));\\n${versionHelper('versionAtLeast')}`,
+    `const here = path.dirname(fileURLToPath(import.meta.url));\n${versionHelper('versionAtLeast')}`,
     'Appendix A test runner'
   );
   next = replaceOnce(
@@ -179,13 +208,18 @@ await edit('appendices/a-api-reference/tests/run-tests.mjs', (source) => {
   next = replaceOnce(
     next,
     "r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();",
-    "r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();\\n    r.outputSchema = tools.find((t) => t.name === 'echo').outputSchema;",
+    "r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();\n    r.outputSchema = tools.find((t) => t.name === 'echo').outputSchema;",
     'Appendix A test runner'
   );
   return replaceOnce(
     next,
     "assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'title', 'window']);",
-    `assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')\n      ? ['description', 'name', 'origin', 'outputSchema', 'title', 'window']\n      : ['description', 'name', 'origin', 'title', 'window']);\n    if (versionAtLeast(out.version, '159.0.8140.0')) {\n      assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });\n    }`,
+    `assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')
+      ? ['description', 'name', 'origin', 'outputSchema', 'title', 'window']
+      : ['description', 'name', 'origin', 'title', 'window']);
+    if (versionAtLeast(out.version, '159.0.8140.0')) {
+      assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });
+    }`,
     'Appendix A test runner'
   );
 });
