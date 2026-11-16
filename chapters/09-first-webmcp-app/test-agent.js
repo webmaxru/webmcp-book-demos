@@ -18,7 +18,7 @@ export function createTestAgent({ planner, maxSteps = 6, log = console.info } = 
       const result = parse(raw);
       checkOutput(tool.outputSchema, result);
       // Keep raw output only after validation: the planner reads this transcript.
-      entry.raw = raw;
+      entry.raw = tool.outputSchema === undefined ? raw : JSON.stringify(result);
       entry.result = result;
       log('[test-agent]', name, args, '->', result);
       return result;
@@ -74,7 +74,8 @@ function checkOutput(schema, result) {
       .filter((error) => typeof error.keyword === 'string' && !summaryKeywords.has(error.keyword))
       .slice()
       .sort((a, b) => (b.keywordLocation?.length ?? 0) - (a.keywordLocation?.length ?? 0));
-    const detail = details[0] ?? errors[0];
+    const unionError = errors.find((error) => error.keyword === 'oneOf' || error.keyword === 'anyOf');
+    const detail = unionError ?? details[0] ?? errors[0];
     const path = detail?.keywordLocation;
     const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path)
       ? ` at ${path}`

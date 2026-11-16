@@ -8,11 +8,14 @@ on:
       - 'chapters/09-first-webmcp-app/**'
       - 'chapters/17-the-road-ahead/**'
       - 'appendices/a-api-reference/**'
+      - 'fjord-table/**'
   pull_request:
     paths:
+      - '.github/workflows/verify-output-schema-tests.yml'
       - 'chapters/09-first-webmcp-app/**'
       - 'chapters/17-the-road-ahead/**'
       - 'appendices/a-api-reference/**'
+      - 'fjord-table/**'
   workflow_dispatch:
 
 permissions:
