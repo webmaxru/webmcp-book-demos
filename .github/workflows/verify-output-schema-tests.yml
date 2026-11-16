@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/verify-output-schema-tests.yml'
       - 'chapters/09-first-webmcp-app/**'
+      - 'chapters/14-testing-debugging-evals/**'
       - 'chapters/17-the-road-ahead/**'
       - 'appendices/a-api-reference/**'
       - 'fjord-table/**'
@@ -13,6 +14,7 @@ on:
     paths:
       - '.github/workflows/verify-output-schema-tests.yml'
       - 'chapters/09-first-webmcp-app/**'
+      - 'chapters/14-testing-debugging-evals/**'
       - 'chapters/17-the-road-ahead/**'
       - 'appendices/a-api-reference/**'
       - 'fjord-table/**'
@@ -30,6 +32,8 @@ jobs:
       matrix:
         include:
           - directory: chapters/09-first-webmcp-app
+            chrome_test: false
+          - directory: chapters/14-testing-debugging-evals
             chrome_test: false
           - directory: chapters/17-the-road-ahead
             chrome_test: true
