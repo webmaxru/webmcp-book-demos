@@ -15,7 +15,7 @@ export function createTestAgent({ planner, maxSteps = 6, log = console.info } = 
     transcript.push(entry);
     try {
       const raw = await document.modelContext.executeTool(tool, args, { signal });
-      const result = parse(raw);
+      const result = parse(raw, tool.outputSchema);
       checkOutput(tool.outputSchema, result);
       // Keep raw output only after validation: the planner reads this transcript.
       entry.raw = tool.outputSchema === undefined ? raw : JSON.stringify(result);
@@ -47,7 +47,17 @@ export const scripted = (...steps) => ({ transcript }) => {
   return typeof step === 'function' ? step(transcript) : step ?? { done: true };
 };
 
-function parse(raw) {
+function parse(raw, schema) {
+  if (typeof raw !== 'string') return raw;
+  // Native WebMCP returns primitive strings unquoted. Preserve a string when the
+  // outputSchema accepts it before trying to parse JSON-looking text like "42".
+  if (schema !== undefined) {
+    try {
+      if (new Validator(schema, '2020-12').validate(raw).valid) return raw;
+    } catch {
+      // checkOutput reports invalid schemas without exposing the result.
+    }
+  }
   try { return JSON.parse(raw); } catch { return raw; }   // Chromium returns plain strings as-is
 }
 
