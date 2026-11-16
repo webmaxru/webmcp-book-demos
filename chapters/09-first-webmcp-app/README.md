@@ -30,7 +30,7 @@ The two short inline snippets in the chapter's prose (a `scripted()` run and a c
 npm install
 npx playwright install chromium
 npm start                      # http://localhost:3000/
-npm test                       # 21 browser/static checks + 5 output-schema tests; +1 listing check with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md
+npm test                       # 21 browser/static checks + 7 output-schema tests; +1 listing check with CHAPTER_MD=…/WebMCP_Ch09_First_WebMCP_App.md
 ```
 
 Open `http://localhost:3000/?test-agent` in Chrome with `chrome://flags/#enable-webmcp-testing` enabled, then in the console:
@@ -70,10 +70,10 @@ Run with Playwright 1.64 and its Chromium **156.0.8078.4**: plain, with `--enabl
 
 ## Output-schema validation (15 November 2026)
 
-`search_availability` and `book_table` declare optional JSON Schemas for their return values. The Test Agent parses each `executeTool()` result and validates it against the tool's `outputSchema` before it enters the transcript or the next planner request. A mismatch becomes a concise validation error with a schema path and safe reason; the malformed result is not retained or sent to the planner. Tools without `outputSchema` still pass their results through, including tools that return plain text.
+`search_availability` and `book_table` declare optional JSON Schemas for their return values. The Test Agent validates each `executeTool()` result against the tool's `outputSchema` before it enters the transcript or the next planner request. It preserves unquoted native string results when the schema accepts them and parses JSON-serialized object results. A mismatch becomes a concise validation error with a schema path and safe reason; the malformed result is not retained or sent to the planner. Tools without `outputSchema` still pass their results through, including tools that return plain text.
 
 WebMCP PR #254 added `outputSchema` to the tool dictionaries. Issue #92 remains open on whether native `executeTool()` must reject an output mismatch, so validation in this demo is an agent-harness safeguard. The task-supplied Chrome build is `159.0.8140.0`; the GitHub Actions tests below use Chromium 156 and do not verify that build. For another host-side validation example, see GoogleChromeLabs/webmcp-extension PR #98.
 
-The GitHub Actions run at [43772716193](https://github.com/webmaxru/webmcp-book-demos/actions/runs/43772716193) passed `npm test` in Chapter 9, Chapter 17 and Appendix A. The Chapter 17 job also passed `npm run test:chrome`. The Chapter 9 command includes the 21 browser/static checks and 5 output-schema tests listed above.
+The GitHub Actions run at [43772716193](https://github.com/webmaxru/webmcp-book-demos/actions/runs/43772716193) passed `npm test` in Chapter 9, Chapter 17 and Appendix A. The Chapter 17 job also passed `npm run test:chrome`. The Chapter 9 command includes the 21 browser/static checks and 7 output-schema tests listed above.
 
 Sources: [WebMCP PR #254](https://github.com/webmachinelearning/webmcp/pull/254), [issue #92](https://github.com/webmachinelearning/webmcp/issues/92), [WebMCP Extension PR #98](https://github.com/GoogleChromeLabs/webmcp-extension/pull/98).

@@ -42,6 +42,7 @@ await test('every file in src/ passes node --check', async () => {
 
 const { catalog } = await import(pathToFileURL(join(ROOT, 'src/catalog.js')));
 const { checkInput } = await import(pathToFileURL(join(ROOT, 'src/check-input.js')));
+const { registerCatalog } = await import(pathToFileURL(join(ROOT, 'src/adapter.js')));
 
 await test('Listing 17.1: the definition is plain data with an outputSchema', () => {
   assert.deepEqual(catalog.map((t) => t.name), ['search_products']);
@@ -62,6 +63,34 @@ await test('Listing 17.1: run() returns what outputSchema promises, for several 
     assert.deepEqual(checkInput(catalog[0].outputSchema, out, 'output'), [], JSON.stringify(input));
   }
   assert.deepEqual(catalog[0].run({ query: 'tent', maxPrice: 4000 }).products.map((p) => p.sku), ['TH-TENT-2P']);
+});
+
+await test('Listing 17.2: outputSchema includes the recoverable adapter error branch', async () => {
+  const previousDocument = globalThis.document;
+  const registered = [];
+  globalThis.document = { modelContext: {
+    registerTool: async (tool) => { registered.push(tool); }
+  } };
+  try {
+    await registerCatalog(catalog);
+    assert.deepEqual(registered.map((tool) => tool.name), ['search_products']);
+    const [tool] = registered;
+    assert.equal(tool.outputSchema, catalog[0].outputSchema);
+
+    const invalidResult = await tool.execute({ maxPrice: -5 });
+    assert.equal(invalidResult.status, 'error');
+    assert.equal(invalidResult.code, 'INVALID_ARGUMENT');
+    assert.deepEqual(checkInput(tool.outputSchema, invalidResult, 'output'), []);
+
+    const successResult = await tool.execute({ query: 'tent' });
+    assert.deepEqual(checkInput(tool.outputSchema, successResult, 'output'), []);
+    assert.deepEqual(checkInput(tool.outputSchema, {
+      status: 'error', code: 'INVALID_ARGUMENT'
+    }, 'output'), ['output must match exactly one allowed schema']);
+  } finally {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
 });
 
 await test('check-input.js (filler): rejects what the browser would let through', () => {
@@ -158,6 +187,7 @@ await test('Listing 17.2: input the browser lets through is answered with Chapte
   assert.equal(r.value.error, undefined, 'no legacy { error: { code } } wrapper');
   assert.match(r.value.message, /input\.query is required/);
   assert.match(r.value.message, /input\.maxPrice must be at least 0/);
+  assert.deepEqual(checkInput(catalog[0].outputSchema, r.value, 'output'), []);
 });
 
 await test('Listing 17.2: exposedTo is passed through only when given', async () => {
