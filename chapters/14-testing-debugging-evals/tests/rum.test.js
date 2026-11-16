@@ -10,7 +10,7 @@ const MOCK = fileURLToPath(new URL('../../../fjord-table/dev/model-context-mock.
 let browser, site, page;
 before(async () => {
   site = await serve(new URL('../', import.meta.url));
-  browser = await chromium.launch(REAL ? { args: ['--enable-features=WebMCPTesting'] } : {});
+  browser = await chromium.launch(REAL ? { args: ['--enable-features=WebMCP,WebMCPTesting'] } : {});
   page = await browser.newPage();
   if (!REAL) await page.addInitScript({ path: MOCK });
   await page.goto(`${site.url}tests/pages/trailhead.html`);
