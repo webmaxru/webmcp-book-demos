@@ -1,6 +1,8 @@
 // test-agent.js: the Test Agent, a minimal in-page agent for development and CI.
 // It lists tools with getTools(), asks a planner what to do next, runs each call
 // with executeTool() and keeps a transcript. It is a harness, not a product agent.
+import { Validator } from './node_modules/@cfworker/json-schema/dist/esm/index.js';
+
 export function createTestAgent({ planner, maxSteps = 6, log = console.info } = {}) {
   const transcript = [];
 
@@ -12,10 +14,14 @@ export function createTestAgent({ planner, maxSteps = 6, log = console.info } = 
     const entry = { name, args };
     transcript.push(entry);
     try {
-      entry.raw = await document.modelContext.executeTool(tool, args, { signal });
-      entry.result = parse(entry.raw);
-      log('[test-agent]', name, args, '->', entry.result);
-      return entry.result;
+      const raw = await document.modelContext.executeTool(tool, args, { signal });
+      const result = parse(raw, tool.outputSchema);
+      checkOutput(tool.outputSchema, result);
+      // Keep raw output only after validation: the planner reads this transcript.
+      entry.raw = tool.outputSchema === undefined ? raw : JSON.stringify(result);
+      entry.result = result;
+      log('[test-agent]', name, args, '->', result);
+      return result;
     } catch (err) {
       entry.error = `${err.name}: ${err.message}`;
       log('[test-agent]', name, args, 'failed:', entry.error);
@@ -41,6 +47,68 @@ export const scripted = (...steps) => ({ transcript }) => {
   return typeof step === 'function' ? step(transcript) : step ?? { done: true };
 };
 
-function parse(raw) {
+function parse(raw, schema) {
+  if (typeof raw !== 'string') return raw;
+  // Native WebMCP returns primitive strings unquoted. Preserve a string when the
+  // outputSchema accepts it before trying to parse JSON-looking text like "42".
+  if (schema !== undefined) {
+    try {
+      if (new Validator(schema, '2020-12').validate(raw).valid) return raw;
+    } catch {
+      // checkOutput reports invalid schemas without exposing the result.
+    }
+  }
   try { return JSON.parse(raw); } catch { return raw; }   // Chromium returns plain strings as-is
+}
+
+function checkOutput(schema, result) {
+  if (schema === undefined) return;                     // an output schema is optional
+  let validation;
+  try {
+    validation = new Validator(schema, '2020-12').validate(result);
+  } catch {
+    // Fail closed: never pass on an output we could not check.
+    throw new Error('Could not validate the tool output against its outputSchema');
+  }
+  if (!validation.valid) {
+    // Applicator summaries such as "properties" point only to a parent schema
+    // node. Prefer the most specific assertion while never including the bad value.
+    const summaryKeywords = new Set([
+      'properties', 'patternProperties', 'allOf', 'anyOf', 'oneOf', 'not',
+      'if', 'then', 'else', '$ref', '$recursiveRef', 'dependentSchemas',
+      'items', 'prefixItems', 'contains', 'propertyNames',
+      'unevaluatedProperties', 'unevaluatedItems'
+    ]);
+    const errors = Array.isArray(validation.errors) ? validation.errors : [];
+    const details = errors
+      .filter((error) => typeof error.keyword === 'string' && !summaryKeywords.has(error.keyword))
+      .slice()
+      .sort((a, b) => (b.keywordLocation?.length ?? 0) - (a.keywordLocation?.length ?? 0));
+    const unionError = errors.find((error) => error.keyword === 'oneOf' || error.keyword === 'anyOf');
+    const detail = unionError ?? details[0] ?? errors[0];
+    const path = detail?.keywordLocation;
+    const safePath = typeof path === 'string' && /^#[A-Za-z0-9_./~%-]{0,120}$/.test(path)
+      ? ` at ${path}`
+      : '';
+    const keyword = detail?.keyword;
+    const safeKeyword = typeof keyword === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(keyword)
+      ? keyword
+      : '';
+    const reasons = {
+      type: 'value has the wrong type',
+      required: 'a required property is missing',
+      enum: 'value is outside the allowed set',
+      const: 'value does not match the required constant',
+      minimum: 'value is below the minimum',
+      maximum: 'value is above the maximum',
+      minLength: 'string is too short',
+      maxLength: 'string is too long',
+      minItems: 'array has too few items',
+      maxItems: 'array has too many items',
+      additionalProperties: 'an unexpected property is present'
+    };
+    const suffix = safeKeyword ? ` (${safeKeyword} keyword)` : '';
+    const reason = safeKeyword ? (reasons[safeKeyword] ?? `the ${safeKeyword} constraint failed`) : 'validation failed';
+    throw new Error(`Tool output does not match its outputSchema${safePath}${suffix}: ${reason}`);
+  }
 }

@@ -30,7 +30,8 @@
       if (tool.description === '') throw new DOMException('Empty description', 'InvalidStateError');
       if (tools.has(tool.name)) throw new DOMException(`Duplicate tool name "${tool.name}"`, 'InvalidStateError');
       const schemaJSON = tool.inputSchema === undefined ? '' : JSON.stringify(tool.inputSchema);
-      tools.set(tool.name, { tool, schemaJSON });
+      const outputSchemaJSON = tool.outputSchema === undefined ? '' : JSON.stringify(tool.outputSchema);
+      tools.set(tool.name, { tool, schemaJSON, outputSchemaJSON });
       this.dispatchEvent(new Event('toolchange'));
       signal?.addEventListener('abort', () => {
         if (tools.get(tool.name)?.tool === tool) {
@@ -42,9 +43,10 @@
     }
 
     async getTools() {
-      return [...tools.values()].map(({ tool, schemaJSON }) => ({
+      return [...tools.values()].map(({ tool, schemaJSON, outputSchemaJSON }) => ({
         name: tool.name, title: tool.title ?? '', description: tool.description,
         ...(schemaJSON ? { inputSchema: JSON.parse(schemaJSON) } : {}),
+        ...(outputSchemaJSON ? { outputSchema: JSON.parse(outputSchemaJSON) } : {}),
         window, origin: location.origin, annotations: { ...(tool.annotations ?? {}) }
       }));
     }

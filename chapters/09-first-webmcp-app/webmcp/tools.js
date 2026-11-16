@@ -4,7 +4,17 @@ import { bookingPanel } from '../booking-panel.js';
 
 const SEATING = ['window', 'indoor', 'terrace'];
 
-const searchAvailability = {
+function isISODate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function isTime(value) {
+  return typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+export const searchAvailability = {
   name: 'search_availability',
   title: 'Search available tables',
   description: 'Find open tables at Fjord Table for a date and party size. ' +
@@ -19,8 +29,40 @@ const searchAvailability = {
     },
     required: ['date', 'partySize']
   },
+  outputSchema: {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['error'] },
+      code: { type: 'string', enum: ['INVALID_INPUT'] },
+      message: { type: 'string' },
+      date: { type: 'string' },
+      partySize: { type: 'integer' },
+      slots: { type: 'array', items: {
+        type: 'object', properties: {
+          time: { type: 'string' },
+          seating: { type: 'array', items: { type: 'string' } }
+        }, required: ['time', 'seating']
+      } }
+    },
+    oneOf: [
+      { required: ['date', 'partySize', 'slots'] },
+      { required: ['status', 'code', 'message'] }
+    ]
+  },
   annotations: { readOnlyHint: true },
-  async execute({ date, partySize, time, seating }, { signal }) {
+  async execute(input = {}, { signal } = {}) {
+    const { date, partySize, time, seating } = input ?? {};
+    const problems = [];
+    if (!isISODate(date)) problems.push('date must use YYYY-MM-DD and name a real date');
+    if (!Number.isInteger(partySize) || partySize < 1 || partySize > 12) {
+      problems.push('partySize must be an integer from 1 to 12');
+    }
+    if (time !== undefined && !isTime(time)) problems.push('time must use 24-hour HH:MM');
+    if (seating !== undefined && !SEATING.includes(seating)) problems.push('seating must be a supported area');
+    if (problems.length > 0) {
+      return { status: 'error', code: 'INVALID_INPUT', message: problems.join('; ') };
+    }
+
     let slots = await availability.search({ date, time, partySize, signal });
     if (SEATING.includes(seating)) slots = slots.filter((s) => s.seating.includes(seating));
     bookingPanel.showSlots(slots);                    // the person sees what the agent found
@@ -28,7 +70,7 @@ const searchAvailability = {
   }
 };
 
-const bookTable = {
+export const bookTable = {
   name: 'book_table',
   title: 'Book a table',
   description: 'Book a slot returned by search_availability. Opens the filled-in ' +
@@ -40,9 +82,24 @@ const bookTable = {
       time: { type: 'string', description: 'Slot time from search_availability, HH:MM' },
       partySize: { type: 'integer', minimum: 1, maximum: 12 },
       seating: { type: 'string', enum: [...SEATING, 'no preference'] },
-      notes: { type: 'string', description: 'Allergies or occasion, in the guest’s words' }
+      notes: { type: 'string', description: 'Allergies or occasion, in the guest’s own words' }
     },
     required: ['date', 'time', 'partySize']
+  },
+  outputSchema: {
+    type: 'object',
+    properties: {
+      status: { enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
+      code: { type: 'string' }, message: { type: 'string' },
+      reference: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }
+    },
+    required: ['status'],
+    oneOf: [
+      { properties: { status: { const: 'error' } }, required: ['code', 'message'] },
+      { properties: { status: { const: 'refused' } }, required: ['code', 'message'] },
+      { properties: { status: { const: 'booked' } }, required: ['reference', 'date', 'time'] },
+      { properties: { status: { const: 'cancelled_by_user' } }, required: ['message'] }
+    ]
   },
   annotations: { consequentialHint: true },
   async execute(input, { signal }) {

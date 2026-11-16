@@ -13,7 +13,7 @@ const suite = JSON.parse(await readFile(new URL('../evals/fjord-table.evals.json
 let browser, site;
 before(async () => {
   site = await serve(new URL('../../../fjord-table/', import.meta.url));
-  browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+  browser = await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] });
 });
 after(async () => { await browser?.close(); await site?.close(); });
 

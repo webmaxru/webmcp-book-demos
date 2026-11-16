@@ -1,5 +1,5 @@
 // Appendix A checks: runs the error-name and API-shape probes behind Table A.6 in
-// Chromium with --enable-features=WebMCPTesting and compares them with the values the
+// Chromium with --enable-features=WebMCP,WebMCPTesting and compares them with the values the
 // book prints. Also unit-tests Listing A.2 (classify-tool-error.js).
 // Run: npm install && npx playwright install chromium && npm test
 import http from 'node:http';
@@ -11,6 +11,14 @@ import { chromium } from 'playwright';
 import { classifyToolError } from '../classify-tool-error.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+function versionAtLeast(actual, minimum) {
+  const a = String(actual).split('.').map((part) => Number(part) || 0);
+  const b = minimum.split('.').map((part) => Number(part) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return true;
+}
 let passed = 0, failed = 0;
 async function test(name, fn) {
   try { await fn(); passed++; console.log('ok   ' + name); }
@@ -65,7 +73,7 @@ await new Promise((r) => setTimeout(r, 200));
 // --- Chromium probes ---------------------------------------------------------
 const out = {};
 let crashed = false, reentrant = null; // set by the re-entrant registration probe
-const browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+const browser = await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] });
 try {
 
 
@@ -86,7 +94,7 @@ out.basic = await page.evaluate(async () => {
   mc.addEventListener('toolcancel', (e) => r.events.push('toolcancel:' + e.toolName));
   const err = async (p) => { try { const v = await p; return 'resolved:' + JSON.stringify(v); } catch (e) { return e.name + ': ' + e.message; } };
   const ok = (name, execute, extra = {}) => ({ name, description: 'd', execute, ...extra });
-  r.regValue = await err(mc.registerTool(ok('echo', (i) => ({ got: i }))));
+  r.regValue = await err(mc.registerTool(ok('echo', (i) => ({ got: i }), { outputSchema: { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] } })));
   r.badName = await err(mc.registerTool(ok('bad name', () => 1)));
   r.longName = await err(mc.registerTool(ok('x'.repeat(129), () => 1)));
   r.emptyDesc = await err(mc.registerTool({ name: 'nodesc', description: '', execute: () => 1 }));
@@ -109,6 +117,7 @@ out.basic = await page.evaluate(async () => {
   const tools = await mc.getTools();
   r.tools = tools.map((t) => t.name);
   r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();
+    r.outputSchema = tools.find((t) => t.name === 'echo').outputSchema;
   r.toolOrigin = tools[0].origin; r.windowIsSelf = tools[0].window === window; r.title = JSON.stringify(tools[0].title);
   const T = (n) => tools.find((t) => t.name === n);
   r.execEcho = await err(mc.executeTool(T('echo'), { a: 1 }));
@@ -225,7 +234,12 @@ await test('SecurityError: insecure exposedTo, insecure or unparsable fromOrigin
 await test('getTools(): sorted by name, title "", window and origin present', () => {
   assert.deepEqual(b.tools, [...b.tools].sort());
   assert.equal(b.title, '""'); assert.equal(b.windowIsSelf, true);
-  assert.deepEqual(b.toolShape, ['description', 'name', 'origin', 'title', 'window']);
+  assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')
+        ? []
+        : ['description', 'name', 'origin', 'title', 'window']);
+    if (versionAtLeast(out.version, '159.0.8140.0')) {
+      assert.deepEqual(b.outputSchema, { type: 'object', properties: { got: { type: 'object' } }, required: ['got'] });
+    }
 });
 await test('executeTool(): object result is JSON, plain string is not quoted, no input -> {}', () => {
   assert.equal(b.execEcho, 'resolved:' + JSON.stringify(JSON.stringify({ got: { a: 1 } })));
@@ -235,17 +249,28 @@ await test('executeTool(): object result is JSON, plain string is not quoted, no
 await test('Chromium differs: undefined -> "undefined", 10n -> "10" (draft: OperationError)', () => {
   assert.equal(b.execUndef, 'resolved:"undefined"'); assert.equal(b.execBigint, 'resolved:"10"');
 });
-await test('Chromium differs: thrown/rejected execute -> UnknownError (draft: OperationError)', () => {
-  assert.match(b.execThrow, /^UnknownError/); assert.match(b.execReject, /^UnknownError/);
+await test('execute errors vary by browser version', () => {
+  const modern = versionAtLeast(out.version, '159.0.8140.0');
+  assert.match(b.execThrow, modern ? /^OperationError/ : /^UnknownError/);
+  assert.match(b.execReject, modern ? /^OperationError/ : /^UnknownError/);
 });
-await test('Chromium differs: unregistered, forged name, forged origin -> UnknownError (draft: NotFoundError)', () => {
-  for (const k of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[k], /^UnknownError/, k);
+await test('stale tools and plain objects use version-specific errors', () => {
+  const modern = versionAtLeast(out.version, '159.0.8140.0');
+  if (modern) {
+    assert.match(b.execUnregistered, /^NotFoundError/);
+    assert.match(b.execForgedName, /^TypeError/);
+    assert.match(b.execForgedOrigin, /^TypeError/);
+  } else {
+    for (const key of ['execUnregistered', 'execForgedName', 'execForgedOrigin']) assert.match(b[key], /^UnknownError/, key);
+  }
   assert.equal(b.afterUnregister, false);
 });
 await test('TypeError: toJSON() -> undefined inputSchema; circular executeTool() input (agrees)', () => {
   assert.match(b.toJsonUndef, /^TypeError/); assert.match(b.execCircularInput, /^TypeError/);
 });
-await test('opaque origin "null" -> NotSupportedError (agrees)', () => assert.match(b.execOpaqueOrigin, /^NotSupportedError/));
+await test('opaque-origin Tool argument uses version-specific errors', () => {
+  assert.match(b.execOpaqueOrigin, versionAtLeast(out.version, '159.0.8140.0') ? /^TypeError/ : /^NotSupportedError/);
+});
 await test('caller abort -> AbortError, execute signal aborts, toolcancel fires', () => {
   assert.match(b.execAborted, /^AbortError/);
   assert.ok(b.events.includes('execSignalAborted')); assert.ok(b.events.includes('toolcancel:slow'));
@@ -255,9 +280,10 @@ await test('events: toolchange on register/unregister, toolactivated per executi
   assert.equal(b.events.filter((e) => e.startsWith('toolchange')).length, 9);
   assert.ok(b.events.includes('toolactivated:echo'));
 });
-await test('Permissions-Policy: tools=() -> NotAllowedError from all three methods', () => {
+await test('Permissions-Policy blocks registration and getTools; executeTool checks its Tool argument', () => {
   assert.equal(out.blocked.allowsFeature, false);
-  assert.deepEqual([out.blocked.register, out.blocked.getTools, out.blocked.execute], ['NotAllowedError', 'NotAllowedError', 'NotAllowedError']);
+  assert.deepEqual([out.blocked.register, out.blocked.getTools], ['NotAllowedError', 'NotAllowedError']);
+  assert.equal(out.blocked.execute, versionAtLeast(out.version, '159.0.8140.0') ? 'TypeError' : 'NotAllowedError');
 });
 await test('cross-origin iframe without allow="tools" -> NotAllowedError', () => assert.equal(out.frames.noAllow, 'reg:NotAllowedError'));
 await test('exposedTo + fromOrigins: the frame tool is visible only when both say yes', () => {
@@ -266,8 +292,8 @@ await test('exposedTo + fromOrigins: the frame tool is visible only when both sa
   assert.deepEqual(out.frames.fromOrigins, ['frame_tool@http://127.0.0.1:8612']);
   assert.deepEqual(out.frames.notExposed, []);
 });
-await test('Chromium differs: target frame removed mid-call -> UnknownError (draft: AbortError)', () => {
-  assert.match(out.frames.frameRemovedMidCall, /^UnknownError/);
+await test('removed frame reports the browser-version-specific error', () => {
+  assert.match(out.frames.frameRemovedMidCall, versionAtLeast(out.version, '159.0.8140.0') ? /^AbortError/ : /^UnknownError/);
 });
 await test('declarative <form toolname> still registers a tool in Chromium 156', () => {
   assert.equal(out.declarative.length, 1);
@@ -275,9 +301,13 @@ await test('declarative <form toolname> still registers a tool in Chromium 156',
   assert.deepEqual(out.declarative[0].schema.required, ['date', 'partySize']);
 });
 
-await test('Chromium differs: re-registering the name during inputSchema serialization kills the renderer, crbug 573722078 (draft: InvalidStateError)', () => {
-  assert.equal(crashed, true, JSON.stringify(reentrant));
+await test('re-entrant registration is rejected without a renderer crash in newer Chromium', () => {
+  if (versionAtLeast(out.version, '159.0.8140.0')) {
+    assert.equal(crashed, false, JSON.stringify(reentrant));
+    assert.deepEqual(reentrant, { outer: 'InvalidStateError', inner: 'resolved' });
+  } else {
+    assert.equal(crashed, true, JSON.stringify(reentrant));
+  }
 });
-
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

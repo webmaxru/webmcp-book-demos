@@ -32,10 +32,13 @@ export const catalog = [
       },
       required: ['query'],
     },
-    // Not in the draft yet (issue #9, PR #254). Browsers that don't know it ignore it.
+    // Optional JSON Schema for both successful results and recoverable input errors.
     outputSchema: {
       type: 'object',
       properties: {
+        status: { type: 'string', enum: ['error'] },
+        code: { type: 'string', enum: ['INVALID_ARGUMENT'] },
+        message: { type: 'string' },
         products: {
           type: 'array',
           maxItems: 10,
@@ -52,7 +55,10 @@ export const catalog = [
           },
         },
       },
-      required: ['products'],
+      oneOf: [
+        { type: 'object', required: ['products'] },
+        { type: 'object', required: ['status', 'code', 'message'] },
+      ],
     },
     annotations: { readOnlyHint: true },
     run: (input) => ({ products: searchProducts(input) }),

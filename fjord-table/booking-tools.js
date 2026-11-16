@@ -25,6 +25,25 @@ export const bookTable = {
     },
     required: ['date', 'time', 'partySize']
   },
+        outputSchema: {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
+      code: { type: 'string' },
+      message: { type: 'string' },
+      reference: { type: 'string' },
+      date: { type: 'string' },
+      time: { type: 'string' },
+      partySize: { type: 'integer' }
+    },
+    required: ['status'],
+    oneOf: [
+      { properties: { status: { const: 'error' } }, required: ['code', 'message'] },
+      { properties: { status: { const: 'refused' } }, required: ['code', 'message'] },
+      { properties: { status: { const: 'booked' } }, required: ['reference', 'date', 'time', 'partySize'] },
+      { properties: { status: { const: 'cancelled_by_user' } }, required: ['message'] }
+    ]
+  },
   annotations: { consequentialHint: true },          // a real-world action: Chapter 6
   async execute(input, { signal }) {
     const problem = checkBookingInput(input);         // validate strictly in code

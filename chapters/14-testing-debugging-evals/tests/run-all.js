@@ -6,7 +6,7 @@
 //  5. Fjord Table over the WebMCP DevTools domain   tests/fjord-table.cdp.test.js
 //  6. the eval harness with scripted agents         tests/evals.test.js
 //  7. Chapter 9's Test Agent, scripted, in the page tests/test-agent.test.js
-// Steps 4-7 launch Chromium with --enable-features=WebMCPTesting.
+// Steps 4-7 launch Chromium with --enable-features=WebMCP,WebMCPTesting.
 import { spawnSync } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';

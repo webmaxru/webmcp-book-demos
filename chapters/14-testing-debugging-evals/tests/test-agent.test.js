@@ -3,19 +3,41 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { resolve, sep } from 'node:path';
 import { chromium } from 'playwright';
 import { serve, nextOpenDate } from './fixtures/serve.js';
 
 const TEST_AGENT = fileURLToPath(new URL('../../09-first-webmcp-app/test-agent.js', import.meta.url));
+const VALIDATOR_ROOT = fileURLToPath(new URL('../node_modules/@cfworker/json-schema/', import.meta.url));
+const VALIDATOR_PREFIX = '/node_modules/@cfworker/json-schema/';
 let browser, site;
 before(async () => {
   site = await serve(new URL('../../../fjord-table/', import.meta.url));
-  browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+  browser = await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] });
 });
 after(async () => { await browser?.close(); await site?.close(); });
 
 async function openWithTestAgent(human) {
   const page = await browser.newPage();
+  // The reused agent imports its validator from Chapter 9's package path. Serve the
+  // Chapter 14 dev dependency from the same URL root as the demo page.
+  await page.route('**/node_modules/@cfworker/json-schema/**', async (route) => {
+    const pathname = decodeURIComponent(new URL(route.request().url()).pathname);
+    const suffix = pathname.startsWith(VALIDATOR_PREFIX)
+      ? pathname.slice(VALIDATOR_PREFIX.length)
+      : '';
+    const root = resolve(VALIDATOR_ROOT);
+    const target = resolve(root, suffix);
+    if (!suffix || !target.startsWith(`${root}${sep}`)) {
+      await route.abort();
+      return;
+    }
+    try {
+      await route.fulfill({ path: target, contentType: 'text/javascript' });
+    } catch {
+      await route.fulfill({ status: 404, body: 'not found' });
+    }
+  });
   // Serve Chapter 9's test-agent.js next to the app, as ?test-agent would load it.
   await page.route('**/test-agent.js', (route) =>
     route.fulfill({ path: TEST_AGENT, contentType: 'text/javascript' }));

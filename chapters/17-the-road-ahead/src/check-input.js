@@ -1,8 +1,8 @@
 // check-input.js (filler, not a listing): a deliberately small JSON Schema
 // checker for the subset Trailhead's schemas use (object, required, string,
-// number, integer, boolean, enum, minimum, maximum, array, minItems, maxItems).
-// In production use a full validator such as Ajv; Chapter 5 explains why the
-// page must validate at all.
+// number, integer, boolean, enum, minimum, maximum, array, minItems, maxItems,
+// and oneOf). In production use a full validator such as Ajv; Chapter 5 explains
+// why the page must validate at all.
 export function checkInput(schema, value, path = 'input') {
   const problems = [];
   if (!schema) return problems;
@@ -16,6 +16,10 @@ export function checkInput(schema, value, path = 'input') {
     }
     for (const [key, sub] of Object.entries(schema.properties ?? {})) {
       if (key in value) problems.push(...checkInput(sub, value[key], `${path}.${key}`));
+    }
+    if (Array.isArray(schema.oneOf)) {
+      const matches = schema.oneOf.filter((option) => checkInput(option, value, path).length === 0).length;
+      if (matches !== 1) problems.push(`${path} must match exactly one allowed schema`);
     }
     return problems;
   }

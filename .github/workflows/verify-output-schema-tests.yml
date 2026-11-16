@@ -1,0 +1,82 @@
+name: Verify WebMCP outputSchema demos
+
+on:
+  push:
+    branches: [output-schema-update]
+    paths:
+      - '.github/workflows/verify-output-schema-tests.yml'
+      - 'chapters/09-first-webmcp-app/**'
+      - 'chapters/14-testing-debugging-evals/**'
+      - 'chapters/17-the-road-ahead/**'
+      - 'appendices/a-api-reference/**'
+      - 'fjord-table/**'
+  pull_request:
+    paths:
+      - '.github/workflows/verify-output-schema-tests.yml'
+      - 'chapters/09-first-webmcp-app/**'
+      - 'chapters/14-testing-debugging-evals/**'
+      - 'chapters/17-the-road-ahead/**'
+      - 'appendices/a-api-reference/**'
+      - 'fjord-table/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.directory }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: chapters/09-first-webmcp-app
+            chrome_test: false
+          - directory: chapters/14-testing-debugging-evals
+            chrome_test: false
+          - directory: chapters/17-the-road-ahead
+            chrome_test: true
+          - directory: appendices/a-api-reference
+            chrome_test: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies and Chromium
+        shell: bash
+        run: |
+          cd "$GITHUB_WORKSPACE/${{ matrix.directory }}"
+          if ! npm install --no-audit --no-fund >/tmp/npm-install.log 2>&1; then
+            echo 'npm install failed:'
+            tail -n 80 /tmp/npm-install.log
+            exit 1
+          fi
+          if ! npx playwright install --with-deps chromium >/tmp/playwright-install.log 2>&1; then
+            echo 'Playwright Chromium installation failed:'
+            tail -n 80 /tmp/playwright-install.log
+            exit 1
+          fi
+          node --version
+          npm --version
+      - name: Run tests and show concise logs
+        shell: bash
+        run: |
+          set -uo pipefail
+          cd "$GITHUB_WORKSPACE/${{ matrix.directory }}"
+          status=0
+          set +e
+          npm test >/tmp/npm-test.log 2>&1
+          test_status=$?
+          echo "===== npm test (exit $test_status) ====="
+          tail -n 140 /tmp/npm-test.log
+          if [ "$test_status" -ne 0 ]; then status=1; fi
+          if [ "${{ matrix.chrome_test }}" = 'true' ]; then
+            npm run test:chrome >/tmp/chrome-test.log 2>&1
+            chrome_status=$?
+            echo "===== npm run test:chrome (exit $chrome_status) ====="
+            tail -n 140 /tmp/chrome-test.log
+            if [ "$chrome_status" -ne 0 ]; then status=1; fi
+          fi
+          exit "$status"

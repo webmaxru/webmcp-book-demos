@@ -6,7 +6,7 @@
 //    CHAPTER_MD points at the chapter's Markdown, every listing file matches the book.
 // 2. Plain Chromium (no WebMCP): the page works for a person, with the tools switched off;
 //    the same page with the polyfill (?webmcp-polyfill) and with the dev-only mock.
-// 3. Chromium with --enable-features=WebMCPTesting (chrome://flags/#enable-webmcp-testing):
+// 3. Chromium with --enable-features=WebMCP,WebMCPTesting (chrome://flags/#enable-webmcp-testing):
 //    native tools, the Test Agent, a browser agent over the DevTools Protocol WebMCP domain,
 //    an insecure origin, a blocking Permissions Policy, an Origin-Trial header and the
 //    Prompt API planner (with a stub model; see the README).
@@ -47,6 +47,15 @@ function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 const day = new Date(Date.now() + 2 * 86400000); while (day.getDay() === 1) day.setDate(day.getDate() + 1);
 const DATE = iso(day);
 
+function versionAtLeast(actual, minimum) {
+  const a = String(actual).split('.').map((part) => Number(part) || 0);
+  const b = minimum.split('.').map((part) => Number(part) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------- static checks
 await test('every .js file passes node --check', async () => {
   const files = [];
@@ -86,9 +95,9 @@ if (process.env.CHAPTER_MD) {
 
 // ---------------------------------------------------------------- browsers
 const plain = await chromium.launch();
-const webmcp = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+const webmcp = await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] });
 const insecure = await chromium.launch({
-  args: ['--enable-features=WebMCPTesting', '--host-resolver-rules=MAP fjord.test 127.0.0.1']
+  args: ['--enable-features=WebMCP,WebMCPTesting', '--host-resolver-rules=MAP fjord.test 127.0.0.1']
 });
 console.log(`\nChromium ${webmcp.version()}\n`);
 
@@ -108,6 +117,9 @@ async function openPage(browser, { url = BASE, mock = false, polyfill = false, i
   }
   await page.goto(url);
   await page.waitForFunction(() => !document.querySelector('#webmcp-status').textContent.startsWith('Checking'));
+  if (new URL(url).searchParams.has('test-agent')) {
+    await page.waitForFunction(() => typeof window.testAgent?.call === 'function');
+  }
   return { page, errors, context, chip: () => page.textContent('#webmcp-status') };
 }
 
@@ -194,12 +206,15 @@ await test('native: both tools registered with their annotations', async () => {
   const { page, errors, context, chip } = await openPage(webmcp, { url: BASE + '?test-agent' });
   assert.match(await chip(), /Agent tools on \(native\): search_availability, book_table/);
   const tools = await page.evaluate(() => window.testAgent.tools().then((ts) =>
-    ts.map((t) => ({ name: t.name, annotations: t.annotations, required: t.inputSchema?.required }))));
+    ts.map((t) => ({ name: t.name, annotations: t.annotations, required: t.inputSchema?.required, outputSchema: t.outputSchema }))));
   observed.nativeTools = tools;
   const byName = Object.fromEntries(tools.map((t) => [t.name, t]));
   assert.equal(byName.search_availability.annotations?.readOnlyHint, true);
   assert.equal(byName.book_table.annotations?.consequentialHint, true);
   assert.deepEqual(byName.book_table.required, ['date', 'time', 'partySize']);
+    const supportsOutputSchema = versionAtLeast(webmcp.version(), '159.0.8140.0');
+    assert.equal(Boolean(byName.search_availability.outputSchema), supportsOutputSchema);
+    assert.equal(Boolean(byName.book_table.outputSchema), supportsOutputSchema);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -239,6 +254,7 @@ await test('native: scripted run() uses one result to plan the next call', async
 
 await test('native: invalid input comes back as a value the planner can read', async () => {
   const { page, context } = await openPage(webmcp, { url: BASE + '?test-agent' });
+await page.waitForFunction(() => typeof window.testAgent?.call === 'function');
   const r = await page.evaluate((date) => window.testAgent.call('book_table', { date, time: '7pm', partySize: 2 }), DATE);
   assert.equal(r.status, 'error');
   assert.equal(r.code, 'INVALID_INPUT');
