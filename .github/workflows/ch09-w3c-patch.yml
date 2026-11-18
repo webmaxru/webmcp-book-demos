@@ -1,0 +1,75 @@
+name: Prepare Chapter 9 W3C polyfill demo
+on:
+  push:
+    branches: [ch09-w3c-polyfill]
+    paths: [.github/workflows/ch09-w3c-patch.yml]
+permissions:
+  contents: write
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ch09-w3c-polyfill
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply exact replacements to Chapter 9 demo
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root = Path('chapters/09-first-webmcp-app')
+          old_url = 'https://cdn.jsdelivr.net/npm/@mcp-b/webmcp-polyfill@6.0.3/dist/index.iife.js'
+          new_url = 'https://cdn.jsdelivr.net/npm/@w3c/webmcp-polyfill@0.1.1/dist/polyfill.js'
+          old_hash = 'sha384-aEnX8+GGpZs7j3YINfHJw5npl4H6AkfYHQ5KqdgJzScZ5s76I533BzlPrceDInPx'
+          new_hash = 'sha256-qMH/jOVlACK6Z8tBBAsrXkzDga2qXWJKAXR7J+20Kok='
+          def change(file, pairs):
+              p = root / file
+              s = p.read_text(encoding='utf-8')
+              for old, new, count in pairs:
+                  assert s.count(old) == count, (file, old, s.count(old), count)
+                  s = s.replace(old, new)
+              p.write_text(s, encoding='utf-8')
+          change('webmcp/enable.js', [
+              (old_url,new_url,1),(old_hash,new_hash,1),
+              (': { mode: \'off\', reason: \'polyfill-declined\' };   // e.g. an old browser',
+               ': { mode: \'off\', reason: \'polyfill-declined\' };',1)
+          ])
+          change('package.json', [('"@mcp-b/webmcp-polyfill": "6.0.3"', '"@w3c/webmcp-polyfill": "0.1.1"',1)])
+          change('tests/run-tests.mjs', [
+              (old_url,new_url,1),
+              ('node_modules/@mcp-b/webmcp-polyfill/dist/index.iife.js','node_modules/@w3c/webmcp-polyfill/dist/polyfill.js',1),
+              ('node_modules/@mcp-b/webmcp-polyfill/package.json','node_modules/@w3c/webmcp-polyfill/package.json',1),
+              ('polyfill integrity hash in enable.js matches @mcp-b/webmcp-polyfill 6.0.3','polyfill integrity hash in enable.js matches @w3c/webmcp-polyfill 0.1.1',1),
+              ("assert.equal(pkg.version, '6.0.3');","assert.equal(pkg.version, '0.1.1');",1),
+              ("'sha384-' + createHash('sha384')","'sha256-' + createHash('sha256')",1)
+          ])
+          p=root/'README.md'
+          s=p.read_text(encoding='utf-8')
+          marker='## Test results (14 October 2026, re-run 2 November 2026)'
+          assert s.count(marker)==1
+          s=s.replace(marker, '## Historical test results (14 October 2026, re-run 2 November 2026)\n\nThese historical results used the MCP-B polyfill. The current demo uses `@w3c/webmcp-polyfill@0.1.1`; run the tests above to check it on your setup. The W3C package does not implement declarative forms, does not replace an existing native context, and requires a secure context.',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+          git diff --stat
+          git diff -- chapters/09-first-webmcp-app
+      - name: Install and test the demo
+        working-directory: chapters/09-first-webmcp-app
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          npm test
+      - name: Commit tested demo changes to the feature branch
+        shell: bash
+        run: |
+          test "$GITHUB_REF" = refs/heads/ch09-w3c-polyfill
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add chapters/09-first-webmcp-app/package.json chapters/09-first-webmcp-app/webmcp/enable.js chapters/09-first-webmcp-app/tests/run-tests.mjs chapters/09-first-webmcp-app/README.md
+          git diff --cached --check
+          git commit -m 'Use W3C WebMCP polyfill in Chapter 9 demo'
+          git push origin HEAD:refs/heads/ch09-w3c-polyfill
