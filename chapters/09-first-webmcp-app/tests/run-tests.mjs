@@ -33,8 +33,8 @@ const main = await serve({});
 const blocked = await serve({ TOOLS_POLICY: 'tools=()' });
 const withToken = await serve({ WEBMCP_OT_TOKEN: 'AnExampleTokenThatIsNotValid==' });
 const BASE = `http://localhost:${main.port}/`;   // localhost is a secure context
-const POLYFILL_CDN = 'https://cdn.jsdelivr.net/npm/@mcp-b/webmcp-polyfill@6.0.3/dist/index.iife.js';
-const POLYFILL_FILE = join(ROOT, 'node_modules/@mcp-b/webmcp-polyfill/dist/index.iife.js');
+const POLYFILL_CDN = 'https://cdn.jsdelivr.net/npm/@w3c/webmcp-polyfill@0.1.1/dist/polyfill.js';
+const POLYFILL_FILE = join(ROOT, 'node_modules/@w3c/webmcp-polyfill/dist/polyfill.js');
 
 let failures = 0, passed = 0;
 const observed = {};
@@ -73,10 +73,10 @@ await test('relay config parses and pins the relay version', async () => {
   assert.equal(args[args.indexOf('--widget-origin') + 1], 'http://localhost:3000');
 });
 
-await test('polyfill integrity hash in enable.js matches @mcp-b/webmcp-polyfill 6.0.3', async () => {
-  const pkg = JSON.parse(await read('node_modules/@mcp-b/webmcp-polyfill/package.json'));
-  assert.equal(pkg.version, '6.0.3');
-  const hash = 'sha384-' + createHash('sha384').update(await readFile(POLYFILL_FILE)).digest('base64');
+await test('polyfill integrity hash in enable.js matches @w3c/webmcp-polyfill 0.1.1', async () => {
+  const pkg = JSON.parse(await read('node_modules/@w3c/webmcp-polyfill/package.json'));
+  assert.equal(pkg.version, '0.1.1');
+  const hash = 'sha256-' + createHash('sha256').update(await readFile(POLYFILL_FILE)).digest('base64');
   assert.ok((await read('webmcp/enable.js')).includes(hash), `enable.js should carry ${hash}`);
 });
 

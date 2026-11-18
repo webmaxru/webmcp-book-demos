@@ -41,7 +41,9 @@ await testAgent.call('search_availability', { date: '2026-11-20', partySize: 4 }
 
 Add `&webmcp-polyfill` (or use `?webmcp-polyfill` alone) to try the polyfill path in a browser without WebMCP.
 
-## Test results (14 October 2026, re-run 2 November 2026)
+## Historical test results (14 October 2026, re-run 2 November 2026)
+
+These historical results used the MCP-B polyfill. The current demo uses `@w3c/webmcp-polyfill@0.1.1`; run the tests above to check it on your setup. The W3C package does not implement declarative forms, does not replace an existing native context, and requires a secure context.
 
 Run with Playwright 1.64 and its Chromium **156.0.8078.4**: plain, with `--enable-features=WebMCPTesting`, and with `--host-resolver-rules=MAP fjord.test 127.0.0.1` for an insecure origin. **21 passed, 0 failed** (with `CHAPTER_MD` set) on 14 October 2026. Re-run for the second edition on 2 November 2026, same Chromium build, after `app.js` started rolling back the whole tool surface when one registration fails (Chrome's WebMCP best practices, "Register tools all at once", 30 October 2026): **22 passed, 0 failed** (with `CHAPTER_MD` set). Spec draft at the time: 27 October 2026. Packages: `playwright@1.64.1`, `@mcp-b/webmcp-polyfill@6.0.3`.
 

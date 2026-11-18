@@ -1,7 +1,7 @@
 // webmcp/enable.js: decide once, at start-up, how this page can talk to agents.
 const POLYFILL = {
-  src: 'https://cdn.jsdelivr.net/npm/@mcp-b/webmcp-polyfill@6.0.3/dist/index.iife.js',
-  integrity: 'sha384-aEnX8+GGpZs7j3YINfHJw5npl4H6AkfYHQ5KqdgJzScZ5s76I533BzlPrceDInPx'
+  src: 'https://cdn.jsdelivr.net/npm/@w3c/webmcp-polyfill@0.1.1/dist/polyfill.js',
+  integrity: 'sha256-qMH/jOVlACK6Z8tBBAsrXkzDga2qXWJKAXR7J+20Kok='
 };
 
 export async function enableWebMCP({ polyfill = false } = {}) {
@@ -15,7 +15,7 @@ export async function enableWebMCP({ polyfill = false } = {}) {
   }
   return 'modelContext' in document
     ? { mode: 'polyfill' }
-    : { mode: 'off', reason: 'polyfill-declined' };   // e.g. an old browser
+    : { mode: 'off', reason: 'polyfill-declined' };
 }
 
 function loadScript({ src, integrity }) {
