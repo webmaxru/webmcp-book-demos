@@ -13,7 +13,7 @@
     "@cfworker/json-schema": "4.1.6"
   },
   "devDependencies": {
-    "@mcp-b/webmcp-polyfill": "6.0.3",
+    "@w3c/webmcp-polyfill": "0.1.1",
     "playwright": "^1.64.1"
   }
 }
