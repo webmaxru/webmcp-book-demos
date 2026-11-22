@@ -44,6 +44,8 @@ npx playwright install chromium
 npm test
 ```
 
+Playwright is pinned to 1.64.1, which installs Chromium 156.0.8078.4. Listing 14.4 launches that browser with `--enable-features=WebMCPTesting` only. A newer Playwright release ships a newer Chromium on which that flag alone does not expose tools to the DevTools Protocol `WebMCP` domain.
+
 `npm test` runs, in order: `node --check` on every JavaScript file; the unit tests; the RUM tests with the mock; the RUM tests with Chromium's own WebMCP; the Fjord Table protocol tests; the eval-harness tests; and Chapter 9's Test Agent in the page. The last four launch Chromium with `--enable-features=WebMCPTesting` (the switch behind `chrome://flags/#enable-webmcp-testing`). The protocol tests need a real Chromium: the DevTools Protocol's `WebMCP` domain has no mock.
 
 Result on 15 October 2026, re-run from a fresh clone during the technical review, after the Trailhead tools and `instrumentTool()` adopted Chapter 11's result convention and Fjord Table's `book_table` moved to it (Node 22.23, Playwright 1.64, Chromium 156.0.8078.4):
