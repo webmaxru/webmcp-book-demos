@@ -7,6 +7,9 @@ export function fjordTablePage(browser, siteUrl, { human = 'confirms' } = {}) {
     const context = await browser.newContext();
     const page = await context.newPage();
     const webmcp = await attachWebMCP(await context.newCDPSession(page));
+    // The suite's sample dates (20, 21 and 28 November 2026) have to be in the
+    // future for the fake backend. The listing keeps those dates.
+    await page.clock.install({ time: new Date('2026-11-18T12:00:00') });
     await page.goto(`${siteUrl}#/book`);
     await webmcp.waitForTool('search_availability');
     await webmcp.waitForTool('book_table');

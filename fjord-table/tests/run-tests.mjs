@@ -40,12 +40,15 @@ async function test(name, fn) {
   catch (err) { failures++; console.log(`FAIL ${name}\n     ${err.message.replace(/\x1b\[\d+m/g, '').split('\n').slice(0, 12).join('\n     ')}`); }
 }
 
-async function openPage({ mock }) {
+async function openPage({ mock, time } = {}) {
   const context = await (mock ? webmcpBrowser : plainBrowser).newContext();
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  // Listing 4.2's sample date is 2026-11-20. The fake backend refuses past dates,
+  // so that one check runs with the page clock still before the sample date.
+  if (time) await page.clock.install({ time: new Date(time) });
   if (mock && !REAL) await page.addInitScript({ path: join(ROOT, 'dev/model-context-mock.js') });
   await page.goto(URL_);
   await page.waitForFunction(() => !document.querySelector('#webmcp-status').textContent.startsWith('Checking'));
@@ -135,7 +138,7 @@ await test(`${LABEL}: search_availability at startup; book_table only on the boo
 });
 
 await test(`${LABEL}: Listing 4.2 verbatim, an in-page agent calling search_availability`, async () => {
-  const { page, errors, context } = await openPage({ mock: true });
+  const { page, errors, context } = await openPage({ mock: true, time: '2026-11-18T12:00:00' });
   const logged = [];
   page.on('console', (m) => { if (m.type() === 'log') logged.push(m.text()); });
   const slots = await page.evaluate(async () => {

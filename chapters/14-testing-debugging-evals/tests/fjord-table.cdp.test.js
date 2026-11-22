@@ -10,7 +10,7 @@ import { serve, nextOpenDate } from './fixtures/serve.js';
 let browser, site;
 before(async () => {
   site = await serve(new URL('../../../fjord-table/', import.meta.url));
-  browser = await chromium.launch({ args: ['--enable-features=WebMCP,WebMCPTesting'] });
+  browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
 });
 after(async () => { await browser?.close(); await site?.close(); });
 

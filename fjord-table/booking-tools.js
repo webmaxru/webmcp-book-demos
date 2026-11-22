@@ -25,7 +25,7 @@ export const bookTable = {
     },
     required: ['date', 'time', 'partySize']
   },
-        outputSchema: {
+  outputSchema: {
     type: 'object',
     properties: {
       status: { type: 'string', enum: ['error', 'refused', 'booked', 'cancelled_by_user'] },
