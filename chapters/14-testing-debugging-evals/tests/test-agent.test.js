@@ -41,6 +41,16 @@ async function openWithTestAgent(human) {
   // Serve Chapter 9's test-agent.js next to the app, as ?test-agent would load it.
   await page.route('**/test-agent.js', (route) =>
     route.fulfill({ path: TEST_AGENT, contentType: 'text/javascript' }));
+  // Listing 9.5 imports @cfworker/json-schema by package name. The Fjord page
+  // has no import map, so this test adds the one the listing's comment describes.
+  await page.route(site.url, async (route) => {
+    const response = await route.fetch();
+    const html = (await response.text()).replace(
+      '<head>',
+      '<head><script type="importmap">{"imports":{"@cfworker/json-schema":"/node_modules/@cfworker/json-schema/dist/esm/index.js"}}</script>'
+    );
+    await route.fulfill({ response, body: html, contentType: 'text/html' });
+  });
   await page.goto(`${site.url}#/book`);
   await page.waitForFunction(async () => (await document.modelContext.getTools()).length === 2);
   (async () => {                                      // the person at the screen

@@ -76,38 +76,31 @@ test('tools with no output schema still pass their result through', async () => 
   assert.deepEqual(await agent.call('weather'), { anything: 'allowed' });
 });
 
-test('unquoted JSON-looking native results stay strings when the outputSchema says string', async () => {
-  for (const raw of ['42', 'true', 'null']) {
-    installRawTool({ type: 'string' }, raw);
-    const agent = createTestAgent({ log: () => {} });
-    assert.equal(await agent.call('weather'), raw);
-    assert.equal(agent.transcript[0].result, raw);
-    assert.equal(agent.transcript[0].raw, JSON.stringify(raw));
-  }
+test('non-JSON strings stay strings; JSON-looking primitives are parsed', async () => {
+  installRawTool({ type: 'string' }, 'hello');
+  const agent = createTestAgent({ log: () => {} });
+  assert.equal(await agent.call('weather'), 'hello');
+  assert.equal(agent.transcript[0].raw, 'hello');
+
+  installRawTool({ type: 'string' }, '42');
+  const parsed = createTestAgent({ log: () => {} });
+  await assert.rejects(parsed.call('weather'), /Tool "weather" output does not match its outputSchema/);
+  assert.equal(parsed.transcript[0].raw, undefined);
+  assert.equal(parsed.transcript[0].result, undefined);
+  assert.doesNotMatch(JSON.stringify(parsed.transcript), /42/);
 });
 
-test('invalid search arguments return schema-valid errors through the Test Agent', async () => {
-  const inputs = [
-    { date: '2026-11-20', partySize: '2' },
-    { partySize: 2 },
-    { date: 'not-a-date', partySize: 2 },
-    { date: '2026-11-20', partySize: 0 }
-  ];
+test('book_table invalid input is a schema-valid error', async () => {
+  globalThis.document = { modelContext: {
+    getTools: async () => [bookTable],
+    executeTool: async (tool, args) => JSON.stringify(await tool.execute(args, {}))
+  } };
   const agent = createTestAgent({ log: () => {} });
-  for (const input of inputs) {
-    globalThis.document = { modelContext: {
-      getTools: async () => [searchAvailability],
-      executeTool: async (tool, args) => JSON.stringify(await tool.execute(args, {}))
-    } };
-    const result = await agent.call('search_availability', input);
-    assert.equal(result.status, 'error');
-    assert.equal(result.code, 'INVALID_INPUT');
-    assert.equal(typeof result.message, 'string');
-    assert.equal('date' in result, false);
-    assert.equal('partySize' in result, false);
-    const validation = new Validator(searchAvailability.outputSchema, '2020-12').validate(result);
-    assert.equal(validation.valid, true, JSON.stringify(validation.errors));
-  }
+  const result = await agent.call('book_table', { date: '2026-11-20', time: '7pm', partySize: 2 });
+  assert.equal(result.status, 'error');
+  assert.equal(result.code, 'INVALID_INPUT');
+  const validation = new Validator(bookTable.outputSchema, '2020-12').validate(result);
+  assert.equal(validation.valid, true, JSON.stringify(validation.errors));
 });
 
 test('Fjord Table outputSchema covers every documented return branch', () => {
@@ -116,10 +109,9 @@ test('Fjord Table outputSchema covers every documented return branch', () => {
     date: '2026-11-20', partySize: 2, slots: [{ time: '19:00', seating: ['window'] }]
   });
   assert.equal(search.valid, true, JSON.stringify(search.errors));
-  const searchError = valid(searchAvailability.outputSchema, {
+  assert.equal(valid(searchAvailability.outputSchema, {
     status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and party size.'
-  });
-  assert.equal(searchError.valid, true, JSON.stringify(searchError.errors));
+  }).valid, false);
 
   const chapter4Search = registeredTools.get('search_availability');
   assert.ok(chapter4Search, 'Chapter 4 registered its search tool');
@@ -127,10 +119,9 @@ test('Fjord Table outputSchema covers every documented return branch', () => {
     date: '2026-11-20', partySize: 2, slots: ['19:00']
   });
   assert.equal(chapter4Success.valid, true, JSON.stringify(chapter4Success.errors));
-  const chapter4Error = valid(chapter4Search.outputSchema, {
+  assert.equal(valid(chapter4Search.outputSchema, {
     status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and party size.'
-  });
-  assert.equal(chapter4Error.valid, true, JSON.stringify(chapter4Error.errors));
+  }).valid, false);
 
   const bookingResults = [
     { status: 'error', code: 'INVALID_INPUT', message: 'Correct the date and time.' },

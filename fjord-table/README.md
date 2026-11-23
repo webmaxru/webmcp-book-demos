@@ -50,7 +50,7 @@ For scripted tests, the same switch is `--enable-features=WebMCPTesting` on the 
 
 | File | Book | Notes |
 |---|---|---|
-| `search-availability.js` | Listing 4.1 (ch. 4) = Listing 5.1 (ch. 5) | Verbatim, with two `import` lines added. The second edition names this file in both listing labels. (The first edition called it `agent-tools.js`, the name the demo gives to Listing 5.3.) |
+| `search-availability.js` | Listing 5.1 (ch. 5); Listing 4.1 (ch. 4) is the same registration without `outputSchema` | Listing 5.1 with the numbered markers removed, plus two `import` lines. Listing 4.1 is not a contiguous excerpt of this file, because Chapter 5 adds `outputSchema` while saying the listing is unchanged apart from the markers. (The first edition called this file `agent-tools.js`, the name the demo gives to Listing 5.3.) |
 | `agent-tools.js` | Listing 5.3 (ch. 5) | Verbatim. `registerAgentTool()`: feature detection plus error handling. |
 | `booking-tools.js` | Listing 5.4 (ch. 5) | Verbatim, with two `import` lines added. The `book_table` tool, `checkBookingInput()`, recoverable failures returned as values. |
 | `booking-view.js` | Listing 5.5 (ch. 5) | Verbatim, plus a minimal `localizeTool()` (Norwegian title and description) that the listing calls but the book doesn't define. |
