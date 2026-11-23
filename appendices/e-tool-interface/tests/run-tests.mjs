@@ -70,7 +70,7 @@ assert.equal(chromium156.plain.title, '');
 const chrome160 = await page.evaluate(async () => {
   const bag = new WeakMap();
   function Tool() {}
-  for (const key of ['name', 'title', 'description', 'origin', 'inputSchema', 'outputSchema', 'annotations', 'source']) {
+  for (const key of ['name', 'title', 'description', 'origin', 'inputSchema', 'outputSchema', 'annotations', 'source', 'window']) {
     Object.defineProperty(Tool.prototype, key, {
       enumerable: false,
       get() { return bag.get(this)[key]; },
@@ -92,8 +92,10 @@ const chrome160 = await page.evaluate(async () => {
     bag.set(tool, fields);
     return tool;
   };
-  document.modelContext.getTools = async () => [make(data), make(gone)];
-  const raw = (await document.modelContext.getTools())[0];
+  const legacy = make({ ...data, name: 'legacy', source: undefined, window });
+  const goneTool = make(gone);
+  document.modelContext.getTools = async () => [make(data), goneTool, legacy];
+  const raw = make(data);
   let cloneError = null;
   try { structuredClone(raw); } catch (error) { cloneError = error.name; }
   const rows = await window.readTools();
@@ -102,8 +104,9 @@ const chrome160 = await page.evaluate(async () => {
     spread: { ...raw },
     ownKeys: Object.keys(raw),
     cloneError,
+    names: rows.map((row) => row.name),
     sourceIsWindow: rows[0].source === window,
-    goneSource: rows[1].source === undefined ? 'undefined' : rows[1].source === null ? 'null' : 'set',
+    nullSourceEqualsWindow: (goneTool.source !== undefined ? goneTool.source : goneTool.window) === window,
     rows: rows.map(({ source, ...plain }) => plain),
   };
 });
@@ -112,14 +115,13 @@ assert.equal(chrome160.stringify, '{}');
 assert.deepEqual(chrome160.spread, {});
 assert.deepEqual(chrome160.ownKeys, []);
 assert.equal(chrome160.cloneError, null);
+assert.deepEqual(chrome160.names, ['search_products', 'legacy']);
 assert.equal(chrome160.sourceIsWindow, true);
+assert.equal(chrome160.nullSourceEqualsWindow, false);
 assert.equal(chrome160.rows[0].name, 'search_products');
 assert.equal(chrome160.rows[0].inputSchema, null);
 assert.equal(chrome160.rows[0].outputSchema, null);
 assert.equal(chrome160.rows[0].annotations, null);
-assert.equal(chrome160.rows[1].name, 'gone');
-// Listing E.1 uses ??, so a null source falls through to the absent window member.
-assert.equal(chrome160.goneSource, 'undefined');
 assert.deepEqual(errors, []);
 
 await browser.close();

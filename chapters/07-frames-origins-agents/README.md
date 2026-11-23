@@ -26,7 +26,7 @@ Every file marked with a listing number is byte-for-byte identical to the listin
 | `ledgerly/agent/run-tool.js` | 7.6 | `executeTool()` with a deadline, a stop signal and error mapping |
 | `ledgerly/agent/agent-loop.js` | 7.7 | The minimal in-page agent loop |
 | `extension/manifest.json` | 7.8 | MV3 manifest, content script in all frames |
-| `extension/content-script.js` | 7.9 | Per-frame tool reporting and execution. Frame identity is `source ?? window` |
+| `extension/content-script.js` | 7.9 | Per-frame tool reporting and execution. `toolSource()` keeps a `null` `source` and only falls back to `window` when `source` is absent |
 | `extension/background.js` | 7.10 | Service worker: catalog per tab/frame, runs a tool in a given frame |
 
 Not printed in the book (minimal fill so the demo runs):

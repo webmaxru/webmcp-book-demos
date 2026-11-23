@@ -3,6 +3,7 @@
 // extension agent loaded unpacked into full Chromium.
 // Run: npm install && npx playwright install chromium && npm test
 import { execFileSync } from 'node:child_process';
+import vm from 'node:vm';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -28,6 +29,22 @@ for (const f of jsFiles) {
   await test(`syntax: ${f}`, () => { execFileSync(process.execPath, ['--check', path.join(root, f)], { timeout: 20000 }); });
 }
 await test('syntax: extension/manifest.json is valid JSON', () => { JSON.parse(fs.readFileSync(path.join(root, 'extension/manifest.json'), 'utf8')); });
+
+await test('Listing 7.9: a null source is not this window', () => {
+  const context = {
+    document: {},
+    location: { origin: 'http://localhost' },
+    chrome: { runtime: { sendMessage() {}, onMessage: { addListener() {} } } },
+  };
+  context.window = context;
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(root, 'extension/content-script.js'), 'utf8'), context);
+  const { toolSource, window } = context;
+  assert.equal(toolSource({ source: null, window }), null);
+  assert.equal(toolSource({ source: null }) === window, false);
+  assert.equal(toolSource({ window }), window);
+  assert.equal(toolSource({ source: window }), window);
+});
 
 const stop = start();
 const frameOf = (page) => page.frames().find((f) => f.url().startsWith(SUPPORTLY));
