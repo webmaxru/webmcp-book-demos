@@ -4,7 +4,7 @@ Companion folder for Appendix A of *Tools, Not Clicks: Building Agent-Ready Webs
 
 | File | In the book |
 |---|---|
-| `webmcp.idl` | Listing A.1 — the specification's IDL index (Draft CG Report, 27 October 2026, identical to the 15 and 14 October drafts), unabridged |
+| `webmcp.idl` | Listing A.1 — the specification's IDL index (Draft CG Report, 23 November 2026). `getTools()` returns `Tool`. Chromium 156 still returns the older `RegisteredTool` dictionary |
 | `classify-tool-error.js` | Listing A.2 — classifying an `executeTool()` rejection under both the draft and Chromium 156 |
 | `tests/run-tests.mjs` | The probes behind Tables A.1–A.8: registration rules, `getTools()` shape, `executeTool()` results, events, Permissions Policy, cross-origin `exposedTo`/`fromOrigins`, exception names, and the declarative `<form toolname>` attributes |
 

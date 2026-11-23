@@ -118,7 +118,9 @@ out.basic = await page.evaluate(async () => {
   r.tools = tools.map((t) => t.name);
   r.toolShape = Object.keys(tools.find((t) => t.name === 'echo')).sort();
     r.outputSchema = tools.find((t) => t.name === 'echo').outputSchema;
-  r.toolOrigin = tools[0].origin; r.windowIsSelf = tools[0].window === window; r.title = JSON.stringify(tools[0].title);
+  r.toolOrigin = tools[0].origin; r.windowIsSelf = tools[0].window === window;
+  r.compatibleSourceIsSelf = (tools[0].source ?? tools[0].window) === window;
+  r.title = JSON.stringify(tools[0].title);
   const T = (n) => tools.find((t) => t.name === n);
   r.execEcho = await err(mc.executeTool(T('echo'), { a: 1 }));
   r.execNoInput = await err(mc.executeTool(T('echo')));
@@ -234,6 +236,7 @@ await test('SecurityError: insecure exposedTo, insecure or unparsable fromOrigin
 await test('getTools(): sorted by name, title "", window and origin present', () => {
   assert.deepEqual(b.tools, [...b.tools].sort());
   assert.equal(b.title, '""'); assert.equal(b.windowIsSelf, true);
+  assert.equal(b.compatibleSourceIsSelf, true);
   assert.deepEqual(b.toolShape, versionAtLeast(out.version, '159.0.8140.0')
         ? []
         : ['description', 'name', 'origin', 'title', 'window']);

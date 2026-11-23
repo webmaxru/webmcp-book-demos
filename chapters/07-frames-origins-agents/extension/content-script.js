@@ -8,9 +8,15 @@ async function report() {
       type: 'tools',
       origin: location.origin,
       tools: tools
-        .filter((t) => t.window === window)      // this frame's tools only
-        .map(({ name, description, inputSchema, annotations }) =>
-          ({ name, description, inputSchema, annotations })),
+        // `source` on Chrome 160, `window` before it. Remove the
+        // fallback when Chrome 160 reaches Stable (5 January 2027).
+        .filter((t) => (t.source ?? t.window) === window)
+        .map((t) => ({
+          name: t.name,
+          description: t.description,
+          inputSchema: t.inputSchema ?? null,
+          annotations: t.annotations ?? null,
+        })),
     });
   } catch (err) {
     chrome.runtime.sendMessage({ type: 'tools', origin: location.origin, error: err.name });
@@ -21,7 +27,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg.type !== 'execute') return;
   (async () => {
     const tools = await document.modelContext.getTools();
-    const tool = tools.find((t) => t.name === msg.name && t.window === window);
+    const tool = tools.find((t) => t.name === msg.name && (t.source ?? t.window) === window);
     if (!tool) return reply({ error: 'NotFound' });
     try {
       reply({ result: await document.modelContext.executeTool(tool, msg.args) });

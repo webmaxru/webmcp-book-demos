@@ -9,6 +9,7 @@ on:
       - 'chapters/14-testing-debugging-evals/**'
       - 'chapters/17-the-road-ahead/**'
       - 'appendices/a-api-reference/**'
+      - 'appendices/e-tool-interface/**'
       - 'fjord-table/**'
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - 'chapters/14-testing-debugging-evals/**'
       - 'chapters/17-the-road-ahead/**'
       - 'appendices/a-api-reference/**'
+      - 'appendices/e-tool-interface/**'
       - 'fjord-table/**'
   workflow_dispatch:
 
@@ -38,6 +40,8 @@ jobs:
           - directory: chapters/17-the-road-ahead
             chrome_test: true
           - directory: appendices/a-api-reference
+            chrome_test: false
+          - directory: appendices/e-tool-interface
             chrome_test: false
     steps:
       - uses: actions/checkout@v4

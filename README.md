@@ -73,6 +73,7 @@ The book follows three running projects: **Fjord Table**, a restaurant-booking s
 | [`chapters/17-the-road-ahead/`](chapters/17-the-road-ahead/) | [17](https://webmcp.salnikov.no/17-the-road-ahead.html) | Trailhead's tools as plain data, one adapter for the WebMCP API shape and a support probe | `npm run test:chrome` |
 | [`appendices/a-api-reference/`](appendices/a-api-reference/) | [App. A](https://webmcp.salnikov.no/appendix-a-api-reference.html) | The WebMCP IDL, an error classifier and probes of Chromium's behaviour | ✓ |
 | [`appendices/d-migration/`](appendices/d-migration/) | [App. D](https://webmcp.salnikov.no/appendix-d-migration.html) | Before and after: moving from `navigator.modelContext` and `provideContext()` to `document.modelContext` | ✓ |
+| [`appendices/e-tool-interface/`](appendices/e-tool-interface/) | [App. E](https://webmcp.salnikov.no/appendix-e-tool-interface.html) | Read a `Tool` on Chrome 160 and on earlier Chrome with `source ?? window` | ✓ |
 
 Each folder's README maps every file to its listing number and says exactly what its tests check.
 

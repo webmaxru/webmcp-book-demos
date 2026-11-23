@@ -105,7 +105,7 @@ try {
       const { discoverTools } = await import('./agent/discover.js');
       const c = await discoverTools();
       const t = c.get('supportly__get_ticket_status');
-      return { keys: [...c.keys()].sort(), origin: t.origin, ann: t.annotations, isFrame: t.window === document.getElementById('supportly').contentWindow };
+      return { keys: [...c.keys()].sort(), origin: t.origin, ann: t.annotations, isFrame: (t.source ?? t.window) === document.getElementById('supportly').contentWindow };
     });
     assert.deepEqual(out.keys, ['ledgerly__find_invoice', 'supportly__create_ticket', 'supportly__get_ticket_status', 'supportly__search_articles']);
     assert.equal(out.origin, SUPPORTLY);
