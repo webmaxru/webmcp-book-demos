@@ -27,7 +27,9 @@ export async function probeWebMCP() {
       execute: async (_input, options = {}) => ({ options: Object.keys(options) }),
     }, { signal: controller.signal });
     const tool = (await mc.getTools()).find((t) => t.name === name);
-    report.outputSchemaReflected = 'outputSchema' in tool;
+    // A Tool always has the attribute. A missing schema is null.
+    // Chromium 156 omitted the member, which is also not a schema.
+    report.outputSchemaReflected = tool.outputSchema != null;
     report.annotationsKept = Object.keys(tool.annotations ?? {}).sort();
     const raw = await mc.executeTool(tool, {});
     report.executeOptions = (typeof raw === 'string' ? JSON.parse(raw) : raw).options;

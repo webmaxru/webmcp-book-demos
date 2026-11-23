@@ -207,6 +207,32 @@ await test('Listing 17.2: exposedTo is passed through only when given', async ()
   assert.deepEqual(seen, [['signal'], ['exposedTo', 'signal']]);
 });
 
+await test('Listing 17.3: null outputSchema is not reflected, even when the attribute exists', async () => {
+  const { probeWebMCP } = await import(pathToFileURL(join(ROOT, 'src/probe.js')));
+  const previous = globalThis.document;
+  const install = (outputSchema) => {
+    globalThis.document = {
+      modelContext: {
+        registerTool: async (tool) => { install.tool = { name: tool.name, outputSchema, annotations: { readOnlyHint: true } }; },
+        getTools: async () => [install.tool],
+        executeTool: async () => JSON.stringify({ options: ['signal'] }),
+      },
+    };
+  };
+  try {
+    install(null);
+    const absent = await probeWebMCP();
+    assert.equal(absent.outputSchemaReflected, false);
+    assert.equal('outputSchema' in install.tool, true);
+    install({ type: 'object', properties: { options: { type: 'array' } } });
+    const present = await probeWebMCP();
+    assert.equal(present.outputSchemaReflected, true);
+  } finally {
+    if (previous === undefined) delete globalThis.document;
+    else globalThis.document = previous;
+  }
+});
+
 await test('Listing 17.3: the probe reports this browser and cleans up after itself', async () => {
   const report = await probe(page);
   console.log(`     ${JSON.stringify(report)}`);

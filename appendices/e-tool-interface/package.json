@@ -1,0 +1,14 @@
+{
+  "name": "appendix-e-tool-interface",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Appendix E: read a Tool from getTools() on Chrome 160 and on earlier Chrome",
+  "license": "MIT",
+  "scripts": {
+    "test": "node tests/run-tests.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}
