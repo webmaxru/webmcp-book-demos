@@ -5,6 +5,7 @@
 import http from 'node:http';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { chromium } from 'playwright';
@@ -28,6 +29,19 @@ async function test(name, fn) {
 // --- static checks ---------------------------------------------------------
 await test('node --check classify-tool-error.js', () => {
   execFileSync(process.execPath, ['--check', path.join(here, '..', 'classify-tool-error.js')]);
+});
+await test('Listing A.1 places waitForToolsUntil between registerTool and getTools', () => {
+  const idl = readFileSync(path.join(here, '..', 'webmcp.idl'), 'utf8').replace(/\n$/, '');
+  const registerAt = idl.indexOf('Promise<undefined> registerTool(ModelContextTool tool, optional ModelContextRegisterToolOptions options = {});');
+  const waitAt = idl.indexOf('undefined waitForToolsUntil(Promise<any> promise);');
+  const getAt = idl.indexOf('Promise<sequence<Tool>> getTools(optional ModelContextGetToolOptions options = {});');
+  assert.ok(registerAt >= 0 && waitAt > registerAt && getAt > waitAt);
+  if (process.env.APPENDIX_MD) {
+    const md = readFileSync(process.env.APPENDIX_MD, 'utf8');
+    const block = md.match(/\*\*Listing A\.1\*\*[\s\S]*?\n```webidl\n([\s\S]*?)\n```/);
+    assert.ok(block, 'Listing A.1 block');
+    assert.equal(idl, block[1]);
+  }
 });
 await test('Listing A.2: classifyToolError maps draft and Chromium names', () => {
   const e = (name) => new DOMException('x', name);

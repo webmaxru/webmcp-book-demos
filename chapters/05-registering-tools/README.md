@@ -2,7 +2,14 @@
 
 Chapter 5's listings (Listings 5.1, 5.3–5.6) are part of the Fjord Table demo and live in [`../../fjord-table/`](../../fjord-table/), where `npm test` and `npm run test:chrome` check them against the mock and against Chromium's own WebMCP.
 
-This folder holds one extra script, `tests/chromium-probe.mjs`. It backs every sentence in Chapter 5 that says what "Chromium 156" does where that differs from, or isn't settled by, the draft:
+Listing 5.7 is `wait-for-tools.js` in this folder. `registerToolsWhenReady` passes one `Promise.allSettled()` batch to `document.modelContext.waitForToolsUntil?.()`, and aborts that batch if any registration rejects. `npm test` runs `tests/wait-for-tools.test.mjs` after the probe:
+
+- On Chromium 156, `waitForToolsUntil` is absent. The optional call does not throw, and the tools still register.
+- A page-local shim of the Chrome 160.0.8185.0 method receives that same promise while the `registerTool()` calls are still in flight. The promise settles only after they finish, and a rejection aborts the batch before it settles.
+
+Listing 5.2 is an IDL excerpt in the chapter, not a file here. The same `waitForToolsUntil` line is in Appendix A's `webmcp.idl`.
+
+This folder also holds `tests/chromium-probe.mjs`. It backs every sentence in Chapter 5 that says what "Chromium 156" does where that differs from, or isn't settled by, the draft:
 
 | What the chapter says | Observed |
 |---|---|

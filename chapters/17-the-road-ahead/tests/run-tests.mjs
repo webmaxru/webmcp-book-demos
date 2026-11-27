@@ -65,7 +65,7 @@ await test('Listing 17.1: run() returns what outputSchema promises, for several 
   assert.deepEqual(catalog[0].run({ query: 'tent', maxPrice: 4000 }).products.map((p) => p.sku), ['TH-TENT-2P']);
 });
 
-await test('Listing 17.2: outputSchema includes the recoverable adapter error branch', async () => {
+await test('Listing 17.2: passes Listing 17.1 outputSchema through and still returns an input error', async () => {
   const previousDocument = globalThis.document;
   const registered = [];
   globalThis.document = { modelContext: {
@@ -80,13 +80,12 @@ await test('Listing 17.2: outputSchema includes the recoverable adapter error br
     const invalidResult = await tool.execute({ maxPrice: -5 });
     assert.equal(invalidResult.status, 'error');
     assert.equal(invalidResult.code, 'INVALID_ARGUMENT');
-    assert.deepEqual(checkInput(tool.outputSchema, invalidResult, 'output'), []);
+    assert.match(invalidResult.message, /input\.query is required/);
+    // Listing 17.1's schema describes the success result only.
+    assert.ok(checkInput(tool.outputSchema, invalidResult, 'output').some((problem) => problem.includes('products')));
 
     const successResult = await tool.execute({ query: 'tent' });
     assert.deepEqual(checkInput(tool.outputSchema, successResult, 'output'), []);
-    assert.deepEqual(checkInput(tool.outputSchema, {
-      status: 'error', code: 'INVALID_ARGUMENT'
-    }, 'output'), ['output must match exactly one allowed schema']);
   } finally {
     if (previousDocument === undefined) delete globalThis.document;
     else globalThis.document = previousDocument;
@@ -157,6 +156,7 @@ await test('no WebMCP: Listing 17.2 registers nothing and Listing 17.3 says so',
   assert.deepEqual(await page.evaluate(() => window.__trailhead.registered), []);
   const report = await probe(page);
   assert.equal(report.documentModelContext, false);
+  assert.equal(report.waitForToolsUntil, false);
   assert.equal(report.executeOptions, null);
   assert.deepEqual(errors, []);
   await context.close();
@@ -187,7 +187,7 @@ await test('Listing 17.2: input the browser lets through is answered with Chapte
   assert.equal(r.value.error, undefined, 'no legacy { error: { code } } wrapper');
   assert.match(r.value.message, /input\.query is required/);
   assert.match(r.value.message, /input\.maxPrice must be at least 0/);
-  assert.deepEqual(checkInput(catalog[0].outputSchema, r.value, 'output'), []);
+  assert.ok(checkInput(catalog[0].outputSchema, r.value, 'output').some((problem) => problem.includes('products')));
 });
 
 await test('Listing 17.2: exposedTo is passed through only when given', async () => {
@@ -239,6 +239,7 @@ await test('Listing 17.3: the probe reports this browser and cleans up after its
   assert.equal(report.documentModelContext, true);
   assert.equal(report.getTools, true);
   assert.equal(report.executeTool, true);
+  assert.equal(report.waitForToolsUntil, Boolean(REAL) && versionAtLeast(plain.version(), '160.0.8185.0'));
   assert.ok(report.executeOptions.includes('signal'));
   assert.equal(report.outputSchemaReflected, !REAL || versionAtLeast(plain.version(), '159.0.8140.0'));
   if (REAL) {
@@ -250,6 +251,117 @@ await test('Listing 17.3: the probe reports this browser and cleans up after its
   }
   const left = await page.evaluate(async () => (await document.modelContext.getTools()).map((t) => t.name));
   assert.deepEqual(left, ['search_products']);
+});
+
+await test('Listing 17.2: a missing waitForToolsUntil does not throw', async () => {
+  const info = await page.evaluate(() => {
+    const mc = document.modelContext;
+    const type = typeof mc.waitForToolsUntil;
+    if (type === 'function') return { type, threw: false, value: 'present' };
+    let threw = false;
+    let value = 'unset';
+    try { value = mc.waitForToolsUntil?.(); }
+    catch (err) { threw = true; value = err.name; }
+    return { type, threw, value };
+  });
+  if (!REAL || !versionAtLeast(plain.version(), '160.0.8185.0')) {
+    assert.equal(info.type, 'undefined');
+    assert.equal(info.threw, false);
+    assert.equal(info.value, undefined);
+  }
+});
+
+await test('Listing 17.2: waitForToolsUntil receives the pending batch, including rollback', async () => {
+  const result = await page.evaluate(async () => {
+    const { registerCatalog } = await import('/src/adapter.js');
+    const mc = document.modelContext;
+    const hadOwn = Object.prototype.hasOwnProperty.call(mc, 'waitForToolsUntil');
+    const previousWait = mc.waitForToolsUntil;
+    const originalRegister = mc.registerTool.bind(mc);
+    const waits = [];
+    let release;
+    let gate = new Promise((resolve) => { release = resolve; });
+    let rollbackAborted = false;
+    mc.waitForToolsUntil = (promise) => {
+      waits.push(promise);
+      if (typeof previousWait === 'function') previousWait.call(mc, promise);
+    };
+    mc.registerTool = async (tool, options = {}) => {
+      if (tool.name === 'wait_dup') {
+        options.signal?.addEventListener('abort', () => { rollbackAborted = true; });
+      }
+      if (tool.name === 'wait_ok' || tool.name === 'wait_dup') await gate;
+      return originalRegister(tool, options);
+    };
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+    try {
+      const stop = new AbortController();
+      const ok = { name: 'wait_ok', description: 'Readiness probe.', run: () => ({ ok: true }) };
+      let successSettled = false;
+      const done = registerCatalog([ok], { signal: stop.signal });
+      done.then(() => { successSettled = true; }, () => { successSettled = true; });
+      await flush();
+      const successPending = !successSettled && waits[0] === done;
+      release();
+      const names = await done;
+      stop.abort();
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      let releaseFail;
+      gate = new Promise((resolve) => { releaseFail = resolve; });
+      const dup = { name: 'wait_dup', description: 'Duplicate-name probe.', run: () => ({}) };
+      let failSettled = false;
+      const failing = registerCatalog([dup, { ...dup }]);
+      failing.then(() => { failSettled = true; }, () => { failSettled = true; });
+      await flush();
+      const rollbackPending = !failSettled && waits[1] === failing && rollbackAborted === false;
+      releaseFail();
+      let rejected = null;
+      try { await failing; }
+      catch (err) { rejected = err.name; }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return {
+        successPending,
+        names,
+        rollbackPending,
+        rejected,
+        rollbackAborted,
+        left: (await mc.getTools()).map((tool) => tool.name),
+      };
+    } finally {
+      mc.registerTool = originalRegister;
+      if (hadOwn) mc.waitForToolsUntil = previousWait;
+      else delete mc.waitForToolsUntil;
+    }
+  });
+  assert.equal(result.successPending, true);
+  assert.deepEqual(result.names, ['wait_ok']);
+  assert.equal(result.rollbackPending, true);
+  assert.equal(result.rejected, 'InvalidStateError');
+  assert.equal(result.rollbackAborted, true);
+  assert.deepEqual(result.left, ['search_products']);
+});
+
+await test('Listing 17.3: a Chrome 160-shaped waitForToolsUntil is reported', async () => {
+  const reported = await page.evaluate(async () => {
+    const mc = document.modelContext;
+    const hadOwn = Object.prototype.hasOwnProperty.call(mc, 'waitForToolsUntil');
+    const previous = mc.waitForToolsUntil;
+    let sawPromise = false;
+    mc.waitForToolsUntil = (promise) => {
+      sawPromise = promise != null && typeof promise.then === 'function';
+    };
+    try {
+      const { probeWebMCP } = await import('/src/probe.js');
+      const report = await probeWebMCP();
+      return { field: report.waitForToolsUntil, sawPromise };
+    } finally {
+      if (hadOwn) mc.waitForToolsUntil = previous;
+      else delete mc.waitForToolsUntil;
+    }
+  });
+  assert.equal(reported.field, true);
+  assert.equal(reported.sawPromise, false, 'the probe reports the method; it does not call it');
 });
 
 await test('Listing 17.2: one failed registration rolls back the whole batch', async () => {

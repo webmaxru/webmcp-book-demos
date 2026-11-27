@@ -1,0 +1,13 @@
+{
+  "name": "ch10-on-route-change",
+  "private": true,
+  "type": "module",
+  "description": "Listing 10.12: onRouteChange passes a route's registrations to waitForToolsUntil",
+  "scripts": {
+    "test": "node --test tests/on-route-change.test.mjs",
+    "test:chrome": "node --test tests/on-route-change.test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}

@@ -25,7 +25,8 @@ npm run watch            # live standards snapshot -> snapshots/last.json (exit 
 ## Tests (all passed on 14 October 2026 and again on 2 November 2026, Node 22, Playwright 1.64.1, Chromium 156.0.8078.4)
 
 - `tests/webmcp-support.test.js` (Playwright, real Chromium, local HTTP server on localhost):
-  - with `--enable-features=WebMCPTesting`: all three methods and three events detected, `policyAllows: true`, the Trailhead `search_products` tool registers and appears in `getTools()`;
+  - with `--enable-features=WebMCPTesting`: `registerTool`, `getTools` and `executeTool` detected (Chromium 156 has no `waitForToolsUntil`, and `waitForToolsUntil?.()` does not throw), all three events, `policyAllows: true`, and the Trailhead `search_products` tool registers and appears in `getTools()`;
+  - a Chrome 160-shaped shim: `detectWebMCP()` also lists `waitForToolsUntil`, and a call with a still-pending registration promise does not throw;
   - same flag plus `Permissions-Policy: tools=()`: API present, `policyAllows: false`, nothing registered (a direct `registerTool()` call is rejected with `NotAllowedError`: "Access to the feature \"tools\" is disallowed by permissions policy.");
   - without the flag: `document.modelContext` absent, `policyAllows: null`, page works, nothing registered;
   - a dev-only mock of a pre-May-2026 build (`navigator.modelContext`): reported as `legacyNavigator: true`, not used.
@@ -39,3 +40,5 @@ Tech review, 15 October 2026: the tests were re-run from a fresh clone (11 of 11
 The origin-trial tokens in Listing 15.1 are placeholders. A real token can't be tested here, because tokens are issued per registered origin.
 
 Second edition, 2 November 2026: `npm test` re-run with `CHAPTER_MD` pointing at the rewritten chapter, 12 of 12 tests pass (Node 22, Playwright 1.64.1, Chromium 156.0.8078.4). The watcher was run live against all sources and its output is `snapshots/2026-11-02.json`, printed as Listing 15.4. No listing code changed: the WebMCP IDL is the same in the 27 October 2026 draft as in the 15 October one.
+
+27 November 2026: Listing 15.2's method list includes `waitForToolsUntil`. `npm test` with `CHAPTER_MD` set is 14 of 14 on the same Playwright and Chromium 156. The method is absent there, `waitForToolsUntil?.()` does not throw, and a shim that adds `waitForToolsUntil(promise)` makes `detectWebMCP()` list it.
