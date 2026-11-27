@@ -65,7 +65,7 @@ test('Chromium 156: waitForToolsUntil is absent and a route change still registe
         inputSchema: { type: 'object', properties: {} },
         execute: async () => ({ ok: true }),
       });
-      onRouteChange({ tools: [tool('route_old')] });
+      const firstBatch = onRouteChange({ tools: [tool('route_old')] });
       const names = async () => (await mc.getTools()).map((entry) => entry.name).sort();
       const deadline = Date.now() + 3000;
       let first = [];
@@ -74,7 +74,7 @@ test('Chromium 156: waitForToolsUntil is absent and a route change still registe
         if (first.includes('route_old')) break;
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
-      onRouteChange({ tools: [tool('route_next')] });
+      const secondBatch = onRouteChange({ tools: [tool('route_next')] });
       let second = [];
       const switched = Date.now() + 3000;
       while (Date.now() < switched) {
@@ -82,7 +82,7 @@ test('Chromium 156: waitForToolsUntil is absent and a route change still registe
         if (second.includes('route_next') && !second.includes('route_old')) break;
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
-      onRouteChange({ tools: [] });
+      const cleared = onRouteChange({ tools: [] });
       await new Promise((resolve) => setTimeout(resolve, 200));
       return {
         type: typeof mc.waitForToolsUntil,
@@ -91,6 +91,12 @@ test('Chromium 156: waitForToolsUntil is absent and a route change still registe
         first,
         second,
         after: await names(),
+        firstIsPromise: typeof firstBatch?.then === 'function',
+        secondIsPromise: typeof secondBatch?.then === 'function',
+        clearedIsPromise: typeof cleared?.then === 'function',
+        firstStatus: (await firstBatch)[0]?.status,
+        secondStatus: (await secondBatch)[0]?.status,
+        clearedLength: (await cleared).length,
       };
     });
     assert.equal(report.type, 'undefined');
@@ -99,6 +105,12 @@ test('Chromium 156: waitForToolsUntil is absent and a route change still registe
     assert.deepEqual(report.first, ['route_old']);
     assert.deepEqual(report.second, ['route_next']);
     assert.deepEqual(report.after, []);
+    assert.equal(report.firstIsPromise, true);
+    assert.equal(report.secondIsPromise, true);
+    assert.equal(report.clearedIsPromise, true);
+    assert.equal(report.firstStatus, 'fulfilled');
+    assert.equal(report.secondStatus, 'fulfilled');
+    assert.equal(report.clearedLength, 0);
     assert.deepEqual(errors, []);
   } finally {
     await page.close();
@@ -172,6 +184,142 @@ test('Chrome 160 shim: the route promise stays pending until every registration 
     assert.deepEqual(report.secondStatuses, ['fulfilled', 'rejected']);
     assert.equal(report.secondReason, 'InvalidStateError');
     assert.deepEqual(report.names, ['next'], JSON.stringify(report));
+    assert.deepEqual(errors, []);
+  } finally {
+    await page.close();
+  }
+});
+
+test('Chrome 160 shim: InvalidStateError and NotAllowedError still return the route promise', async () => {
+  const { page, errors } = await open(plain);
+  try {
+    const report = await page.evaluate(async () => {
+      const registered = new Map();
+      const seen = [];
+      let release;
+      let gate = new Promise((resolve) => { release = resolve; });
+      let throwName = null;
+      const mc = {
+        async registerTool(entry, { signal } = {}) {
+          signal?.addEventListener('abort', () => registered.delete(entry.name));
+          await gate;
+          if (signal?.aborted) throw signal.reason ?? new DOMException('The signal was aborted.', 'AbortError');
+          if (entry.name.startsWith('bad')) throw new DOMException('Duplicate tool name.', 'InvalidStateError');
+          registered.set(entry.name, entry.name);
+        },
+        waitForToolsUntil(promise) {
+          seen.push(promise);
+          if (throwName) throw new DOMException(throwName, throwName);
+        },
+      };
+      Object.defineProperty(document, 'modelContext', { configurable: true, value: mc });
+      const { onRouteChange } = await import('/on-route-change.js');
+      const make = (name) => ({ name, description: `Route tool ${name}.`, execute: async () => ({ ok: true }) });
+      const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+      const arm = () => { gate = new Promise((resolve) => { release = resolve; }); };
+      const cases = [];
+      for (const name of ['InvalidStateError', 'NotAllowedError']) {
+        arm();
+        throwName = name;
+        let thrown = null;
+        let batch;
+        try { batch = onRouteChange({ tools: [make(`keep_${name}`), make(`bad_${name}`)] }); }
+        catch (err) { thrown = err?.name ?? String(err); }
+        let settled = false;
+        batch?.then(() => { settled = true; }, () => { settled = true; });
+        await flush();
+        const pending = thrown == null && settled === false && batch === seen.at(-1);
+        release();
+        const results = batch ? await batch : null;
+        cases.push({
+          name,
+          thrown,
+          pending,
+          samePromise: batch === seen.at(-1),
+          statuses: results?.map((result) => result.status) ?? null,
+          reason: results?.[1]?.reason?.name ?? null,
+          names: [...registered.keys()].sort(),
+        });
+      }
+      return { cases };
+    });
+    assert.equal(report.cases.length, 2);
+    for (const item of report.cases) {
+      assert.equal(item.thrown, null, item.name);
+      assert.equal(item.pending, true, JSON.stringify(item));
+      assert.equal(item.samePromise, true, item.name);
+      assert.deepEqual(item.statuses, ['fulfilled', 'rejected'], item.name);
+      assert.equal(item.reason, 'InvalidStateError', item.name);
+      assert.deepEqual(item.names, [`keep_${item.name}`], JSON.stringify(item));
+    }
+    assert.deepEqual(errors, []);
+  } finally {
+    await page.close();
+  }
+});
+
+test('Chrome 160 shim: any other synchronous error from waitForToolsUntil propagates', async () => {
+  const { page, errors } = await open(plain);
+  try {
+    const report = await page.evaluate(async () => {
+      const registered = new Map();
+      const seen = [];
+      let release;
+      let gate = new Promise((resolve) => { release = resolve; });
+      let throwName = null;
+      const mc = {
+        async registerTool(entry, { signal } = {}) {
+          signal?.addEventListener('abort', () => registered.delete(entry.name));
+          await gate;
+          if (signal?.aborted) throw signal.reason ?? new DOMException('The signal was aborted.', 'AbortError');
+          if (entry.name.startsWith('bad')) throw new DOMException('Duplicate tool name.', 'InvalidStateError');
+          registered.set(entry.name, entry.name);
+        },
+        waitForToolsUntil(promise) {
+          seen.push(promise);
+          if (throwName === 'TypeError') throw new TypeError('shim refused the promise');
+          if (throwName) throw new DOMException(throwName, throwName);
+        },
+      };
+      Object.defineProperty(document, 'modelContext', { configurable: true, value: mc });
+      const { onRouteChange } = await import('/on-route-change.js');
+      const make = (name) => ({ name, description: `Route tool ${name}.`, execute: async () => ({ ok: true }) });
+      const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+      const arm = () => { gate = new Promise((resolve) => { release = resolve; }); };
+      const cases = [];
+      for (const name of ['TypeError', 'OperationError']) {
+        arm();
+        throwName = name;
+        let thrown = null;
+        let returned = 'unset';
+        try { returned = onRouteChange({ tools: [make(`keep_${name}`), make(`bad_${name}`)] }); }
+        catch (err) { thrown = err?.name ?? String(err); }
+        const batch = seen.at(-1);
+        let settled = false;
+        batch?.then(() => { settled = true; }, () => { settled = true; });
+        await flush();
+        const pending = settled === false;
+        release();
+        const results = batch ? await batch : null;
+        cases.push({
+          name,
+          thrown,
+          returnedUnset: returned === 'unset',
+          pending,
+          statuses: results?.map((result) => result.status) ?? null,
+          names: [...registered.keys()].sort(),
+        });
+      }
+      return { cases };
+    });
+    assert.deepEqual(report.cases.map((item) => item.name), ['TypeError', 'OperationError']);
+    for (const item of report.cases) {
+      assert.equal(item.thrown, item.name, JSON.stringify(item));
+      assert.equal(item.returnedUnset, true, JSON.stringify(item));
+      assert.equal(item.pending, true, JSON.stringify(item));
+      assert.deepEqual(item.statuses, ['fulfilled', 'rejected'], JSON.stringify(item));
+      assert.deepEqual(item.names, [`keep_${item.name}`], JSON.stringify(item));
+    }
     assert.deepEqual(errors, []);
   } finally {
     await page.close();

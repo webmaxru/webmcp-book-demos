@@ -54,7 +54,7 @@ npm test                     # Listing 10.12, Chromium 156 and a Chrome 160-shap
 npm run test:chrome          # the same
 ```
 
-Listing 10.12 aborts the previous route's controller, then passes `Promise.allSettled()` of the new registrations to `waitForToolsUntil?.()`. It does not roll a partial success back; Listing 5.7 does. On Chromium 156 the method is absent and the optional call does not throw. The shim checks that the promise stays pending until every registration in the new route has settled, including a rejection, and that the previous route's tool is aborted first.
+Listing 10.12 aborts the previous route's controller, registers the next route with `Promise.allSettled()`, passes that promise to `waitForToolsUntil?.()`, and returns it. A synchronous `InvalidStateError` or `NotAllowedError` is caught so the return still happens. Any other exception is rethrown. A rejected `registerTool()` leaves the tools that succeeded; Listing 5.7 is the rollback. On Chromium 156 the method is absent, the optional call does not throw, and `onRouteChange` still returns the batch promise. The shim checks that the promise stays pending until every registration in the new route has settled, including a rejection, that the previous route's tool is aborted first, and that those two synchronous errors do not drop the return.
 
 To try the store with a real agent, open it in Chrome with `chrome://flags/#enable-webmcp-testing` enabled (see `fjord-table/README.md` and chapter 9).
 

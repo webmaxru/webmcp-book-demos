@@ -8,9 +8,14 @@ export function webmcpAvailable() {
 
 export function registerCatalog(catalog, { signal, exposedTo } = {}) {
   if (!webmcpAvailable()) return Promise.resolve([]);
-  // The caller awaits this same promise. The catch below aborts before it rejects.
+  // Callers await done. registerBatch aborts the batch before that promise rejects.
   const done = registerBatch(catalog, { signal, exposedTo });
-  document.modelContext.waitForToolsUntil?.(done);
+  // A synchronous InvalidStateError or NotAllowedError must not skip the return.
+  try {
+    document.modelContext.waitForToolsUntil?.(done);
+  } catch (err) {
+    if (err?.name !== 'InvalidStateError' && err?.name !== 'NotAllowedError') throw err;
+  }
   return done;
 }
 
