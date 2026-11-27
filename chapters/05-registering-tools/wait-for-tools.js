@@ -12,6 +12,11 @@ export function registerToolsWhenReady(tools, signal) {
     }
     return results;
   })();
-  document.modelContext.waitForToolsUntil?.(toolsUpdated);
+  // A synchronous InvalidStateError or NotAllowedError must not skip the return.
+  try {
+    document.modelContext.waitForToolsUntil?.(toolsUpdated);
+  } catch (err) {
+    if (err?.name !== 'InvalidStateError' && err?.name !== 'NotAllowedError') throw err;
+  }
   return toolsUpdated;
 }

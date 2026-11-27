@@ -364,6 +364,112 @@ await test('Listing 17.3: a Chrome 160-shaped waitForToolsUntil is reported', as
   assert.equal(reported.sawPromise, false, 'the probe reports the method; it does not call it');
 });
 
+await test('Listing 17.2: synchronous waitForToolsUntil errors are caught or rethrown', async () => {
+  const result = await page.evaluate(async () => {
+    const { registerCatalog } = await import('/src/adapter.js');
+    const mc = document.modelContext;
+    const hadOwnWait = Object.prototype.hasOwnProperty.call(mc, 'waitForToolsUntil');
+    const previousWait = mc.waitForToolsUntil;
+    const previousRegister = mc.registerTool;
+    const originalRegister = mc.registerTool.bind(mc);
+    const seen = [];
+    let throwName = null;
+    let release;
+    let gate = new Promise((resolve) => { release = resolve; });
+    const arm = () => { gate = new Promise((resolve) => { release = resolve; }); };
+    mc.waitForToolsUntil = (promise) => {
+      seen.push(promise);
+      if (throwName === 'TypeError') throw new TypeError('shim refused the promise');
+      if (throwName) throw new DOMException(throwName, throwName);
+    };
+    mc.registerTool = async (tool, options) => {
+      if (String(tool.name).startsWith('throw_')) await gate;
+      return originalRegister(tool, options);
+    };
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+    const names = async () => (await mc.getTools()).map((tool) => tool.name).sort();
+    try {
+      const caught = [];
+      for (const name of ['InvalidStateError', 'NotAllowedError']) {
+        arm();
+        throwName = name;
+        const def = { name: `throw_${name}`, description: 'Synchronous throw probe.', run: () => ({}) };
+        let thrown = null;
+        let done;
+        try { done = registerCatalog([def, { ...def }]); }
+        catch (err) { thrown = err?.name ?? String(err); }
+        let settled = false;
+        done?.then(() => { settled = true; }, () => { settled = true; });
+        await flush();
+        const pending = thrown == null && settled === false && done === seen.at(-1);
+        release();
+        let rejected = null;
+        try { await done; }
+        catch (err) { rejected = err?.name ?? String(err); }
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        caught.push({
+          name,
+          thrown,
+          pending,
+          samePromise: done === seen.at(-1),
+          rejected,
+          names: await names(),
+        });
+      }
+      const propagated = [];
+      for (const name of ['TypeError', 'OperationError']) {
+        arm();
+        throwName = name;
+        const def = { name: `throw_${name}`, description: 'Propagated throw probe.', run: () => ({}) };
+        let thrown = null;
+        let returned = 'unset';
+        try { returned = registerCatalog([def, { ...def }]); }
+        catch (err) { thrown = err?.name ?? String(err); }
+        const batch = seen.at(-1);
+        let settled = false;
+        batch?.then(() => { settled = true; }, () => { settled = true; });
+        await flush();
+        const pending = settled === false;
+        release();
+        let rejected = null;
+        try { await batch; }
+        catch (err) { rejected = err?.name ?? String(err); }
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        propagated.push({
+          name,
+          thrown,
+          returnedUnset: returned === 'unset',
+          pending,
+          rejected,
+          names: await names(),
+        });
+      }
+      return { caught, propagated, left: await names() };
+    } finally {
+      mc.registerTool = previousRegister;
+      if (hadOwnWait) mc.waitForToolsUntil = previousWait;
+      else delete mc.waitForToolsUntil;
+    }
+  });
+  assert.equal(result.caught.length, 2);
+  for (const item of result.caught) {
+    assert.equal(item.thrown, null, JSON.stringify(item));
+    assert.equal(item.pending, true, JSON.stringify(item));
+    assert.equal(item.samePromise, true, item.name);
+    assert.equal(item.rejected, 'InvalidStateError', JSON.stringify(item));
+    assert.deepEqual(item.names, ['search_products'], JSON.stringify(item));
+  }
+  assert.deepEqual(result.propagated.map((item) => item.name), ['TypeError', 'OperationError']);
+  for (const item of result.propagated) {
+    assert.equal(item.thrown, item.name, JSON.stringify(item));
+    assert.equal(item.returnedUnset, true, JSON.stringify(item));
+    assert.equal(item.pending, true, JSON.stringify(item));
+    assert.equal(item.rejected, 'InvalidStateError', JSON.stringify(item));
+    assert.deepEqual(item.names, ['search_products'], JSON.stringify(item));
+  }
+  assert.deepEqual(result.left, ['search_products']);
+});
+
 await test('Listing 17.2: one failed registration rolls back the whole batch', async () => {
   const result = await page.evaluate(async () => {
     const { registerCatalog } = await import('/src/adapter.js');
