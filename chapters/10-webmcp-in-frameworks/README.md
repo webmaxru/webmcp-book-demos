@@ -21,6 +21,7 @@ Every listing in the chapter is a file here, byte-identical to the book (`node c
 | 10.9 An app-wide tool in the application config | `angular/src/app.config.ts` |
 | 10.10 A tool that lives with its route | `angular/src/routes.ts` |
 | 10.11 A Signal Form that is also a tool | `angular/src/stock-alert.ts` |
+| 10.12 Tell agents to wait out a route's registrations | `on-route-change.js` |
 
 ## Files the book doesn't print
 
@@ -46,7 +47,14 @@ cd ../angular
 npm install
 npm test                     # tsc + esbuild + Playwright with the mock
 npm run test:chrome          # the same against Chromium's own WebMCP
+
+cd ..
+npm install
+npm test                     # Listing 10.12, Chromium 156 and a Chrome 160-shaped shim
+npm run test:chrome          # the same
 ```
+
+Listing 10.12 aborts the previous route's controller, then passes `Promise.allSettled()` of the new registrations to `waitForToolsUntil?.()`. It does not roll a partial success back; Listing 5.7 does. On Chromium 156 the method is absent and the optional call does not throw. The shim checks that the promise stays pending until every registration in the new route has settled, including a rejection, and that the previous route's tool is aborted first.
 
 To try the store with a real agent, open it in Chrome with `chrome://flags/#enable-webmcp-testing` enabled (see `fjord-table/README.md` and chapter 9).
 

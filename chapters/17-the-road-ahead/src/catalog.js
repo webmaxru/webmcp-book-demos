@@ -32,13 +32,10 @@ export const catalog = [
       },
       required: ['query'],
     },
-    // Optional JSON Schema for both successful results and recoverable input errors.
+    // Optional JSON Schema return contract; agents should validate results before passing them to a model.
     outputSchema: {
       type: 'object',
       properties: {
-        status: { type: 'string', enum: ['error'] },
-        code: { type: 'string', enum: ['INVALID_ARGUMENT'] },
-        message: { type: 'string' },
         products: {
           type: 'array',
           maxItems: 10,
@@ -55,10 +52,7 @@ export const catalog = [
           },
         },
       },
-      oneOf: [
-        { type: 'object', required: ['products'] },
-        { type: 'object', required: ['status', 'code', 'message'] },
-      ],
+      required: ['products'],
     },
     annotations: { readOnlyHint: true },
     run: (input) => ({ products: searchProducts(input) }),

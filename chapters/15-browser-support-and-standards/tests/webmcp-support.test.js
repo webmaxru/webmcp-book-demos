@@ -75,6 +75,85 @@ test('Chromium without the feature: page still works, nothing registered', async
   assert.deepEqual(r.registered, []);
 });
 
+test('Chromium 156: waitForToolsUntil is absent and the optional call does not throw', async () => {
+  const browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+  try {
+    const tab = await browser.newPage();
+    await tab.goto(base + '/');
+    await tab.waitForFunction(() => window.done === true, null, { timeout: 10_000 });
+    const observed = await tab.evaluate(async () => {
+      const { detectWebMCP } = await import('/webmcp-support.js');
+      const mc = document.modelContext;
+      let threw = false;
+      let value = 'unset';
+      try { value = mc.waitForToolsUntil?.(); }
+      catch (err) { threw = true; value = err.name; }
+      return {
+        version: navigator.userAgent,
+        type: typeof mc.waitForToolsUntil,
+        threw,
+        value,
+        methods: detectWebMCP().methods,
+      };
+    });
+    assert.equal(observed.type, 'undefined');
+    assert.equal(observed.threw, false);
+    assert.equal(observed.value, undefined);
+    assert.deepEqual(observed.methods, ['registerTool', 'getTools', 'executeTool']);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('Chrome 160 shim: detectWebMCP lists waitForToolsUntil(promise)', async () => {
+  const browser = await chromium.launch({ args: ['--enable-features=WebMCPTesting'] });
+  try {
+    const tab = await browser.newPage();
+    await tab.goto(base + '/');
+    await tab.waitForFunction(() => window.done === true, null, { timeout: 10_000 });
+    const observed = await tab.evaluate(async () => {
+      const mc = document.modelContext;
+      const seen = [];
+      Object.defineProperty(mc, 'waitForToolsUntil', {
+        configurable: true,
+        writable: true,
+        value(promise) {
+          seen.push(promise != null && typeof promise.then === 'function');
+        },
+      });
+      const { detectWebMCP } = await import('/webmcp-support.js');
+      const methods = detectWebMCP().methods;
+      let release;
+      const gate = new Promise((resolve) => { release = resolve; });
+      const registration = (async () => {
+        await mc.registerTool({
+          name: 'detect_probe',
+          description: 'Feature-detection probe.',
+          execute: async () => ({ ok: true }),
+        });
+        await gate;
+      })();
+      let settled = false;
+      registration.then(() => { settled = true; }, () => { settled = true; });
+      mc.waitForToolsUntil(registration);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const pendingWhileRegistering = seen[0] === true && settled === false;
+      release();
+      let threw = false;
+      try { await registration; }
+      catch (err) { threw = err.name; }
+      return { methods, sawPromise: seen[0], calls: seen.length, pendingWhileRegistering, threw };
+    });
+    assert.deepEqual(observed.methods, ['registerTool', 'getTools', 'executeTool', 'waitForToolsUntil']);
+    assert.equal(observed.sawPromise, true);
+    assert.equal(observed.calls, 1);
+    assert.equal(observed.pendingWhileRegistering, true);
+    assert.equal(observed.threw, false);
+  } finally {
+    await browser.close();
+  }
+});
+
 test('mock of a pre-May-2026 build: legacy navigator surface is reported, not used', async () => {
   // Dev-only mock: an old build exposed navigator.modelContext instead of document.modelContext.
   const r = await run([], '/', () => {

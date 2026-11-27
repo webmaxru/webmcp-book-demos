@@ -8,7 +8,7 @@ export function detectWebMCP(win = globalThis) {
     available: !!mc && typeof mc.registerTool === 'function',
     secureContext: !!win.isSecureContext,
     methods: mc
-      ? ['registerTool', 'getTools', 'executeTool'].filter((m) => typeof mc[m] === 'function')
+      ? ['registerTool', 'getTools', 'executeTool', 'waitForToolsUntil'].filter((m) => typeof mc[m] === 'function')
       : [],
     events: mc
       ? ['toolchange', 'toolactivated', 'toolcancel'].filter((e) => `on${e}` in mc)

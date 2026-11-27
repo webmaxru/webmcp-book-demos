@@ -6,8 +6,15 @@ export function webmcpAvailable() {
     && typeof document.modelContext?.registerTool === 'function';
 }
 
-export async function registerCatalog(catalog, { signal, exposedTo } = {}) {
-  if (!webmcpAvailable()) return [];
+export function registerCatalog(catalog, { signal, exposedTo } = {}) {
+  if (!webmcpAvailable()) return Promise.resolve([]);
+  // The caller awaits this same promise. The catch below aborts before it rejects.
+  const done = registerBatch(catalog, { signal, exposedTo });
+  document.modelContext.waitForToolsUntil?.(done);
+  return done;
+}
+
+async function registerBatch(catalog, { signal, exposedTo } = {}) {
   // All or nothing: if one registration fails, the ones before it are rolled back.
   const batch = new AbortController();
   const batchSignal = signal ? AbortSignal.any([signal, batch.signal]) : batch.signal;

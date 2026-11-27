@@ -7,6 +7,7 @@ export async function probeWebMCP() {
     legacyNavigatorModelContext: 'modelContext' in (globalThis.navigator ?? {}),
     getTools: typeof mc?.getTools === 'function',
     executeTool: typeof mc?.executeTool === 'function',
+    waitForToolsUntil: typeof mc?.waitForToolsUntil === 'function',
     resumeTool: typeof mc?.resumeTool === 'function',   // continuations explainer
     outputSchemaReflected: null,
     annotationsKept: null,
